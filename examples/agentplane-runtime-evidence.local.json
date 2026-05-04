@@ -1,0 +1,74 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:agentplane-runtime-evidence:local-llama-cpp-activation",
+  "kind": "AgentPlaneRuntimeEvidence",
+  "evidenceType": "activation",
+  "agentMachineId": "urn:srcos:agent-machine:m2-asahi-local",
+  "agentPodId": "urn:srcos:agent-machine:agent-pod:local-podman-llama-cpp",
+  "providerId": "urn:srcos:agent-machine:inference-provider:asahi-llama-cpp",
+  "deploymentReceiptId": "urn:srcos:agent-machine:deployment-receipt:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "policyFabric": {
+    "required": true,
+    "decisionRef": null,
+    "decisionDigest": null,
+    "admissionStatus": "missing",
+    "obligationsRef": null,
+    "expiresAt": null
+  },
+  "agentRegistry": {
+    "required": true,
+    "grantRef": null,
+    "grantDigest": null,
+    "grantStatus": "missing",
+    "revocationRef": null,
+    "expiresAt": null
+  },
+  "artifacts": {
+    "imageRef": "ghcr.io/ggerganov/llama.cpp:server",
+    "imageDigest": null,
+    "modelDigest": null,
+    "tokenizerDigest": null,
+    "manifestDigest": null,
+    "sbomRef": null,
+    "provenanceRef": null
+  },
+  "storageReceiptRefs": [
+    "urn:srcos:agent-machine:storage-receipt:local-lvm-warm-cache"
+  ],
+  "cache": {
+    "cacheReuseRequested": true,
+    "cacheReuseAllowed": false,
+    "cachePolicyRef": "urn:srcos:policy:agent-machine-cache-reuse",
+    "cacheReceiptRefs": [
+      "urn:srcos:agent-machine:storage-receipt:local-lvm-warm-cache"
+    ],
+    "cacheReuseDecisionRef": null
+  },
+  "runtime": {
+    "status": "activating",
+    "runtimeVersion": "0.1.0-dev",
+    "probeVersion": "0.1.0-dev",
+    "nodeName": "m2-asahi-local",
+    "namespace": null,
+    "serviceAccountName": null,
+    "pid": null,
+    "containerIdDigest": null,
+    "startedAt": "2026-05-04T12:46:00Z",
+    "completedAt": null,
+    "failureReason": "policy_fabric_admission_missing_and_agent_registry_grant_missing"
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "rawPromptContentIncluded": false,
+    "rawKvCacheContentIncluded": false,
+    "secretValuesIncluded": false,
+    "privateMemoryIncluded": false
+  },
+  "observedAt": "2026-05-04T12:46:00Z",
+  "labels": {
+    "sourceos.profile": "m2-asahi-linux",
+    "sourceos.runtime": "podman-quadlet",
+    "sourceos.evidence.prototype": "true",
+    "sourceos.activation.fail-closed": "true"
+  }
+}
