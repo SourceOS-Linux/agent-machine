@@ -14,6 +14,10 @@ if str(SRC_ROOT) not in sys.path:
 
 def main() -> int:
     import agent_machine
+    import agent_machine.cli
+    import agent_machine.renderers.k8s
+    import agent_machine.renderers.plan
+    import agent_machine.renderers.quadlet
     from agent_machine.contracts import contracts_dir, examples_dir, schema_by_kind
     from agent_machine.digest import stable_digest, stable_text_digest
     from agent_machine.paths import default_evidence_path, default_model_cache_path, repo_root_from_file
