@@ -261,6 +261,34 @@ def cmd_render_k8s(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_activate_evaluate(args: argparse.Namespace) -> int:
+    activation = import_renderer(lambda: __import__("agent_machine.activation", fromlist=["_unused"]))
+    storage_receipts = activation.load_storage_receipts(
+        files=args.storage_receipt_file,
+        directories=args.storage_receipt_dir,
+    )
+    storage_receipt_refs = list(args.storage_receipt_ref or [])
+    if not storage_receipt_refs and storage_receipts:
+        storage_receipt_refs = [str(receipt.get("id")) for receipt in storage_receipts]
+    decision = activation.evaluate_activation(
+        agentpod=load_json(args.agentpod_json),
+        policy=load_json(args.policy_json),
+        grant=load_json(args.grant_json),
+        deployment_receipt_id=args.deployment_receipt_id,
+        storage_receipt_refs=storage_receipt_refs,
+        storage_receipts=storage_receipts if storage_receipts else None,
+        decided_at=args.decided_at,
+        decision_id=args.decision_id,
+        root=REPO_ROOT,
+    )
+    activation.validate_activation_decision_payload(decision, REPO_ROOT)
+    if args.pretty:
+        print(json.dumps(decision, indent=2, sort_keys=True))
+    else:
+        print(json.dumps(decision, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Agent Machine Python CLI")
     subcommands = parser.add_subparsers(dest="command", required=True)
@@ -304,6 +332,21 @@ def build_parser() -> argparse.ArgumentParser:
     render_k8s.add_argument("agentpod_json", type=Path)
     render_k8s.add_argument("--compare", type=Path)
     render_k8s.set_defaults(func=cmd_render_k8s)
+
+    activate = subcommands.add_parser("activate", help="Evaluate activation readiness")
+    activate_subcommands = activate.add_subparsers(dest="activate_command", required=True)
+    activate_evaluate = activate_subcommands.add_parser("evaluate", help="Evaluate AgentPod activation decision")
+    activate_evaluate.add_argument("agentpod_json", type=Path)
+    activate_evaluate.add_argument("policy_json", type=Path)
+    activate_evaluate.add_argument("grant_json", type=Path)
+    activate_evaluate.add_argument("--deployment-receipt-id", required=True)
+    activate_evaluate.add_argument("--storage-receipt-ref", action="append", default=[])
+    activate_evaluate.add_argument("--storage-receipt-file", action="append", type=Path, default=[])
+    activate_evaluate.add_argument("--storage-receipt-dir", action="append", type=Path, default=[])
+    activate_evaluate.add_argument("--decided-at", default="1970-01-01T00:00:00Z")
+    activate_evaluate.add_argument("--decision-id")
+    activate_evaluate.add_argument("--pretty", action="store_true")
+    activate_evaluate.set_defaults(func=cmd_activate_evaluate)
 
     return parser
 
