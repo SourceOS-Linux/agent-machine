@@ -1,0 +1,237 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:agent-pod:v0.1.0",
+  "title": "AgentPod",
+  "description": "Schedulable agent workload envelope for local Agent Machine runtimes and Kubernetes-backed AgentPods.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specVersion",
+    "id",
+    "kind",
+    "podType",
+    "profile",
+    "workload",
+    "runtime",
+    "resources",
+    "storage",
+    "policy",
+    "receipts"
+  ],
+  "properties": {
+    "specVersion": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:agent-pod:[a-z0-9][a-z0-9-]*$"
+    },
+    "kind": {
+      "type": "string",
+      "const": "AgentPod"
+    },
+    "podType": {
+      "type": "string",
+      "enum": [
+        "local-systemd",
+        "local-podman",
+        "local-podman-quadlet",
+        "local-docker-compat",
+        "local-bubblewrap",
+        "kubernetes-pod",
+        "kubernetes-crd"
+      ]
+    },
+    "profile": {
+      "type": "string",
+      "enum": [
+        "m2-asahi-linux",
+        "sourceos-workstation",
+        "fedora-silverblue",
+        "linux-gpu-node",
+        "linux-edge-node",
+        "kubernetes-node",
+        "macos-apple-silicon-compat"
+      ]
+    },
+    "workload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "purpose", "agentIdentityRequired"],
+      "properties": {
+        "name": { "type": "string" },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "inference-provider",
+            "agent-runner",
+            "browser-runtime",
+            "terminal-runtime",
+            "tool-runner",
+            "workspace-job",
+            "probe-job",
+            "other"
+          ]
+        },
+        "description": { "type": "string" },
+        "agentIdentityRequired": { "type": "boolean" },
+        "agentIdentityRef": { "type": "string" },
+        "workroomRef": { "type": "string" },
+        "topicRef": { "type": "string" }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "imageOrCommand", "networkMode", "restartPolicy"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["systemd", "podman", "podman-quadlet", "docker", "bubblewrap", "kubernetes"]
+        },
+        "imageOrCommand": {
+          "type": "string",
+          "description": "Container image, systemd unit command, executable, or Kubernetes workload reference. Do not include secrets."
+        },
+        "entrypoint": { "type": "string" },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "networkMode": {
+          "type": "string",
+          "enum": ["none", "loopback", "host", "slirp4netns", "pod", "kubernetes-service", "policy-managed"]
+        },
+        "restartPolicy": {
+          "type": "string",
+          "enum": ["never", "on-failure", "always", "policy-managed"]
+        },
+        "serviceAccountName": { "type": "string" },
+        "namespace": { "type": "string" }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cpu", "memoryBytes"],
+      "properties": {
+        "cpu": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["request", "limit"],
+          "properties": {
+            "request": { "type": "string" },
+            "limit": { "type": "string" }
+          }
+        },
+        "memoryBytes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["request", "limit"],
+          "properties": {
+            "request": { "type": "integer", "minimum": 0 },
+            "limit": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "accelerators": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "required"],
+            "properties": {
+              "type": { "type": "string", "enum": ["cpu", "vulkan", "cuda", "rocm", "metal", "mlx", "unknown"] },
+              "required": { "type": "boolean" },
+              "count": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "storage": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["cacheTierId", "mountPath", "accessMode"],
+        "properties": {
+          "cacheTierId": { "type": "string" },
+          "volumeClass": {
+            "type": "string",
+            "enum": [
+              "agent-models",
+              "agent-cache-hot",
+              "agent-cache-warm",
+              "agent-cache-cold",
+              "agent-scratch",
+              "agent-evidence",
+              "agent-artifacts"
+            ]
+          },
+          "mountPath": { "type": "string" },
+          "hostPath": { "type": "string" },
+          "pvcName": { "type": "string" },
+          "storageClassName": { "type": "string" },
+          "accessMode": { "type": "string", "enum": ["read-only", "read-write", "runtime-managed"] },
+          "sensitive": { "type": "boolean" }
+        }
+      }
+    },
+    "ports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "containerPort", "exposure"],
+        "properties": {
+          "name": { "type": "string" },
+          "containerPort": { "type": "integer", "minimum": 1, "maximum": 65535 },
+          "hostPort": { "type": "integer", "minimum": 1, "maximum": 65535 },
+          "exposure": { "type": "string", "enum": ["none", "loopback", "host", "cluster", "ingress", "policy-managed"] }
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policyFabricRequired",
+        "agentRegistryRequired",
+        "networkPolicyRequired",
+        "egressPolicyRequired",
+        "allowPrivileged",
+        "allowHostNetwork",
+        "allowSecretInSpec"
+      ],
+      "properties": {
+        "policyFabricRequired": { "type": "boolean" },
+        "agentRegistryRequired": { "type": "boolean" },
+        "networkPolicyRequired": { "type": "boolean" },
+        "egressPolicyRequired": { "type": "boolean" },
+        "allowPrivileged": { "type": "boolean", "const": false },
+        "allowHostNetwork": { "type": "boolean" },
+        "allowSecretInSpec": { "type": "boolean", "const": false },
+        "toolUseRequiresGrant": { "type": "boolean" },
+        "cacheReuseRequiresPolicy": { "type": "boolean" }
+      }
+    },
+    "receipts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "emitPlacement", "emitStorage", "emitRuntime", "includeRawContent"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "emitPlacement": { "type": "boolean" },
+        "emitStorage": { "type": "boolean" },
+        "emitRuntime": { "type": "boolean" },
+        "includeRawContent": { "type": "boolean", "const": false }
+      }
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}
