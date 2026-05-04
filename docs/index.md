@@ -21,6 +21,7 @@ Agent Machine is a bootstrap runtime-control substrate for SourceOS agent worklo
 | [Deployment safety](architecture/deployment-safety.md) | Skeleton-vs-production manifest rules and safety gates. |
 | [Receipt chain](architecture/receipt-chain.md) | AgentPod source to plan, manifest, receipt, policy, registry, and AgentPlane evidence. |
 | [Image digest pinning and provenance](architecture/image-digest-pinning-and-provenance.md) | Supply-chain strict-mode gate for digest-pinned release-candidate artifacts. |
+| [Release evidence bundle](architecture/release-evidence-bundle.md) | Deterministic validation/source/inventory/render/supply-chain/readiness bundle. |
 | [Runtime package layout](architecture/runtime-package-layout.md) | Migration from loose scripts to `src/agent_machine/` package modules. |
 | [Homebrew Python dependencies](architecture/homebrew-python-dependencies.md) | Current dependency strategy for render/evaluation commands. |
 | [Local LVM and TopoLVM profile](architecture/local-lvm-and-topolvm-profile.md) | Local and Kubernetes storage/cache/evidence profile. |
@@ -71,6 +72,7 @@ Important contract families:
 | `PolicyAdmission` | Policy Fabric admission decision/stub. |
 | `AgentRegistryGrant` | Agent Registry grant/stub. |
 | `ActivationDecision` | Final dry-run activation decision. |
+| `ReleaseEvidenceBundle` | Secret-free release validation/source/inventory/render/supply-chain/readiness evidence. |
 
 ## Validation
 
@@ -91,6 +93,7 @@ validate-evidence
 validate-governance
 validate-activation
 validate-supply-chain
+validate-release-bundle
 validate-package
 validate-cli
 validate-formula
@@ -111,5 +114,5 @@ Current blockers:
 - TopoLVM runtime integration beyond skeleton manifests;
 - provider discovery and controlled provider activation implementation;
 - M2 Asahi host measurement/provider readiness data;
-- release evidence bundle;
+- signed release evidence bundle;
 - rollback, teardown, and wipe workflows.
