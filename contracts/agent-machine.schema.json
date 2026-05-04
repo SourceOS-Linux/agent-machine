@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:agent-machine:v0.1.0",
+  "title": "AgentMachine",
+  "description": "Managed compute substrate for local or clustered SourceOS agent workloads.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specVersion",
+    "id",
+    "kind",
+    "profile",
+    "host",
+    "runtime",
+    "storage",
+    "trust"
+  ],
+  "properties": {
+    "specVersion": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:[a-z0-9][a-z0-9-]*$"
+    },
+    "kind": {
+      "type": "string",
+      "const": "AgentMachine"
+    },
+    "profile": {
+      "type": "string",
+      "enum": [
+        "m2-asahi-linux",
+        "sourceos-workstation",
+        "fedora-silverblue",
+        "linux-gpu-node",
+        "linux-edge-node",
+        "kubernetes-node",
+        "macos-apple-silicon-compat"
+      ]
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hostname", "os", "arch"],
+      "properties": {
+        "hostname": { "type": "string" },
+        "os": { "type": "string" },
+        "distro": { "type": "string" },
+        "kernel": { "type": "string" },
+        "arch": { "type": "string", "enum": ["arm64", "aarch64", "x86_64"] },
+        "immutableHost": { "type": "boolean" }
+      }
+    },
+    "accelerators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "available"],
+        "properties": {
+          "type": { "type": "string", "enum": ["cpu", "cuda", "rocm", "vulkan", "metal", "mlx", "unknown"] },
+          "name": { "type": "string" },
+          "available": { "type": "boolean" },
+          "driver": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["localEnvelopes", "containerRuntime"],
+      "properties": {
+        "localEnvelopes": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["systemd", "podman-quadlet", "podman", "bubblewrap", "toolbox", "kubernetes", "none"] }
+        },
+        "containerRuntime": { "type": "string" },
+        "selinuxMode": { "type": "string", "enum": ["enforcing", "permissive", "disabled", "unknown"] },
+        "cgroupMode": { "type": "string", "enum": ["v2", "v1", "unknown"] }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["modelCache", "runtimeCache", "evidencePath"],
+      "properties": {
+        "modelCache": { "type": "string" },
+        "runtimeCache": { "type": "string" },
+        "evidencePath": { "type": "string" },
+        "topolvmAvailable": { "type": "boolean" },
+        "encryptedAtRest": { "type": "boolean" }
+      }
+    },
+    "trust": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policyFabricRequired", "agentRegistryRequired", "receiptsRequired"],
+      "properties": {
+        "policyFabricRequired": { "type": "boolean" },
+        "agentRegistryRequired": { "type": "boolean" },
+        "receiptsRequired": { "type": "boolean" },
+        "secureBootObserved": { "type": "boolean" },
+        "tpmObserved": { "type": "boolean" },
+        "fido2Observed": { "type": "boolean" }
+      }
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}
