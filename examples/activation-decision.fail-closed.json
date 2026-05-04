@@ -1,0 +1,61 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:activation-decision:local-llama-cpp-fail-closed",
+  "kind": "ActivationDecision",
+  "decision": {
+    "status": "fail-closed",
+    "activationAllowed": false,
+    "reason": "activation failed closed",
+    "failureReasons": [
+      "agent_registry_grant_does_not_allow_activation_scope",
+      "policy_does_not_allow_activation_scope"
+    ],
+    "requiredBeforeActivation": [
+      "agent_registry_grant_active_activation",
+      "policy_admission_allowed_activation"
+    ]
+  },
+  "inputs": {
+    "agentPodId": "urn:srcos:agent-machine:agent-pod:local-podman-llama-cpp",
+    "agentMachineId": "urn:srcos:agent-machine:m2-asahi-local",
+    "providerId": "urn:srcos:agent-machine:inference-provider:asahi-llama-cpp",
+    "policyAdmissionId": "urn:srcos:agent-machine:policy-admission:missing-local-activation",
+    "agentRegistryGrantId": "urn:srcos:agent-machine:agent-registry-grant:missing-local-provider",
+    "deploymentReceiptId": "urn:srcos:agent-machine:deployment-receipt:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "storageReceiptRefs": [
+      "urn:srcos:agent-machine:storage-receipt:local-lvm-warm-cache"
+    ]
+  },
+  "scope": {
+    "runtimeMode": "podman-quadlet",
+    "networkExposure": [],
+    "sideEffects": [],
+    "toolRefs": [],
+    "storageScopeRefs": [],
+    "cacheReuseAllowed": false
+  },
+  "obligations": {
+    "requiredReceipts": [
+      "deployment",
+      "storage",
+      "runtime"
+    ],
+    "policyDecisionRef": null,
+    "agentRegistryGrantRef": null,
+    "expiresAt": null,
+    "revocationRefs": []
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "rawPromptContentIncluded": false,
+    "rawKvCacheContentIncluded": false,
+    "secretValuesIncluded": false,
+    "privateMemoryIncluded": false
+  },
+  "decidedAt": "2026-05-04T12:51:00Z",
+  "labels": {
+    "sourceos.activation.prototype": "true",
+    "sourceos.activation.allowed": "false",
+    "sourceos.activation.fail-closed": "true"
+  }
+}
