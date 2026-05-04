@@ -18,6 +18,8 @@ POLICY_ALLOWED_STATUSES = {"allowed", "not-required"}
 POLICY_DENIED_STATUSES = {"missing", "denied", "unknown"}
 GRANT_ACTIVE_STATUSES = {"active", "not-required"}
 GRANT_INACTIVE_STATUSES = {"missing", "expired", "revoked", "denied", "unknown"}
+ACTIVATION_SIDE_EFFECTS = {"start-provider", "mount-cache"}
+ACTIVATION_TOOL_REFS = {"urn:srcos:tool:start-provider", "urn:srcos:tool:mount-cache"}
 
 
 def validate_policy_admission_schema(path: Path, root: Path | None = None) -> dict[str, Any]:
@@ -78,8 +80,6 @@ def validate_policy_admission_semantics(policy: dict[str, Any], source: str = "<
         raise AssertionError(f"{source}: scope.allowed and scope.denied must be objects")
 
     if granted is False:
-        # Denied/missing policy may still expose render-safe allowed scopes in a denied decision,
-        # but missing must allow nothing.
         if status == "missing":
             for key, value in allowed.items():
                 if value not in (False, [], None):
@@ -142,18 +142,49 @@ def validate_agent_registry_grant_semantics(grant_doc: dict[str, Any], source: s
     _assert_secret_free_safety(safety, source)
 
 
+def policy_allows_activation(policy: dict[str, Any]) -> bool:
+    decision = policy.get("decision", {})
+    if decision.get("status") != "allowed" or decision.get("authorizationGranted") is not True:
+        return False
+    request = policy.get("request", {})
+    if request.get("requestType") != "activation":
+        return False
+    allowed = policy.get("scope", {}).get("allowed", {})
+    side_effects = set(allowed.get("sideEffects") or [])
+    provider_ids = set(allowed.get("providerIds") or [])
+    provider_id = request.get("providerId")
+    if not ACTIVATION_SIDE_EFFECTS.issubset(side_effects):
+        return False
+    if provider_id and provider_id not in provider_ids:
+        return False
+    return True
+
+
+def grant_allows_activation(grant_doc: dict[str, Any], provider_id: str | None = None) -> bool:
+    grant = grant_doc.get("grant", {})
+    if grant.get("status") != "active" or grant.get("authorizationGranted") is not True:
+        return False
+    allowed = grant_doc.get("scope", {}).get("allowed", {})
+    tool_refs = set(allowed.get("toolRefs") or [])
+    provider_ids = set(allowed.get("providerIds") or [])
+    if not ACTIVATION_TOOL_REFS.issubset(tool_refs):
+        return False
+    if provider_id and provider_id not in provider_ids:
+        return False
+    return True
+
+
 def activation_ready(policy: dict[str, Any], grant: dict[str, Any]) -> bool:
-    """Return true only when both policy and registry authorize activation."""
-    policy_decision = policy.get("decision", {})
-    grant_decision = grant.get("grant", {})
-    return policy_decision.get("status") == "allowed" and grant_decision.get("status") == "active" and policy_decision.get("authorizationGranted") is True and grant_decision.get("authorizationGranted") is True
+    """Return true only when policy+grant authorize the activation operation, not merely render-only work."""
+    provider_id = policy.get("request", {}).get("providerId")
+    return policy_allows_activation(policy) and grant_allows_activation(grant, provider_id=provider_id)
 
 
 def assert_activation_ready(policy: dict[str, Any], grant: dict[str, Any], source: str = "<activation>") -> None:
     validate_policy_admission_semantics(policy, source=f"{source}:policy")
     validate_agent_registry_grant_semantics(grant, source=f"{source}:grant")
     if not activation_ready(policy, grant):
-        raise AssertionError(f"{source}: activation is not allowed without allowed PolicyAdmission and active AgentRegistryGrant")
+        raise AssertionError(f"{source}: activation is not allowed without activation-scoped PolicyAdmission and AgentRegistryGrant")
 
 
 def assert_activation_fails_closed(policy: dict[str, Any], grant: dict[str, Any], source: str = "<activation>") -> None:
