@@ -27,6 +27,7 @@ EXAMPLES_DIR = REPO_ROOT / "examples"
 
 SCHEMA_BY_KIND = {
     "AgentMachine": CONTRACTS_DIR / "agent-machine.schema.json",
+    "AgentPod": CONTRACTS_DIR / "agent-pod.schema.json",
     "CacheTier": CONTRACTS_DIR / "cache-tier.schema.json",
     "InferenceProvider": CONTRACTS_DIR / "inference-provider.schema.json",
 }
