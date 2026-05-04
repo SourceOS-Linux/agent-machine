@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:activation-decision:v0.1.0",
+  "title": "ActivationDecision",
+  "description": "Final secret-free Agent Machine decision artifact for whether an AgentPod may activate. This combines AgentPod intent, PolicyAdmission, AgentRegistryGrant, deployment receipt, and storage receipt references.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specVersion",
+    "id",
+    "kind",
+    "decision",
+    "inputs",
+    "scope",
+    "obligations",
+    "receiptSafety",
+    "decidedAt"
+  ],
+  "properties": {
+    "specVersion": { "type": "string", "const": "0.1.0" },
+    "id": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:activation-decision:[a-z0-9][a-z0-9-]*$"
+    },
+    "kind": { "type": "string", "const": "ActivationDecision" },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "activationAllowed", "reason", "failureReasons", "requiredBeforeActivation"],
+      "properties": {
+        "status": { "type": "string", "enum": ["allowed", "fail-closed", "denied", "unknown"] },
+        "activationAllowed": { "type": "boolean" },
+        "reason": { "type": "string" },
+        "failureReasons": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "requiredBeforeActivation": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agentPodId", "policyAdmissionId", "agentRegistryGrantId", "deploymentReceiptId", "storageReceiptRefs"],
+      "properties": {
+        "agentPodId": {
+          "type": "string",
+          "pattern": "^urn:srcos:agent-machine:agent-pod:[a-z0-9][a-z0-9-]*$"
+        },
+        "agentMachineId": {
+          "type": ["string", "null"],
+          "pattern": "^urn:srcos:agent-machine:[a-z0-9][a-z0-9-]*$"
+        },
+        "providerId": {
+          "type": ["string", "null"],
+          "pattern": "^urn:srcos:agent-machine:inference-provider:[a-z0-9][a-z0-9-]*$"
+        },
+        "policyAdmissionId": {
+          "type": "string",
+          "pattern": "^urn:srcos:agent-machine:policy-admission:[a-z0-9][a-z0-9-]*$"
+        },
+        "agentRegistryGrantId": {
+          "type": "string",
+          "pattern": "^urn:srcos:agent-machine:agent-registry-grant:[a-z0-9][a-z0-9-]*$"
+        },
+        "deploymentReceiptId": {
+          "type": "string",
+          "pattern": "^urn:srcos:agent-machine:deployment-receipt:[a-f0-9]{16,64}$"
+        },
+        "storageReceiptRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^urn:srcos:agent-machine:storage-receipt:[a-z0-9][a-z0-9-]*$"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtimeMode", "networkExposure", "sideEffects", "toolRefs", "cacheReuseAllowed"],
+      "properties": {
+        "runtimeMode": { "type": ["string", "null"] },
+        "networkExposure": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "sideEffects": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "toolRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "storageScopeRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "cacheReuseAllowed": { "type": "boolean" }
+      }
+    },
+    "obligations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requiredReceipts", "policyDecisionRef", "agentRegistryGrantRef", "expiresAt", "revocationRefs"],
+      "properties": {
+        "requiredReceipts": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["deployment", "storage", "runtime", "wipe", "teardown", "cache-reuse"] },
+          "uniqueItems": true
+        },
+        "policyDecisionRef": { "type": ["string", "null"] },
+        "agentRegistryGrantRef": { "type": ["string", "null"] },
+        "expiresAt": { "type": ["string", "null"] },
+        "revocationRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    },
+    "receiptSafety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["includeRawContent", "rawPromptContentIncluded", "rawKvCacheContentIncluded", "secretValuesIncluded", "privateMemoryIncluded"],
+      "properties": {
+        "includeRawContent": { "type": "boolean", "const": false },
+        "rawPromptContentIncluded": { "type": "boolean", "const": false },
+        "rawKvCacheContentIncluded": { "type": "boolean", "const": false },
+        "secretValuesIncluded": { "type": "boolean", "const": false },
+        "privateMemoryIncluded": { "type": "boolean", "const": false }
+      }
+    },
+    "decidedAt": { "type": "string" },
+    "labels": { "type": "object", "additionalProperties": { "type": "string" } }
+  }
+}
