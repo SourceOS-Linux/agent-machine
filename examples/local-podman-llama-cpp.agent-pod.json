@@ -16,6 +16,7 @@
   "runtime": {
     "mode": "podman-quadlet",
     "imageOrCommand": "ghcr.io/ggerganov/llama.cpp:server",
+    "imageReferencePolicy": "tag-allowed-bootstrap",
     "entrypoint": "llama-server",
     "args": [
       "--host",
