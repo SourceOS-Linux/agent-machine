@@ -1,0 +1,70 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:m2-asahi-local",
+  "kind": "AgentMachine",
+  "profile": "m2-asahi-linux",
+  "host": {
+    "hostname": "m2-asahi-local",
+    "os": "Linux",
+    "distro": "Fedora Asahi Remix",
+    "kernel": "example-kernel",
+    "arch": "arm64",
+    "immutableHost": false
+  },
+  "accelerators": [
+    {
+      "type": "cpu",
+      "name": "Apple Silicon CPU",
+      "available": true,
+      "driver": "linux-kernel",
+      "notes": "Baseline inference path for llama.cpp CPU/ARM64."
+    },
+    {
+      "type": "vulkan",
+      "name": "Asahi Vulkan probe",
+      "available": false,
+      "driver": "probe-required",
+      "notes": "Availability must be discovered by agent-machine probe before enabling Vulkan-backed inference."
+    },
+    {
+      "type": "metal",
+      "name": "Metal",
+      "available": false,
+      "driver": "not-applicable-on-linux",
+      "notes": "M2 Asahi is Linux on Apple Silicon, not macOS."
+    }
+  ],
+  "runtime": {
+    "localEnvelopes": [
+      "systemd",
+      "podman-quadlet",
+      "podman",
+      "bubblewrap",
+      "toolbox"
+    ],
+    "containerRuntime": "podman",
+    "selinuxMode": "enforcing",
+    "cgroupMode": "v2"
+  },
+  "storage": {
+    "modelCache": "/var/lib/agent-machine/models",
+    "runtimeCache": "/var/lib/agent-machine/cache",
+    "evidencePath": "/var/lib/agent-machine/evidence",
+    "topolvmAvailable": false,
+    "encryptedAtRest": true
+  },
+  "trust": {
+    "policyFabricRequired": true,
+    "agentRegistryRequired": true,
+    "receiptsRequired": true,
+    "secureBootObserved": false,
+    "tpmObserved": false,
+    "fido2Observed": false
+  },
+  "labels": {
+    "sourceos.profile": "m2-asahi-linux",
+    "sourceos.storage": "local-lvm",
+    "sourceos.inference.baseline": "llama.cpp-cpu",
+    "sourceos.role": "developer-workstation"
+  }
+}
