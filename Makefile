@@ -1,14 +1,17 @@
-.PHONY: validate validate-json validate-cli validate-formula doctor probe
+.PHONY: validate validate-json validate-yaml validate-cli validate-formula doctor probe
 
 PYTHON ?= python3
 RUBY ?= ruby
 CLI := bin/agent-machine
 FORMULA := packaging/homebrew/Formula/agent-machine.rb
 
-validate: validate-json validate-cli validate-formula
+validate: validate-json validate-yaml validate-cli validate-formula
 
 validate-json:
 	$(PYTHON) scripts/validate-json.py
+
+validate-yaml:
+	$(PYTHON) scripts/validate-yaml.py
 
 validate-cli:
 	sh -n $(CLI)
