@@ -4,16 +4,14 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import platform
 import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from agent_machine import __version__
-from agent_machine.contracts import load_json
 from agent_machine.paths import (
     default_config_path,
     default_evidence_path,
@@ -21,10 +19,45 @@ from agent_machine.paths import (
     default_runtime_cache_path,
     default_runtime_path,
     default_state_path,
+    repo_root_from_file,
 )
-from agent_machine.renderers import k8s as k8s_renderer
-from agent_machine.renderers import plan as plan_renderer
-from agent_machine.renderers import quadlet as quadlet_renderer
+
+REPO_ROOT = repo_root_from_file(__file__)
+REQUIREMENTS_PATH = REPO_ROOT / "requirements-dev.txt"
+
+
+def load_json(path: Path) -> dict[str, Any]:
+    """Load a JSON object without importing optional validation dependencies."""
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            value = json.load(handle)
+    except json.JSONDecodeError as exc:
+        raise AssertionError(f"{path}: invalid JSON: {exc}") from exc
+    if not isinstance(value, dict):
+        raise AssertionError(f"{path}: root must be a JSON object")
+    return value
+
+
+def dependency_hint(error: BaseException) -> str:
+    message = str(error)
+    lower = message.lower()
+    if "pyyaml" in lower or "yaml" in lower:
+        missing = "PyYAML"
+    elif "jsonschema" in lower:
+        missing = "jsonschema"
+    else:
+        missing = "a required Python dependency"
+    return (
+        f"Agent Machine Python dependency missing: {missing}.\n"
+        f"Install dependencies with: python3 -m pip install -r {REQUIREMENTS_PATH}"
+    )
+
+
+def import_renderer(importer: Callable[[], Any]) -> Any:
+    try:
+        return importer()
+    except (ImportError, ModuleNotFoundError, RuntimeError) as exc:
+        raise RuntimeError(dependency_hint(exc)) from exc
 
 
 def command_available(command: str) -> bool:
@@ -183,6 +216,7 @@ def cmd_probe(args: argparse.Namespace) -> int:
 
 
 def cmd_render_plan(args: argparse.Namespace) -> int:
+    plan_renderer = import_renderer(lambda: __import__("agent_machine.renderers.plan", fromlist=["_unused"]))
     pod = load_json(args.agentpod_json)
     plan_renderer.validate_agentpod(args.agentpod_json, pod)
     plan = plan_renderer.render_plan(args.agentpod_json, pod)
@@ -192,6 +226,7 @@ def cmd_render_plan(args: argparse.Namespace) -> int:
 
 
 def cmd_render_receipt(args: argparse.Namespace) -> int:
+    plan_renderer = import_renderer(lambda: __import__("agent_machine.renderers.plan", fromlist=["_unused"]))
     pod = load_json(args.agentpod_json)
     plan_renderer.validate_agentpod(args.agentpod_json, pod)
     plan = plan_renderer.render_plan(args.agentpod_json, pod)
@@ -203,6 +238,7 @@ def cmd_render_receipt(args: argparse.Namespace) -> int:
 
 
 def cmd_render_quadlet(args: argparse.Namespace) -> int:
+    quadlet_renderer = import_renderer(lambda: __import__("agent_machine.renderers.quadlet", fromlist=["_unused"]))
     pod = load_json(args.agentpod_json)
     quadlet_renderer.require_local_quadlet(args.agentpod_json, pod)
     rendered = quadlet_renderer.render_quadlet(pod)
@@ -214,6 +250,7 @@ def cmd_render_quadlet(args: argparse.Namespace) -> int:
 
 
 def cmd_render_k8s(args: argparse.Namespace) -> int:
+    k8s_renderer = import_renderer(lambda: __import__("agent_machine.renderers.k8s", fromlist=["_unused"]))
     pod = load_json(args.agentpod_json)
     k8s_renderer.require_k8s_agentpod(args.agentpod_json, pod)
     docs = k8s_renderer.render_documents(pod)
