@@ -3,7 +3,8 @@
 
 This is deliberately a plan renderer, not a manifest writer. It proves that the
 AgentPod contract has enough information to derive local Quadlet and Kubernetes
-execution intent without treating a manifest as authorization.
+execution intent without treating a manifest as authorization. It can also emit a
+secret-free DeploymentReceipt for the rendered plan artifact.
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ except ImportError as exc:  # pragma: no cover - exercised in environments witho
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PLAN_SCHEMA_PATH = REPO_ROOT / "contracts" / "agentpod-deployment-plan.schema.json"
+RECEIPT_SCHEMA_PATH = REPO_ROOT / "contracts" / "deployment-receipt.schema.json"
 
 GENERATOR_NAME = "agentpod-plan-renderer"
 GENERATOR_VERSION = "0.1.0"
@@ -44,9 +46,26 @@ def load_json(path: Path) -> dict[str, Any]:
     return value
 
 
+def stable_json_bytes(value: Any) -> bytes:
+    return json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
 def stable_digest(value: Any) -> str:
-    payload = json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return "sha256:" + hashlib.sha256(payload).hexdigest()
+    return "sha256:" + hashlib.sha256(stable_json_bytes(value)).hexdigest()
+
+
+def validate_against_schema(value: dict[str, Any], schema_path: Path, label: str) -> None:
+    schema = load_json(schema_path)
+    validator_cls = validator_for(schema)
+    validator_cls.check_schema(schema)
+    validator = validator_cls(schema)
+    errors = sorted(validator.iter_errors(value), key=lambda err: list(err.path))
+    if errors:
+        rendered = []
+        for err in errors:
+            location = "/".join(str(part) for part in err.path) or "<root>"
+            rendered.append(f"  - {location}: {err.message}")
+        raise AssertionError(f"Rendered {label} failed schema validation:\n" + "\n".join(rendered))
 
 
 def require_bool_false(obj: dict[str, Any], key: str, path: Path) -> None:
@@ -96,20 +115,6 @@ def validate_agentpod(source_path: Path, pod: dict[str, Any]) -> None:
             raise AssertionError(f"{source_path}: Kubernetes AgentPod requires runtime.namespace")
         if not runtime.get("serviceAccountName"):
             raise AssertionError(f"{source_path}: Kubernetes AgentPod requires runtime.serviceAccountName")
-
-
-def validate_plan(plan: dict[str, Any]) -> None:
-    schema = load_json(PLAN_SCHEMA_PATH)
-    validator_cls = validator_for(schema)
-    validator_cls.check_schema(schema)
-    validator = validator_cls(schema)
-    errors = sorted(validator.iter_errors(plan), key=lambda err: list(err.path))
-    if errors:
-        rendered = []
-        for err in errors:
-            location = "/".join(str(part) for part in err.path) or "<root>"
-            rendered.append(f"  - {location}: {err.message}")
-        raise AssertionError("Rendered AgentPodDeploymentPlan failed schema validation:\n" + "\n".join(rendered))
 
 
 def target_surface(pod_type: str) -> str:
@@ -208,11 +213,72 @@ def render_plan(source_path: Path, pod: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def render_receipt(source_path: Path, pod: dict[str, Any], plan: dict[str, Any], artifact_path: str) -> dict[str, Any]:
+    plan_digest = stable_digest(plan)
+    receipt_seed = f"{pod.get('id')}:{plan_digest}:{GENERATOR_NAME}:{GENERATOR_VERSION}"
+    receipt_suffix = hashlib.sha256(receipt_seed.encode("utf-8")).hexdigest()[:32]
+    policy = plan["policy"]
+    return {
+        "specVersion": "0.1.0",
+        "kind": "DeploymentReceipt",
+        "receiptId": f"urn:srcos:agent-machine:deployment-receipt:{receipt_suffix}",
+        "generator": {
+            "name": GENERATOR_NAME,
+            "version": GENERATOR_VERSION,
+        },
+        "source": {
+            "sourceKind": "AgentPod",
+            "path": str(source_path),
+            "id": pod.get("id"),
+            "digest": stable_digest(pod),
+        },
+        "artifact": {
+            "artifactKind": "AgentPodDeploymentPlan",
+            "path": artifact_path,
+            "digest": plan_digest,
+        },
+        "target": {
+            "surface": plan["target"]["surface"],
+            "profile": plan["target"]["profile"],
+        },
+        "policy": {
+            "authorizationGranted": False,
+            "policyFabricRequired": policy["policyFabricRequired"],
+            "policyDecisionRef": None,
+            "agentRegistryRequired": policy["agentRegistryRequired"],
+            "agentRegistryGrantRef": None,
+        },
+        "receiptSafety": {
+            "includeRawContent": False,
+            "rawPromptContentIncluded": False,
+            "rawKvCacheContentIncluded": False,
+            "secretValuesIncluded": False,
+        },
+        "notes": [
+            "This receipt proves deterministic derivation only; it does not authorize execution.",
+            "Policy Fabric admission and Agent Registry grants are required before activation.",
+        ],
+    }
+
+
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Render an AgentPod deployment plan")
+    parser = argparse.ArgumentParser(description="Render an AgentPod deployment plan or receipt")
     parser.add_argument("agentpod_json", type=Path, help="Path to an AgentPod JSON object")
     parser.add_argument("--pretty", action="store_true", help="Pretty-print JSON output")
+    parser.add_argument("--receipt", action="store_true", help="Emit DeploymentReceipt for the rendered plan instead of the plan")
+    parser.add_argument(
+        "--artifact-path",
+        default="stdout:AgentPodDeploymentPlan",
+        help="Artifact path/reference to record in DeploymentReceipt output",
+    )
     return parser.parse_args()
+
+
+def emit_json(value: dict[str, Any], pretty: bool) -> None:
+    if pretty:
+        print(json.dumps(value, indent=2, sort_keys=True))
+    else:
+        print(json.dumps(value, sort_keys=True, separators=(",", ":")))
 
 
 def main() -> int:
@@ -220,11 +286,14 @@ def main() -> int:
     pod = load_json(args.agentpod_json)
     validate_agentpod(args.agentpod_json, pod)
     plan = render_plan(args.agentpod_json, pod)
-    validate_plan(plan)
-    if args.pretty:
-        print(json.dumps(plan, indent=2, sort_keys=True))
+    validate_against_schema(plan, PLAN_SCHEMA_PATH, "AgentPodDeploymentPlan")
+
+    if args.receipt:
+        receipt = render_receipt(args.agentpod_json, pod, plan, args.artifact_path)
+        validate_against_schema(receipt, RECEIPT_SCHEMA_PATH, "DeploymentReceipt")
+        emit_json(receipt, args.pretty)
     else:
-        print(json.dumps(plan, sort_keys=True, separators=(",", ":")))
+        emit_json(plan, args.pretty)
     return 0
 
 
