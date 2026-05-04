@@ -1,0 +1,59 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:inference-provider:asahi-llama-cpp",
+  "kind": "InferenceProvider",
+  "providerType": "llama.cpp",
+  "status": "probe-only",
+  "profileSupport": [
+    "m2-asahi-linux",
+    "sourceos-workstation",
+    "fedora-silverblue",
+    "linux-edge-node"
+  ],
+  "apiSurfaces": [
+    "openai-chat-completions",
+    "openai-completions",
+    "openai-embeddings",
+    "native-cli",
+    "native-http"
+  ],
+  "runtime": {
+    "mode": "local-process",
+    "acceleration": "cpu",
+    "commandRef": "llama-server",
+    "version": "probe-required",
+    "endpoint": "http://127.0.0.1:8080",
+    "healthPath": "/health"
+  },
+  "modelStore": {
+    "path": "/var/lib/agent-machine/models/gguf",
+    "format": "gguf",
+    "requiresDigest": true,
+    "cacheTierId": "urn:srcos:agent-machine:cache-tier:linux-workstation-warm-cache"
+  },
+  "capabilities": {
+    "textGeneration": true,
+    "toolCalling": false,
+    "embeddings": true,
+    "reranking": false,
+    "vision": false,
+    "ocr": false,
+    "continuousBatching": false,
+    "prefixCache": true,
+    "kvCache": true
+  },
+  "policy": {
+    "policyFabricRequired": true,
+    "agentRegistryRequired": true,
+    "receiptRequired": true,
+    "allowSecretInConfig": false,
+    "cacheReuseRequiresPolicy": true,
+    "toolUseRequiresGrant": true
+  },
+  "labels": {
+    "sourceos.profile": "m2-asahi-linux",
+    "sourceos.provider.baseline": "true",
+    "sourceos.acceleration": "cpu-first",
+    "sourceos.runtime": "local-process"
+  }
+}
