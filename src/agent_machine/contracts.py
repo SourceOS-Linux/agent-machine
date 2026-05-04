@@ -51,6 +51,7 @@ def schema_by_kind(root: Path | None = None) -> dict[str, Path]:
         "CacheTier": base / "cache-tier.schema.json",
         "DeploymentReceipt": base / "deployment-receipt.schema.json",
         "InferenceProvider": base / "inference-provider.schema.json",
+        "StorageReceipt": base / "storage-receipt.schema.json",
     }
 
 
