@@ -1,0 +1,89 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:release-evidence-bundle:bootstrap-v0-example",
+  "kind": "ReleaseEvidenceBundle",
+  "release": {
+    "name": "agent-machine-bootstrap-v0",
+    "maturity": "bootstrap-ready",
+    "productionReady": false,
+    "notes": [
+      "Example bundle shape only.",
+      "The generator produces a complete bundle from repository contents."
+    ]
+  },
+  "source": {
+    "repository": "SourceOS-Linux/agent-machine",
+    "branch": "main",
+    "commitSha": "0cba4c4774982ce4705c27f7c4ec1c0bcdfb0725",
+    "pullRequest": 11
+  },
+  "validation": {
+    "canonicalCommand": "make validate",
+    "status": "passed",
+    "workflowRunId": 25327418937,
+    "workflowJobName": "Validate contracts, examples, CLI, formula, and docs",
+    "validatedAt": "2026-05-04T15:21:00Z"
+  },
+  "inventories": {
+    "schemas": [
+      {
+        "path": "contracts/release-evidence-bundle.schema.json",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "examples": [
+      {
+        "path": "examples/local-podman-llama-cpp.agent-pod.json",
+        "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    ],
+    "docs": [
+      {
+        "path": "BOOTSTRAP_STATUS.md",
+        "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    ]
+  },
+  "renderedArtifacts": [
+    {
+      "name": "local-agentpod-plan",
+      "artifactKind": "AgentPodDeploymentPlan",
+      "path": null,
+      "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    }
+  ],
+  "supplyChain": {
+    "strictModeAvailable": true,
+    "strictExamples": [
+      {
+        "path": "examples/local-podman-llama-cpp.pinned.agent-pod.json",
+        "digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      }
+    ],
+    "mutableBootstrapExamples": [
+      {
+        "path": "examples/local-podman-llama-cpp.agent-pod.json",
+        "digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      }
+    ]
+  },
+  "readiness": {
+    "bootstrapReady": true,
+    "productionReady": false,
+    "releaseGateRef": "docs/architecture/world-class-release-gate.md",
+    "statusRef": "BOOTSTRAP_STATUS.md"
+  },
+  "knownBlockers": [
+    "main-branch-ci-visibility-and-branch-protection-policy",
+    "real-policy-fabric-client-or-endpoint",
+    "real-agentplane-evidence-submission-or-staging-client"
+  ],
+  "receiptSafety": {
+    "includeRawContent": false,
+    "rawPromptContentIncluded": false,
+    "rawKvCacheContentIncluded": false,
+    "secretValuesIncluded": false,
+    "privateMemoryIncluded": false
+  },
+  "generatedAt": "2026-05-04T15:21:00Z"
+}
