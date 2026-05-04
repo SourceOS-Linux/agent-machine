@@ -45,6 +45,7 @@ def load_json(path: Path) -> Any:
 def schema_by_kind(root: Path | None = None) -> dict[str, Path]:
     base = contracts_dir(root)
     return {
+        "ActivationDecision": base / "activation-decision.schema.json",
         "AgentMachine": base / "agent-machine.schema.json",
         "AgentPlaneRuntimeEvidence": base / "agentplane-runtime-evidence.schema.json",
         "AgentPod": base / "agent-pod.schema.json",
