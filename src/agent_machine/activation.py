@@ -64,6 +64,54 @@ def validate_storage_receipt_payload(receipt: dict[str, Any], root: Path | None 
         raise AssertionError(f"StorageReceipt {receipt.get('id')}: symlinkTraversalObserved must be false")
 
 
+def iter_json_files(directory: Path) -> list[Path]:
+    if not directory.exists():
+        raise AssertionError(f"storage receipt directory does not exist: {directory}")
+    if not directory.is_dir():
+        raise AssertionError(f"storage receipt path is not a directory: {directory}")
+    return sorted(path for path in directory.rglob("*.json") if path.is_file())
+
+
+def load_storage_receipts(
+    *,
+    files: list[Path] | None = None,
+    directories: list[Path] | None = None,
+) -> list[dict[str, Any]]:
+    """Load StorageReceipt objects from explicit files and/or receipt directories."""
+    receipts: list[dict[str, Any]] = []
+    seen_paths: set[Path] = set()
+
+    for path in files or []:
+        resolved = path.resolve()
+        seen_paths.add(resolved)
+        value = load_json(path)
+        if not isinstance(value, dict):
+            raise AssertionError(f"{path}: storage receipt file root must be an object")
+        if value.get("kind") != "StorageReceipt":
+            raise AssertionError(f"{path}: expected kind=StorageReceipt")
+        receipts.append(value)
+
+    for directory in directories or []:
+        for path in iter_json_files(directory):
+            resolved = path.resolve()
+            if resolved in seen_paths:
+                continue
+            value = load_json(path)
+            if isinstance(value, dict) and value.get("kind") == "StorageReceipt":
+                receipts.append(value)
+                seen_paths.add(resolved)
+
+    receipt_ids: dict[str, dict[str, Any]] = {}
+    for receipt in receipts:
+        receipt_id = receipt.get("id")
+        if not isinstance(receipt_id, str):
+            raise AssertionError("StorageReceipt loaded without string id")
+        if receipt_id in receipt_ids:
+            raise AssertionError(f"duplicate StorageReceipt id loaded: {receipt_id}")
+        receipt_ids[receipt_id] = receipt
+    return receipts
+
+
 def validate_storage_receipts(
     *,
     storage_receipt_refs: list[str],
@@ -227,6 +275,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--deployment-receipt-id", required=True)
     parser.add_argument("--storage-receipt-ref", action="append", default=[])
     parser.add_argument("--storage-receipt-file", action="append", type=Path, default=[])
+    parser.add_argument("--storage-receipt-dir", action="append", type=Path, default=[])
     parser.add_argument("--decided-at", default=DEFAULT_DECIDED_AT)
     parser.add_argument("--decision-id")
     parser.add_argument("--pretty", action="store_true")
@@ -235,7 +284,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    storage_receipts = [load_json(path) for path in args.storage_receipt_file]
+    storage_receipts = load_storage_receipts(files=args.storage_receipt_file, directories=args.storage_receipt_dir)
     if not args.storage_receipt_ref and storage_receipts:
         args.storage_receipt_ref = [str(receipt.get("id")) for receipt in storage_receipts]
     decision = evaluate_activation(
