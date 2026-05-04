@@ -1,4 +1,4 @@
-.PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-package validate-cli validate-formula doctor probe
+.PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-package validate-cli validate-formula doctor probe
 
 PYTHON ?= python3
 RUBY ?= ruby
@@ -10,7 +10,7 @@ LOCAL_QUADLET := deploy/quadlet/agent-machine-llama-cpp.container
 K8S_MANIFEST := deploy/k8s/llama-cpp-topolvm-pod.yaml
 PYCLI := PYTHONPATH=src $(PYTHON) -m agent_machine.cli
 
-validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-package validate-cli validate-formula
+validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-package validate-cli validate-formula
 
 validate-json:
 	$(PYTHON) scripts/validate-json.py
@@ -41,6 +41,9 @@ validate-evidence:
 
 validate-governance:
 	$(PYTHON) scripts/validate-governance.py
+
+validate-activation:
+	$(PYTHON) scripts/validate-activation.py
 
 validate-package:
 	$(PYTHON) scripts/validate-package.py
