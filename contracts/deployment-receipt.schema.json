@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:deployment-receipt:v0.1.0",
+  "title": "DeploymentReceipt",
+  "description": "Secret-free receipt proving an Agent Machine deployment artifact was derived from a typed source object by a named generator. This is evidence, not authorization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specVersion",
+    "kind",
+    "receiptId",
+    "generator",
+    "source",
+    "artifact",
+    "target",
+    "policy",
+    "receiptSafety",
+    "notes"
+  ],
+  "properties": {
+    "specVersion": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "kind": {
+      "type": "string",
+      "const": "DeploymentReceipt"
+    },
+    "receiptId": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:deployment-receipt:[a-f0-9]{16,64}$"
+    },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceKind", "path", "id", "digest"],
+      "properties": {
+        "sourceKind": { "type": "string", "enum": ["AgentPod"] },
+        "path": { "type": "string" },
+        "id": {
+          "type": "string",
+          "pattern": "^urn:srcos:agent-machine:agent-pod:[a-z0-9][a-z0-9-]*$"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactKind", "path", "digest"],
+      "properties": {
+        "artifactKind": {
+          "type": "string",
+          "enum": ["AgentPodDeploymentPlan", "QuadletContainer", "KubernetesYaml", "Other"]
+        },
+        "path": { "type": "string" },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surface", "profile"],
+      "properties": {
+        "surface": {
+          "type": "string",
+          "enum": ["quadlet-container", "local-runtime-plan", "kubernetes-yaml", "agentpod-crd", "unknown"]
+        },
+        "profile": {
+          "type": "string",
+          "enum": [
+            "m2-asahi-linux",
+            "sourceos-workstation",
+            "fedora-silverblue",
+            "linux-gpu-node",
+            "linux-edge-node",
+            "kubernetes-node",
+            "macos-apple-silicon-compat"
+          ]
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorizationGranted",
+        "policyFabricRequired",
+        "policyDecisionRef",
+        "agentRegistryRequired",
+        "agentRegistryGrantRef"
+      ],
+      "properties": {
+        "authorizationGranted": { "type": "boolean", "const": false },
+        "policyFabricRequired": { "type": "boolean" },
+        "policyDecisionRef": { "type": ["string", "null"] },
+        "agentRegistryRequired": { "type": "boolean" },
+        "agentRegistryGrantRef": { "type": ["string", "null"] }
+      }
+    },
+    "receiptSafety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "includeRawContent",
+        "rawPromptContentIncluded",
+        "rawKvCacheContentIncluded",
+        "secretValuesIncluded"
+      ],
+      "properties": {
+        "includeRawContent": { "type": "boolean", "const": false },
+        "rawPromptContentIncluded": { "type": "boolean", "const": false },
+        "rawKvCacheContentIncluded": { "type": "boolean", "const": false },
+        "secretValuesIncluded": { "type": "boolean", "const": false }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    }
+  }
+}
