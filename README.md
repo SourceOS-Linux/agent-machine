@@ -1,10 +1,104 @@
 # Agent Machine
 
-SourceOS Agent Machine is the Linux-first node substrate for local and clustered agent execution. It owns the machine-local runtime layer: hardware/runtime probing, inference provider lifecycle, model residency, cache-aware scheduling facts, AgentPod envelopes, governed side-effect boundaries, and execution receipts that upstream AgentPlane and Policy Fabric can verify.
+SourceOS Agent Machine is the Linux-first node substrate for local and clustered agent execution. It owns the machine-local runtime layer: hardware/runtime probing, inference provider lifecycle, model residency, cache-aware scheduling facts, AgentPod envelopes, governed side-effect boundaries, activation decisions, and execution receipts that upstream AgentPlane and Policy Fabric can verify.
 
 Agent Machine is not a new agent brain, chat app, or orchestration plane. It is the managed compute surface that lets AgentTerm, TurtleTerm, BearBrowser, AgentPlane, Sociosphere, SourceOS, and Kubernetes-backed clusters ask one question consistently:
 
 > Where can this agent workload run safely, with the right model, cache locality, policy grants, and evidence trail?
+
+## Current status
+
+Agent Machine is a bootstrap runtime-control substrate. It is intentionally production-blocked until the release gate is satisfied.
+
+| Area | Status |
+| --- | --- |
+| Contracts and examples | Bootstrap-ready |
+| Plan / receipt / Quadlet / Kubernetes renderers | Bootstrap-ready |
+| StorageReceipt / AgentPlaneRuntimeEvidence / ActivationDecision modeling | Bootstrap-ready |
+| PolicyAdmission and AgentRegistryGrant semantic validation | Bootstrap-ready |
+| Homebrew bootstrap install | Bootstrap-ready, with documented external Python render dependencies |
+| Provider activation | Not implemented |
+| GitHub Actions visibility | Blocked / unresolved |
+| Production readiness | Blocked by release gate |
+
+Start here:
+
+- [Documentation index](docs/index.md)
+- [Quickstart](docs/quickstart.md)
+- [Install guide](docs/install.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Bootstrap MVP readiness](docs/architecture/bootstrap-mvp-readiness.md)
+- [World-class release gate](docs/architecture/world-class-release-gate.md)
+
+## Quickstart
+
+Install from the direct Homebrew formula:
+
+```bash
+brew install --HEAD https://raw.githubusercontent.com/SourceOS-Linux/agent-machine/main/packaging/homebrew/Formula/agent-machine.rb
+```
+
+Install render/evaluation dependencies from a checkout:
+
+```bash
+python3 -m pip install -r requirements-dev.txt
+```
+
+Run safe bootstrap diagnostics:
+
+```bash
+agent-machine version
+agent-machine paths
+agent-machine doctor --format json
+agent-machine probe --format json
+```
+
+Render a local AgentPod plan:
+
+```bash
+agent-machine render plan examples/local-podman-llama-cpp.agent-pod.json --pretty
+```
+
+Evaluate allowed activation as a dry-run decision artifact:
+
+```bash
+agent-machine activate evaluate \
+  examples/local-podman-llama-cpp.agent-pod.json \
+  examples/policy-admission.allowed-activation.json \
+  examples/agent-registry-grant.active-activation.json \
+  --deployment-receipt-id urn:srcos:agent-machine:deployment-receipt:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+  --storage-receipt-dir examples \
+  --decided-at 2026-05-04T12:51:00Z \
+  --decision-id urn:srcos:agent-machine:activation-decision:local-llama-cpp-allowed \
+  --pretty
+```
+
+Full walkthrough: [docs/quickstart.md](docs/quickstart.md).
+
+## Validation
+
+Canonical validation:
+
+```bash
+make validate
+```
+
+Current validation stages:
+
+```text
+validate-json
+validate-yaml
+validate-quadlet
+validate-render
+validate-evidence
+validate-governance
+validate-activation
+validate-package
+validate-cli
+validate-formula
+```
+
+Important: CI visibility is still unresolved through the current connector/API path. Empty workflow/status results are tracked in Issue #2 and are not proof of pass or failure.
 
 ## Install
 
@@ -40,7 +134,7 @@ Validate:
 agent-machine version && agent-machine paths && agent-machine probe --format json
 ```
 
-See `docs/install.md` for installer philosophy, runtime directory targets, future setup commands, and M2 Asahi notes.
+See [docs/install.md](docs/install.md) for installer philosophy, runtime directory targets, future setup commands, and M2 Asahi notes.
 
 ## Core boundary
 
@@ -49,10 +143,12 @@ See `docs/install.md` for installer philosophy, runtime directory targets, futur
 | `AgentMachine` | A managed host/node substrate: laptop, workstation, edge box, VM, bare-metal GPU host, or Kubernetes node. |
 | `AgentPod` | A schedulable agent workload envelope. On Kubernetes this maps toward a Pod/CRD. Locally it maps toward systemd, rootless Podman Quadlet, bubblewrap, toolbox, or another policy-governed runtime. |
 | `InferenceProvider` | A backend adapter such as `llama.cpp`, `vLLM`, `SGLang`, `oMLX`, `Ollama-compatible`, or a remote governed endpoint. |
-| `ModelResidency` | Evidence that a model/tokenizer/quantization/runtime is loaded, warm, pinned, evictable, or unavailable on a machine. |
 | `CacheTier` | RAM/NVMe/object-store cache policy for KV cache, prompt-prefix cache, embeddings, retrieval packs, scratch, and evidence staging. |
-| `PlacementFact` | Machine facts consumed by schedulers and policies: accelerator, memory, storage, model residency, cache locality, isolation domain, and trust posture. |
-| `AgentMachineReceipt` | Runtime evidence emitted after probing, placement, execution, cache reuse, model load/unload, or policy-mediated side effects. |
+| `StorageReceipt` | Secret-free evidence for model/cache/scratch/evidence storage across local filesystem, local LVM, TopoLVM, tmpfs, object-store, and remote-volume backends. |
+| `PolicyAdmission` | Policy Fabric admission decision/stub for render, placement, activation, cache reuse, side-effect, teardown, and wipe operations. |
+| `AgentRegistryGrant` | Agent Registry grant/stub for agent identity, session, provider, model, tool, cache, memory, storage, and evidence scopes. |
+| `AgentPlaneRuntimeEvidence` | Secret-free runtime evidence emitted or staged for placement, activation, runtime status, teardown, or wipe events. |
+| `ActivationDecision` | Final pre-runtime dry-run decision artifact: activation allowed or fail-closed, with reasons and required preconditions. |
 
 ## Product thesis
 
@@ -112,13 +208,13 @@ agent-machine/
 ├── contracts/              # Draft JSON Schemas before promotion to sourceos-spec
 ├── docs/
 │   ├── adr/                # Architecture decision records
-│   ├── architecture/       # Runtime, profile, scheduling, and provider docs
+│   ├── architecture/       # Runtime, profile, scheduling, governance, release-gate docs
 │   └── integration/        # AgentPlane, Policy Fabric, AgentTerm, TopoLVM edges
 ├── examples/               # Conforming example payloads
 ├── packaging/              # Homebrew and future package/install surfaces
-├── deploy/                 # Future systemd, Quadlet, SELinux, and Kubernetes assets
-├── adapters/               # Future provider adapter implementation lanes
-└── tools/                  # Future probe and conformance tooling
+├── deploy/                 # Quadlet and Kubernetes skeleton deployment assets
+├── scripts/                # Validation and wrapper entrypoints
+└── src/agent_machine/      # Transitional Python package implementation
 ```
 
 ## Initial milestones
@@ -131,6 +227,22 @@ agent-machine/
 6. Add AgentTerm/TurtleTerm/BearBrowser local inference route integration.
 7. Add TopoLVM-backed AgentPod placement examples for Kubernetes nodes.
 
+## Production blockers
+
+Agent Machine is not production-ready until the release gate passes. Current blockers include:
+
+- visible green CI run;
+- image digest pinning and provenance gate;
+- real Policy Fabric client or endpoint;
+- real Agent Registry grant resolver;
+- real AgentPlane evidence submission/staging client;
+- local LVM provisioning/probe implementation;
+- TopoLVM runtime integration beyond skeleton manifests;
+- provider discovery and controlled activation implementation;
+- M2 Asahi host measurement and provider readiness data;
+- release evidence bundle with signed/provenance artifacts;
+- rollback, teardown, and wipe workflows.
+
 ## Non-goals
 
 - Replacing AgentPlane.
@@ -139,3 +251,5 @@ agent-machine/
 - Becoming a chat UI.
 - Depending on macOS-only acceleration for the Linux stack.
 - Treating cache reuse as safe without identity, tenant, policy, and evidence boundaries.
+- Treating render output as authorization.
+- Starting runtime providers before activation gates exist.
