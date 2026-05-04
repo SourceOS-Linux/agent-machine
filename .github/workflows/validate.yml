@@ -1,0 +1,43 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate contracts, examples, CLI, and formula
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install validation dependencies
+        run: python -m pip install --upgrade pip jsonschema
+
+      - name: Validate JSON schemas and examples
+        run: python scripts/validate-json.py
+
+      - name: Check shell syntax
+        run: sh -n bin/agent-machine
+
+      - name: Exercise bootstrap CLI
+        run: |
+          chmod +x bin/agent-machine
+          bin/agent-machine version
+          bin/agent-machine paths
+          bin/agent-machine doctor --format json
+          bin/agent-machine probe --format json
+
+      - name: Check Homebrew formula Ruby syntax
+        run: ruby -c packaging/homebrew/Formula/agent-machine.rb
