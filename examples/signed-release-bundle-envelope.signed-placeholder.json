@@ -1,0 +1,40 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:signed-release-bundle-envelope:bootstrap-signed-placeholder",
+  "kind": "SignedReleaseBundleEnvelope",
+  "subject": {
+    "subjectKind": "ReleaseEvidenceBundle",
+    "subjectRef": "examples/release-evidence-bundle.bootstrap.json",
+    "subjectDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "sourceCommitSha": "2f905e63818cbefe823977946ba24bce801c7fa2",
+    "workflowRunId": 25335379781
+  },
+  "signature": {
+    "status": "signed-placeholder",
+    "algorithm": "cosign-keyless",
+    "keyRef": "urn:srcos:signing-key:placeholder",
+    "signatureDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "signatureRef": "urn:srcos:signature:placeholder",
+    "transparencyLogRef": "urn:srcos:rekor:placeholder",
+    "certificateRef": "urn:srcos:certificate:placeholder"
+  },
+  "verification": {
+    "verified": false,
+    "verificationStatus": "not-implemented",
+    "verifiedAt": null,
+    "verifierVersion": null,
+    "failureReason": "signature verification is not implemented in bootstrap lane"
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "rawPromptContentIncluded": false,
+    "rawKvCacheContentIncluded": false,
+    "secretValuesIncluded": false,
+    "privateMemoryIncluded": false
+  },
+  "generatedAt": "2026-05-04T18:20:00Z",
+  "notes": [
+    "Signed-placeholder envelope shape only.",
+    "Production release bundles require a verified signature and verifier output."
+  ]
+}

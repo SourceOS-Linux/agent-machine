@@ -22,6 +22,7 @@ Agent Machine is a bootstrap runtime-control substrate for SourceOS agent worklo
 | [Receipt chain](architecture/receipt-chain.md) | AgentPod source to plan, manifest, receipt, policy, registry, and AgentPlane evidence. |
 | [Image digest pinning and provenance](architecture/image-digest-pinning-and-provenance.md) | Supply-chain strict-mode gate for digest-pinned release-candidate artifacts. |
 | [Release evidence bundle](architecture/release-evidence-bundle.md) | Deterministic validation/source/inventory/render/supply-chain/readiness bundle. |
+| [Signed release bundle envelope](architecture/signed-release-bundle-envelope.md) | Signing envelope contract for release evidence bundles. |
 | [Runtime package layout](architecture/runtime-package-layout.md) | Migration from loose scripts to `src/agent_machine/` package modules. |
 | [Homebrew Python dependencies](architecture/homebrew-python-dependencies.md) | Current dependency strategy for render/evaluation commands. |
 | [Local LVM and TopoLVM profile](architecture/local-lvm-and-topolvm-profile.md) | Local and Kubernetes storage/cache/evidence profile. |
@@ -73,6 +74,7 @@ Important contract families:
 | `AgentRegistryGrant` | Agent Registry grant/stub. |
 | `ActivationDecision` | Final dry-run activation decision. |
 | `ReleaseEvidenceBundle` | Secret-free release validation/source/inventory/render/supply-chain/readiness evidence. |
+| `SignedReleaseBundleEnvelope` | Signing/verification envelope around a release evidence bundle. |
 
 ## Validation
 
@@ -107,6 +109,7 @@ Current blockers:
 
 - main-branch CI visibility and branch protection;
 - real image digest pinning/provenance from trusted build artifacts;
+- real release bundle signature verification;
 - real Policy Fabric client or endpoint;
 - real Agent Registry grant resolver;
 - real AgentPlane evidence submission/staging client;
@@ -114,5 +117,4 @@ Current blockers:
 - TopoLVM runtime integration beyond skeleton manifests;
 - provider discovery and controlled provider activation implementation;
 - M2 Asahi host measurement/provider readiness data;
-- signed release evidence bundle;
 - rollback, teardown, and wipe workflows.

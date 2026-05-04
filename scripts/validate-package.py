@@ -40,6 +40,7 @@ def main() -> int:
         "AgentRegistryGrant",
         "PolicyAdmission",
         "ReleaseEvidenceBundle",
+        "SignedReleaseBundleEnvelope",
         "StorageReceipt",
     }
     missing = sorted(required_kinds - set(mapping))
