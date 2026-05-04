@@ -15,6 +15,17 @@ import sys
 from pathlib import Path
 from typing import Any
 
+try:
+    import jsonschema
+    from jsonschema.validators import validator_for
+except ImportError as exc:  # pragma: no cover - exercised in environments without deps
+    raise SystemExit(
+        "Missing dependency: jsonschema. Install with `python -m pip install -r requirements-dev.txt`."
+    ) from exc
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+PLAN_SCHEMA_PATH = REPO_ROOT / "contracts" / "agentpod-deployment-plan.schema.json"
+
 GENERATOR_NAME = "agentpod-plan-renderer"
 GENERATOR_VERSION = "0.1.0"
 
@@ -85,6 +96,20 @@ def validate_agentpod(source_path: Path, pod: dict[str, Any]) -> None:
             raise AssertionError(f"{source_path}: Kubernetes AgentPod requires runtime.namespace")
         if not runtime.get("serviceAccountName"):
             raise AssertionError(f"{source_path}: Kubernetes AgentPod requires runtime.serviceAccountName")
+
+
+def validate_plan(plan: dict[str, Any]) -> None:
+    schema = load_json(PLAN_SCHEMA_PATH)
+    validator_cls = validator_for(schema)
+    validator_cls.check_schema(schema)
+    validator = validator_cls(schema)
+    errors = sorted(validator.iter_errors(plan), key=lambda err: list(err.path))
+    if errors:
+        rendered = []
+        for err in errors:
+            location = "/".join(str(part) for part in err.path) or "<root>"
+            rendered.append(f"  - {location}: {err.message}")
+        raise AssertionError("Rendered AgentPodDeploymentPlan failed schema validation:\n" + "\n".join(rendered))
 
 
 def target_surface(pod_type: str) -> str:
@@ -195,6 +220,7 @@ def main() -> int:
     pod = load_json(args.agentpod_json)
     validate_agentpod(args.agentpod_json, pod)
     plan = render_plan(args.agentpod_json, pod)
+    validate_plan(plan)
     if args.pretty:
         print(json.dumps(plan, indent=2, sort_keys=True))
     else:
