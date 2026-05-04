@@ -52,11 +52,30 @@ The bootstrap formula installs:
 - `agent-machine` CLI;
 - draft contracts;
 - architecture docs;
-- example payloads.
+- example payloads;
+- Python package source under `src/`;
+- `pyproject.toml` and `requirements-dev.txt`.
 
 The bootstrap formula does not yet create privileged runtime directories, install systemd services, configure LVM, modify container runtime policy, download models, or start inference providers.
 
 That is deliberate. Agent Machine setup must separate install from activation.
+
+## Render command availability
+
+`doctor` and `probe` are safe bootstrap commands implemented directly in the shell CLI. Render commands delegate to the Python package source when available.
+
+Supported render commands:
+
+```bash
+agent-machine render plan examples/local-podman-llama-cpp.agent-pod.json --pretty
+agent-machine render receipt examples/local-podman-llama-cpp.agent-pod.json --pretty
+agent-machine render quadlet examples/local-podman-llama-cpp.agent-pod.json
+agent-machine render k8s examples/k8s-topolvm.agent-pod.json
+```
+
+The Homebrew formula installs `src/` under the package share directory so the bootstrap CLI can find the package source in an installed context. Render commands require the Python dependencies listed in `requirements-dev.txt`, currently `jsonschema` and `PyYAML`.
+
+Render output is not authorization. It is a deterministic plan, manifest, or receipt artifact. Policy Fabric admission and Agent Registry grants remain required before activation.
 
 ## Target runtime directories
 
@@ -128,6 +147,12 @@ Minimum post-install checks:
 agent-machine version
 agent-machine paths
 agent-machine probe --format json
+```
+
+Render validation after Python dependencies are present:
+
+```bash
+agent-machine render plan examples/local-podman-llama-cpp.agent-pod.json --pretty
 ```
 
 The probe must remain secret-free. It must not emit raw prompts, raw KV-cache contents, private memory content, unredacted credentials, or model-provider secrets.
