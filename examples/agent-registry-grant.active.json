@@ -1,0 +1,56 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:agent-registry-grant:active-render-only",
+  "kind": "AgentRegistryGrant",
+  "request": {
+    "requestId": "urn:srcos:agent-machine:grant-request:active-render-only",
+    "agentMachineId": "urn:srcos:agent-machine:m2-asahi-local",
+    "agentPodId": "urn:srcos:agent-machine:agent-pod:local-podman-llama-cpp",
+    "requestedAgentIdentityRef": "urn:srcos:agent:local-inference-provider",
+    "sessionRef": "urn:srcos:session:local-bootstrap",
+    "workroomRef": "urn:srcos:workroom:local-default",
+    "topicRef": "urn:srcos:topic:agent-machine"
+  },
+  "grant": {
+    "status": "active",
+    "authorizationGranted": true,
+    "grantRef": "urn:srcos:agent-registry-grant:active-render-only",
+    "grantDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "reason": "Render-only scope is active; provider activation still requires separate policy admission.",
+    "expiresAt": "2026-05-04T13:49:00Z",
+    "revocationRef": "urn:srcos:revocation:active-render-only"
+  },
+  "scope": {
+    "allowed": {
+      "providerIds": ["urn:srcos:agent-machine:inference-provider:asahi-llama-cpp"],
+      "modelRefs": [],
+      "toolRefs": ["urn:srcos:tool:render-plan", "urn:srcos:tool:render-quadlet"],
+      "cacheScopeRefs": [],
+      "memoryScopeRefs": [],
+      "storageScopeRefs": [],
+      "evidenceScopeRefs": ["urn:srcos:evidence:deployment-receipts"]
+    },
+    "denied": {
+      "providerIds": [],
+      "modelRefs": ["urn:srcos:model:local-gguf-default"],
+      "toolRefs": ["urn:srcos:tool:start-provider", "urn:srcos:tool:reuse-cache"],
+      "cacheScopeRefs": ["urn:srcos:policy-domain:local-workstation-default"],
+      "memoryScopeRefs": ["urn:srcos:memory:local-default"],
+      "storageScopeRefs": ["urn:srcos:agent-machine:storage-receipt:local-lvm-warm-cache"],
+      "evidenceScopeRefs": []
+    }
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "rawPromptContentIncluded": false,
+    "rawKvCacheContentIncluded": false,
+    "secretValuesIncluded": false,
+    "privateMemoryIncluded": false
+  },
+  "issuedAt": "2026-05-04T12:49:00Z",
+  "labels": {
+    "sourceos.registry.prototype": "true",
+    "sourceos.registry.result": "active",
+    "sourceos.activation.authorized": "false"
+  }
+}
