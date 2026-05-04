@@ -1,0 +1,109 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:agent-pod:local-podman-llama-cpp",
+  "kind": "AgentPod",
+  "podType": "local-podman-quadlet",
+  "profile": "m2-asahi-linux",
+  "workload": {
+    "name": "local-llama-cpp-provider",
+    "purpose": "inference-provider",
+    "description": "Local llama.cpp OpenAI-compatible provider for M2 Asahi and SourceOS workstations.",
+    "agentIdentityRequired": true,
+    "agentIdentityRef": "urn:srcos:agent:local-inference-provider",
+    "workroomRef": "urn:srcos:workroom:local-default",
+    "topicRef": "urn:srcos:topic:agent-machine"
+  },
+  "runtime": {
+    "mode": "podman-quadlet",
+    "imageOrCommand": "ghcr.io/ggerganov/llama.cpp:server",
+    "entrypoint": "llama-server",
+    "args": [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "8080"
+    ],
+    "networkMode": "loopback",
+    "restartPolicy": "policy-managed"
+  },
+  "resources": {
+    "cpu": {
+      "request": "2",
+      "limit": "6"
+    },
+    "memoryBytes": {
+      "request": 8589934592,
+      "limit": 25769803776
+    },
+    "accelerators": [
+      {
+        "type": "cpu",
+        "required": true,
+        "count": 1
+      },
+      {
+        "type": "vulkan",
+        "required": false,
+        "count": 1
+      }
+    ]
+  },
+  "storage": [
+    {
+      "cacheTierId": "urn:srcos:agent-machine:cache-tier:linux-workstation-warm-cache",
+      "volumeClass": "agent-models",
+      "mountPath": "/models",
+      "hostPath": "/var/lib/agent-machine/models/gguf",
+      "accessMode": "read-only",
+      "sensitive": true
+    },
+    {
+      "cacheTierId": "urn:srcos:agent-machine:cache-tier:linux-workstation-warm-cache",
+      "volumeClass": "agent-cache-warm",
+      "mountPath": "/agent/cache/warm",
+      "hostPath": "/var/lib/agent-machine/cache/warm",
+      "accessMode": "runtime-managed",
+      "sensitive": true
+    },
+    {
+      "cacheTierId": "urn:srcos:agent-machine:cache-tier:linux-workstation-warm-cache",
+      "volumeClass": "agent-evidence",
+      "mountPath": "/agent/evidence",
+      "hostPath": "/var/lib/agent-machine/evidence",
+      "accessMode": "read-write",
+      "sensitive": false
+    }
+  ],
+  "ports": [
+    {
+      "name": "openai-compatible-http",
+      "containerPort": 8080,
+      "hostPort": 8080,
+      "exposure": "loopback"
+    }
+  ],
+  "policy": {
+    "policyFabricRequired": true,
+    "agentRegistryRequired": true,
+    "networkPolicyRequired": true,
+    "egressPolicyRequired": true,
+    "allowPrivileged": false,
+    "allowHostNetwork": false,
+    "allowSecretInSpec": false,
+    "toolUseRequiresGrant": true,
+    "cacheReuseRequiresPolicy": true
+  },
+  "receipts": {
+    "required": true,
+    "emitPlacement": true,
+    "emitStorage": true,
+    "emitRuntime": true,
+    "includeRawContent": false
+  },
+  "labels": {
+    "sourceos.profile": "m2-asahi-linux",
+    "sourceos.runtime": "podman-quadlet",
+    "sourceos.provider": "llama.cpp",
+    "sourceos.exposure": "loopback-only"
+  }
+}
