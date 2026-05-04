@@ -25,6 +25,12 @@ except ImportError as exc:  # pragma: no cover - exercised in environments witho
     ) from exc
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SRC_ROOT = REPO_ROOT / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
+
+from agent_machine.digest import stable_digest  # noqa: E402
+
 PLAN_SCHEMA_PATH = REPO_ROOT / "contracts" / "agentpod-deployment-plan.schema.json"
 RECEIPT_SCHEMA_PATH = REPO_ROOT / "contracts" / "deployment-receipt.schema.json"
 
@@ -44,14 +50,6 @@ def load_json(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise AssertionError(f"{path}: root must be a JSON object")
     return value
-
-
-def stable_json_bytes(value: Any) -> bytes:
-    return json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
-
-
-def stable_digest(value: Any) -> str:
-    return "sha256:" + hashlib.sha256(stable_json_bytes(value)).hexdigest()
 
 
 def validate_against_schema(value: dict[str, Any], schema_path: Path, label: str) -> None:
