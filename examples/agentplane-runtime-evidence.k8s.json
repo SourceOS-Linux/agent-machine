@@ -1,0 +1,73 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:agentplane-runtime-evidence:k8s-llama-cpp-placement",
+  "kind": "AgentPlaneRuntimeEvidence",
+  "evidenceType": "placement",
+  "agentMachineId": "urn:srcos:agent-machine:k8s-agent-node",
+  "agentPodId": "urn:srcos:agent-machine:agent-pod:k8s-topolvm-llama-cpp",
+  "providerId": "urn:srcos:agent-machine:inference-provider:k8s-llama-cpp",
+  "deploymentReceiptId": "urn:srcos:agent-machine:deployment-receipt:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "policyFabric": {
+    "required": true,
+    "decisionRef": null,
+    "decisionDigest": null,
+    "admissionStatus": "missing",
+    "obligationsRef": null,
+    "expiresAt": null
+  },
+  "agentRegistry": {
+    "required": true,
+    "grantRef": null,
+    "grantDigest": null,
+    "grantStatus": "missing",
+    "revocationRef": null,
+    "expiresAt": null
+  },
+  "artifacts": {
+    "imageRef": "ghcr.io/ggerganov/llama.cpp:server",
+    "imageDigest": null,
+    "modelDigest": null,
+    "tokenizerDigest": null,
+    "manifestDigest": null,
+    "sbomRef": null,
+    "provenanceRef": null
+  },
+  "storageReceiptRefs": [
+    "urn:srcos:agent-machine:storage-receipt:topolvm-evidence-pvc"
+  ],
+  "cache": {
+    "cacheReuseRequested": false,
+    "cacheReuseAllowed": false,
+    "cachePolicyRef": null,
+    "cacheReceiptRefs": [],
+    "cacheReuseDecisionRef": null
+  },
+  "runtime": {
+    "status": "placed",
+    "runtimeVersion": "0.1.0-dev",
+    "probeVersion": "0.1.0-dev",
+    "nodeName": "k8s-agent-node-01",
+    "namespace": "agent-machine",
+    "serviceAccountName": "agent-machine-provider",
+    "pid": null,
+    "containerIdDigest": null,
+    "startedAt": null,
+    "completedAt": null,
+    "failureReason": "policy_fabric_admission_missing_and_agent_registry_grant_missing"
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "rawPromptContentIncluded": false,
+    "rawKvCacheContentIncluded": false,
+    "secretValuesIncluded": false,
+    "privateMemoryIncluded": false
+  },
+  "observedAt": "2026-05-04T12:47:00Z",
+  "labels": {
+    "sourceos.profile": "kubernetes-node",
+    "sourceos.runtime": "kubernetes",
+    "sourceos.storage": "topolvm-k8s",
+    "sourceos.evidence.prototype": "true",
+    "sourceos.activation.fail-closed": "true"
+  }
+}
