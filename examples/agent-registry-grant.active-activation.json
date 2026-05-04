@@ -9,7 +9,37 @@
     "requestedAgentIdentityRef": "urn:srcos:agent:local-inference-provider",
     "sessionRef": "urn:srcos:session:local-bootstrap",
     "workroomRef": "urn:srcos:workroom:local-default",
-    "topicRef": "urn:srcos:topic:agent-machine"
+    "topicRef": "urn:srcos:topic:agent-machine",
+    "requestedScope": {
+      "providerIds": [
+        "urn:srcos:agent-machine:inference-provider:asahi-llama-cpp"
+      ],
+      "modelRefs": [
+        "urn:srcos:model:local-gguf-default"
+      ],
+      "toolRefs": [
+        "urn:srcos:tool:emit-runtime-receipt",
+        "urn:srcos:tool:emit-storage-receipt",
+        "urn:srcos:tool:mount-cache",
+        "urn:srcos:tool:public-ingress",
+        "urn:srcos:tool:reuse-cache",
+        "urn:srcos:tool:start-provider"
+      ],
+      "cacheScopeRefs": [
+        "urn:srcos:policy-domain:local-workstation-default"
+      ],
+      "memoryScopeRefs": [
+        "urn:srcos:memory:local-default"
+      ],
+      "storageScopeRefs": [
+        "urn:srcos:agent-machine:storage-receipt:local-lvm-warm-cache"
+      ],
+      "evidenceScopeRefs": [
+        "urn:srcos:evidence:deployment-receipts",
+        "urn:srcos:evidence:runtime-receipts"
+      ]
+    },
+    "requestedExpiresAt": "2026-05-04T13:50:00Z"
   },
   "grant": {
     "status": "active",
@@ -18,24 +48,48 @@
     "grantDigest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
     "reason": "Loopback provider activation is active for the local inference provider with no memory or cache reuse scope.",
     "expiresAt": "2026-05-04T13:50:00Z",
-    "revocationRef": "urn:srcos:revocation:active-loopback-activation"
+    "revocationStatus": "active",
+    "revocationRef": "urn:srcos:revocation:active-loopback-activation",
+    "revocationHookRef": "urn:srcos:agent-registry:revocation-hook:active-loopback-activation",
+    "externalTrustSignals": []
   },
   "scope": {
     "allowed": {
-      "providerIds": ["urn:srcos:agent-machine:inference-provider:asahi-llama-cpp"],
-      "modelRefs": ["urn:srcos:model:local-gguf-default"],
-      "toolRefs": ["urn:srcos:tool:start-provider", "urn:srcos:tool:mount-cache", "urn:srcos:tool:emit-runtime-receipt", "urn:srcos:tool:emit-storage-receipt"],
+      "providerIds": [
+        "urn:srcos:agent-machine:inference-provider:asahi-llama-cpp"
+      ],
+      "modelRefs": [
+        "urn:srcos:model:local-gguf-default"
+      ],
+      "toolRefs": [
+        "urn:srcos:tool:start-provider",
+        "urn:srcos:tool:mount-cache",
+        "urn:srcos:tool:emit-runtime-receipt",
+        "urn:srcos:tool:emit-storage-receipt"
+      ],
       "cacheScopeRefs": [],
       "memoryScopeRefs": [],
-      "storageScopeRefs": ["urn:srcos:agent-machine:storage-receipt:local-lvm-warm-cache"],
-      "evidenceScopeRefs": ["urn:srcos:evidence:deployment-receipts", "urn:srcos:evidence:runtime-receipts"]
+      "storageScopeRefs": [
+        "urn:srcos:agent-machine:storage-receipt:local-lvm-warm-cache"
+      ],
+      "evidenceScopeRefs": [
+        "urn:srcos:evidence:deployment-receipts",
+        "urn:srcos:evidence:runtime-receipts"
+      ]
     },
     "denied": {
       "providerIds": [],
       "modelRefs": [],
-      "toolRefs": ["urn:srcos:tool:reuse-cache", "urn:srcos:tool:public-ingress"],
-      "cacheScopeRefs": ["urn:srcos:policy-domain:local-workstation-default"],
-      "memoryScopeRefs": ["urn:srcos:memory:local-default"],
+      "toolRefs": [
+        "urn:srcos:tool:reuse-cache",
+        "urn:srcos:tool:public-ingress"
+      ],
+      "cacheScopeRefs": [
+        "urn:srcos:policy-domain:local-workstation-default"
+      ],
+      "memoryScopeRefs": [
+        "urn:srcos:memory:local-default"
+      ],
       "storageScopeRefs": [],
       "evidenceScopeRefs": []
     }
