@@ -1,0 +1,55 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:agent-registry-grant:missing-local-provider",
+  "kind": "AgentRegistryGrant",
+  "request": {
+    "requestId": "urn:srcos:agent-machine:grant-request:missing-local-provider",
+    "agentMachineId": "urn:srcos:agent-machine:m2-asahi-local",
+    "agentPodId": "urn:srcos:agent-machine:agent-pod:local-podman-llama-cpp",
+    "requestedAgentIdentityRef": "urn:srcos:agent:local-inference-provider",
+    "sessionRef": "urn:srcos:session:local-bootstrap",
+    "workroomRef": "urn:srcos:workroom:local-default",
+    "topicRef": "urn:srcos:topic:agent-machine"
+  },
+  "grant": {
+    "status": "missing",
+    "authorizationGranted": false,
+    "grantRef": null,
+    "grantDigest": null,
+    "reason": "Agent Registry grant has not been resolved; activation must fail closed.",
+    "expiresAt": null,
+    "revocationRef": null
+  },
+  "scope": {
+    "allowed": {
+      "providerIds": [],
+      "modelRefs": [],
+      "toolRefs": [],
+      "cacheScopeRefs": [],
+      "memoryScopeRefs": [],
+      "storageScopeRefs": [],
+      "evidenceScopeRefs": []
+    },
+    "denied": {
+      "providerIds": ["urn:srcos:agent-machine:inference-provider:asahi-llama-cpp"],
+      "modelRefs": ["urn:srcos:model:local-gguf-default"],
+      "toolRefs": ["urn:srcos:tool:inference-http"],
+      "cacheScopeRefs": ["urn:srcos:policy-domain:local-workstation-default"],
+      "memoryScopeRefs": ["urn:srcos:memory:local-default"],
+      "storageScopeRefs": ["urn:srcos:agent-machine:storage-receipt:local-lvm-warm-cache"],
+      "evidenceScopeRefs": ["urn:srcos:evidence:local-default"]
+    }
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "rawPromptContentIncluded": false,
+    "rawKvCacheContentIncluded": false,
+    "secretValuesIncluded": false,
+    "privateMemoryIncluded": false
+  },
+  "issuedAt": "2026-05-04T12:49:00Z",
+  "labels": {
+    "sourceos.registry.prototype": "true",
+    "sourceos.activation.fail-closed": "true"
+  }
+}
