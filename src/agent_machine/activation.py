@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from agent_machine.contracts import load_json, schema_by_kind, validate_instance
+from agent_machine.contracts import load_json, schema_by_kind
 from agent_machine.governance import (
     activation_ready,
     grant_allows_activation,
@@ -26,10 +26,9 @@ from agent_machine.governance import (
 DEFAULT_DECIDED_AT = "1970-01-01T00:00:00Z"
 
 
-def validate_activation_decision_payload(decision: dict[str, Any], root: Path | None = None) -> None:
-    schema = schema_by_kind(root)["ActivationDecision"]
-    # Validate in-memory payload through a temporary jsonschema path without writing a file.
-    schema_payload = load_json(schema)
+def validate_payload_against_kind(value: dict[str, Any], kind: str, root: Path | None = None) -> None:
+    schema_path = schema_by_kind(root)[kind]
+    schema_payload = load_json(schema_path)
     try:
         from jsonschema.validators import validator_for
     except ImportError as exc:  # pragma: no cover
@@ -39,13 +38,75 @@ def validate_activation_decision_payload(decision: dict[str, Any], root: Path | 
     validator_cls = validator_for(schema_payload)
     validator_cls.check_schema(schema_payload)
     validator = validator_cls(schema_payload)
-    errors = sorted(validator.iter_errors(decision), key=lambda err: list(err.path))
+    errors = sorted(validator.iter_errors(value), key=lambda err: list(err.path))
     if errors:
         rendered = []
         for err in errors:
             location = "/".join(str(part) for part in err.path) or "<root>"
             rendered.append(f"  - {location}: {err.message}")
-        raise AssertionError("ActivationDecision failed schema validation:\n" + "\n".join(rendered))
+        raise AssertionError(f"{kind} failed schema validation:\n" + "\n".join(rendered))
+
+
+def validate_activation_decision_payload(decision: dict[str, Any], root: Path | None = None) -> None:
+    validate_payload_against_kind(decision, "ActivationDecision", root)
+
+
+def validate_storage_receipt_payload(receipt: dict[str, Any], root: Path | None = None) -> None:
+    validate_payload_against_kind(receipt, "StorageReceipt", root)
+    safety = receipt.get("receiptSafety", {})
+    for key in ["includeRawContent", "rawPromptContentIncluded", "rawKvCacheContentIncluded", "secretValuesIncluded"]:
+        if safety.get(key) is not False:
+            raise AssertionError(f"StorageReceipt {receipt.get('id')}: receiptSafety.{key} must be false")
+    filesystem = receipt.get("filesystem", {})
+    if filesystem.get("worldWritable") is not False:
+        raise AssertionError(f"StorageReceipt {receipt.get('id')}: worldWritable must be false")
+    if filesystem.get("symlinkTraversalObserved") is not False:
+        raise AssertionError(f"StorageReceipt {receipt.get('id')}: symlinkTraversalObserved must be false")
+
+
+def validate_storage_receipts(
+    *,
+    storage_receipt_refs: list[str],
+    storage_receipts: list[dict[str, Any]] | None,
+    root: Path | None = None,
+) -> tuple[list[str], list[str]]:
+    """Validate storage receipt files and return (valid_refs, failure_reasons)."""
+    requested_refs = sorted(set(storage_receipt_refs))
+    if not requested_refs:
+        return [], ["storage_receipts_missing"]
+    if storage_receipts is None:
+        return requested_refs, ["storage_receipt_files_missing"]
+
+    seen: set[str] = set()
+    failures: list[str] = []
+    for receipt in storage_receipts:
+        try:
+            validate_storage_receipt_payload(receipt, root)
+        except AssertionError as exc:
+            failures.append(f"storage_receipt_invalid:{receipt.get('id', 'unknown')}:{exc}")
+            continue
+        receipt_id = receipt.get("id")
+        if not isinstance(receipt_id, str):
+            failures.append("storage_receipt_id_missing")
+            continue
+        seen.add(receipt_id)
+        encryption = receipt.get("encryption", {})
+        if encryption.get("required") is True and encryption.get("observed") is not True:
+            failures.append(f"storage_receipt_encryption_required_not_observed:{receipt_id}")
+        quota = receipt.get("quota", {})
+        if quota.get("required") is True and quota.get("observed") is not True:
+            failures.append(f"storage_receipt_quota_required_not_observed:{receipt_id}")
+
+    missing = sorted(set(requested_refs) - seen)
+    for missing_ref in missing:
+        failures.append(f"storage_receipt_ref_unresolved:{missing_ref}")
+    return requested_refs, sorted(set(failures))
+
+
+def sorted_list(value: Any) -> list[Any]:
+    if not isinstance(value, list):
+        return []
+    return sorted(value, key=lambda item: json.dumps(item, sort_keys=True))
 
 
 def evaluate_activation(
@@ -57,6 +118,8 @@ def evaluate_activation(
     storage_receipt_refs: list[str],
     decided_at: str,
     decision_id: str | None = None,
+    storage_receipts: list[dict[str, Any]] | None = None,
+    root: Path | None = None,
 ) -> dict[str, Any]:
     validate_policy_admission_semantics(policy, source="activation:policy")
     validate_agent_registry_grant_semantics(grant, source="activation:grant")
@@ -81,9 +144,16 @@ def evaluate_activation(
     if not grant_allows_activation(grant, provider_id=provider_id):
         failure_reasons.append("agent_registry_grant_does_not_allow_activation_scope")
         required_before_activation.append("agent_registry_grant_active_activation")
-    if not storage_receipt_refs:
-        failure_reasons.append("storage_receipts_missing")
-        required_before_activation.append("storage_receipts")
+
+    resolved_storage_refs, storage_failures = validate_storage_receipts(
+        storage_receipt_refs=storage_receipt_refs,
+        storage_receipts=storage_receipts,
+        root=root,
+    )
+    failure_reasons.extend(storage_failures)
+    if storage_failures:
+        required_before_activation.append("valid_storage_receipts")
+
     if not deployment_receipt_id:
         failure_reasons.append("deployment_receipt_missing")
         required_before_activation.append("deployment_receipt")
@@ -116,24 +186,22 @@ def evaluate_activation(
             "policyAdmissionId": policy_id,
             "agentRegistryGrantId": grant_id,
             "deploymentReceiptId": deployment_receipt_id,
-            "storageReceiptRefs": storage_receipt_refs,
+            "storageReceiptRefs": resolved_storage_refs,
         },
         "scope": {
             "runtimeMode": runtime_mode,
-            "networkExposure": policy_allowed_scope.get("networkExposure") or [],
-            "sideEffects": policy_allowed_scope.get("sideEffects") or [],
-            "toolRefs": grant_allowed_scope.get("toolRefs") or [],
-            "storageScopeRefs": grant_allowed_scope.get("storageScopeRefs") or [],
+            "networkExposure": sorted_list(policy_allowed_scope.get("networkExposure")),
+            "sideEffects": sorted_list(policy_allowed_scope.get("sideEffects")),
+            "toolRefs": sorted_list(grant_allowed_scope.get("toolRefs")),
+            "storageScopeRefs": sorted_list(grant_allowed_scope.get("storageScopeRefs")),
             "cacheReuseAllowed": bool(policy_allowed_scope.get("cacheReuse")) and bool(grant_allowed_scope.get("cacheScopeRefs")),
         },
         "obligations": {
-            "requiredReceipts": obligations.get("requiredReceipts") or [],
+            "requiredReceipts": sorted_list(obligations.get("requiredReceipts")),
             "policyDecisionRef": policy_decision.get("decisionRef"),
             "agentRegistryGrantRef": grant_payload.get("grantRef"),
             "expiresAt": obligations.get("expiresAt") or grant_payload.get("expiresAt"),
-            "revocationRefs": [
-                ref for ref in [obligations.get("revocationRef"), grant_payload.get("revocationRef")] if ref
-            ],
+            "revocationRefs": sorted(ref for ref in [obligations.get("revocationRef"), grant_payload.get("revocationRef")] if ref),
         },
         "receiptSafety": {
             "includeRawContent": False,
@@ -146,6 +214,7 @@ def evaluate_activation(
         "labels": {
             "sourceos.activation.prototype": "true",
             "sourceos.activation.allowed": str(allowed).lower(),
+            "sourceos.activation.fail-closed": str(not allowed).lower(),
         },
     }
 
@@ -157,20 +226,27 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("grant_json", type=Path)
     parser.add_argument("--deployment-receipt-id", required=True)
     parser.add_argument("--storage-receipt-ref", action="append", default=[])
+    parser.add_argument("--storage-receipt-file", action="append", type=Path, default=[])
     parser.add_argument("--decided-at", default=DEFAULT_DECIDED_AT)
+    parser.add_argument("--decision-id")
     parser.add_argument("--pretty", action="store_true")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    storage_receipts = [load_json(path) for path in args.storage_receipt_file]
+    if not args.storage_receipt_ref and storage_receipts:
+        args.storage_receipt_ref = [str(receipt.get("id")) for receipt in storage_receipts]
     decision = evaluate_activation(
         agentpod=load_json(args.agentpod_json),
         policy=load_json(args.policy_json),
         grant=load_json(args.grant_json),
         deployment_receipt_id=args.deployment_receipt_id,
         storage_receipt_refs=args.storage_receipt_ref,
+        storage_receipts=storage_receipts if storage_receipts else None,
         decided_at=args.decided_at,
+        decision_id=args.decision_id,
     )
     validate_activation_decision_payload(decision)
     if args.pretty:
