@@ -1,0 +1,40 @@
+# Agent Machine local llama.cpp provider
+#
+# This is the first local AgentPod deployment template. It mirrors
+# examples/local-podman-llama-cpp.agent-pod.json and keeps exposure on loopback.
+# Runtime activation remains explicit: install this into the appropriate systemd
+# user or system Quadlet directory only after Policy Fabric / Agent Registry
+# admission has approved the workload.
+
+[Unit]
+Description=Agent Machine llama.cpp local inference provider
+Documentation=https://github.com/SourceOS-Linux/agent-machine
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=ghcr.io/ggerganov/llama.cpp:server
+ContainerName=agent-machine-llama-cpp
+Exec=llama-server --host 127.0.0.1 --port 8080
+PublishPort=127.0.0.1:8080:8080
+ReadOnly=true
+NoNewPrivileges=true
+SecurityLabelDisable=false
+DropCapability=all
+AddCapability=CHOWN DAC_OVERRIDE FOWNER SETGID SETUID
+Environment=AGENT_MACHINE_PROFILE=m2-asahi-linux
+Environment=AGENT_MACHINE_PROVIDER=llama.cpp
+Environment=AGENT_MACHINE_RECEIPTS_REQUIRED=true
+Volume=/var/lib/agent-machine/models/gguf:/models:ro,Z
+Volume=/var/lib/agent-machine/cache/warm:/agent/cache/warm:rw,Z
+Volume=/var/lib/agent-machine/evidence:/agent/evidence:rw,Z
+Tmpfs=/tmp:rw,nodev,nosuid,size=1g
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=120s
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=default.target
