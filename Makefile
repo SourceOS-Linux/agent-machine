@@ -29,7 +29,7 @@ validate-render:
 	$(PYTHON) scripts/render-agentpod-k8s.py $(K8S_AGENTPOD) --compare $(K8S_MANIFEST)
 
 validate-package:
-	PYTHONPATH=src $(PYTHON) -c "import agent_machine, agent_machine.digest, agent_machine.paths, agent_machine.contracts; print(agent_machine.__version__)"
+	$(PYTHON) scripts/validate-package.py
 
 validate-cli:
 	sh -n $(CLI)
