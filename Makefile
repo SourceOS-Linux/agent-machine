@@ -18,6 +18,7 @@ RECEIPT_DIR := examples
 DEPLOYMENT_RECEIPT_ID := urn:srcos:agent-machine:deployment-receipt:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 DECIDED_AT := 2026-05-04T12:51:00Z
 PYCLI := PYTHONPATH=src $(PYTHON) -m agent_machine.cli
+PYMOD := PYTHONPATH=src $(PYTHON) -m
 
 validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-package validate-cli validate-formula
 
@@ -59,7 +60,7 @@ validate-activation:
 
 validate-supply-chain:
 	$(PYTHON) scripts/validate-supply-chain.py
-	$(PYTHON) -m agent_machine.supply_chain $(PINNED_AGENTPOD) --strict
+	$(PYMOD) agent_machine.supply_chain $(PINNED_AGENTPOD) --strict
 
 validate-package:
 	$(PYTHON) scripts/validate-package.py
