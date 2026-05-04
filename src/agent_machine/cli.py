@@ -4,8 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import platform
+import shutil
+import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 from agent_machine import __version__
 from agent_machine.contracts import load_json
@@ -20,6 +25,127 @@ from agent_machine.paths import (
 from agent_machine.renderers import k8s as k8s_renderer
 from agent_machine.renderers import plan as plan_renderer
 from agent_machine.renderers import quadlet as quadlet_renderer
+
+
+def command_available(command: str) -> bool:
+    return shutil.which(command) is not None
+
+
+def command_output(command: list[str], fallback: str = "unknown") -> str:
+    try:
+        result = subprocess.run(command, check=False, capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.TimeoutExpired):
+        return fallback
+    if result.returncode != 0:
+        return fallback
+    value = result.stdout.strip()
+    return value if value else fallback
+
+
+def selinux_mode() -> str:
+    if command_available("getenforce"):
+        return command_output(["getenforce"])
+    return "unknown"
+
+
+def cgroup_mode() -> str:
+    if Path("/sys/fs/cgroup/cgroup.controllers").is_file():
+        return "v2"
+    if Path("/sys/fs/cgroup").is_dir():
+        return "v1"
+    return "unknown"
+
+
+def probe_payload() -> dict[str, Any]:
+    return {
+        "specVersion": "0.1.0",
+        "kind": "AgentMachineProbe",
+        "host": {
+            "hostname": platform.node() or command_output(["hostname"]),
+            "os": platform.system() or "unknown",
+            "kernel": platform.release() or "unknown",
+            "arch": platform.machine() or "unknown",
+        },
+        "runtime": {
+            "systemdAvailable": command_available("systemctl"),
+            "podmanAvailable": command_available("podman"),
+            "dockerAvailable": command_available("docker"),
+            "selinuxMode": selinux_mode(),
+            "cgroupMode": cgroup_mode(),
+        },
+        "storage": {
+            "lvmAvailable": command_available("lvs"),
+            "modelCache": str(default_model_cache_path()),
+            "runtimeCache": str(default_runtime_cache_path()),
+            "evidencePath": str(default_evidence_path()),
+        },
+        "accelerators": {
+            "cpuAvailable": True,
+            "vulkanProbeAvailable": command_available("vulkaninfo"),
+            "cudaProbeAvailable": command_available("nvidia-smi"),
+            "rocmProbeAvailable": command_available("rocminfo"),
+            "metalAvailable": False,
+        },
+        "safety": {
+            "rawPromptContentIncluded": False,
+            "rawKvCacheContentIncluded": False,
+            "secretValuesIncluded": False,
+        },
+    }
+
+
+def doctor_payload() -> dict[str, Any]:
+    return {
+        "specVersion": "0.1.0",
+        "kind": "AgentMachineDoctor",
+        "install": {
+            "cliVersion": __version__,
+            "homebrewAvailable": command_available("brew"),
+            "bootstrapOnly": True,
+            "runtimeDirectoriesManaged": False,
+        },
+        "readiness": {
+            "podmanAvailable": command_available("podman"),
+            "lvmAvailable": command_available("lvs"),
+            "probeSecretFree": True,
+        },
+        "nextActions": [
+            "agent-machine probe --format json",
+            "review docs/install.md before privileged runtime activation",
+        ],
+    }
+
+
+def print_json_or_text(payload: dict[str, Any], output_format: str, text_renderer: Any) -> None:
+    if output_format == "json":
+        print(json.dumps(payload, sort_keys=True))
+    else:
+        text_renderer(payload)
+
+
+def print_doctor_text(payload: dict[str, Any]) -> None:
+    print("Agent Machine doctor")
+    print(f"  agent-machine {payload['install']['cliVersion']}")
+    print(f"  homebrew: {'available' if payload['install']['homebrewAvailable'] else 'unavailable'}")
+    print(f"  podman: {'available' if payload['readiness']['podmanAvailable'] else 'unavailable'}")
+    print(f"  lvm: {'available' if payload['readiness']['lvmAvailable'] else 'unavailable'}")
+    print(f"  bootstrap-only install: {str(payload['install']['bootstrapOnly']).lower()}")
+    print(f"  runtime directories managed automatically: {str(payload['install']['runtimeDirectoriesManaged']).lower()}")
+    print("  next: agent-machine probe --format json")
+
+
+def print_probe_text(payload: dict[str, Any]) -> None:
+    host = payload["host"]
+    runtime = payload["runtime"]
+    storage = payload["storage"]
+    accelerators = payload["accelerators"]
+    print("Agent Machine probe summary")
+    print(f"  host: {host['os']} {host['kernel']} {host['arch']}")
+    print(f"  podman: {'available' if runtime['podmanAvailable'] else 'unavailable'}")
+    print(f"  docker: {'available' if runtime['dockerAvailable'] else 'unavailable'}")
+    print(f"  lvm: {'available' if storage['lvmAvailable'] else 'unavailable'}")
+    print(f"  vulkan probe: {'available' if accelerators['vulkanProbeAvailable'] else 'unavailable'}")
+    print("  metal: unavailable on Linux profiles")
 
 
 def cmd_version(_args: argparse.Namespace) -> int:
@@ -42,6 +168,17 @@ def cmd_paths(args: argparse.Namespace) -> int:
         print("Agent Machine default paths:")
         for key, value in paths.items():
             print(f"  {key}: {value}")
+    return 0
+
+
+def cmd_doctor(args: argparse.Namespace) -> int:
+    print_json_or_text(doctor_payload(), args.format, print_doctor_text)
+    return 0
+
+
+def cmd_probe(args: argparse.Namespace) -> int:
+    # --fail-closed is accepted now so shell and Python CLIs remain compatible.
+    print_json_or_text(probe_payload(), args.format, print_probe_text)
     return 0
 
 
@@ -97,6 +234,15 @@ def build_parser() -> argparse.ArgumentParser:
     paths = subcommands.add_parser("paths", help="Print default runtime paths")
     paths.add_argument("--format", choices=["text", "json"], default="text")
     paths.set_defaults(func=cmd_paths)
+
+    doctor = subcommands.add_parser("doctor", help="Run conservative install/readiness diagnostics")
+    doctor.add_argument("--format", choices=["text", "json"], default="text")
+    doctor.set_defaults(func=cmd_doctor)
+
+    probe = subcommands.add_parser("probe", help="Run conservative host/runtime probe")
+    probe.add_argument("--format", choices=["text", "json"], default="text")
+    probe.add_argument("--fail-closed", action="store_true")
+    probe.set_defaults(func=cmd_probe)
 
     render = subcommands.add_parser("render", help="Render AgentPod-derived artifacts")
     render_subcommands = render.add_subparsers(dest="render_command", required=True)
