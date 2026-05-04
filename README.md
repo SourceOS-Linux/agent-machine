@@ -6,6 +6,42 @@ Agent Machine is not a new agent brain, chat app, or orchestration plane. It is 
 
 > Where can this agent workload run safely, with the right model, cache locality, policy grants, and evidence trail?
 
+## Install
+
+Agent Machine follows the TurtleTerm and BearBrowser install philosophy: Homebrew is a first-class developer/operator surface, direct repository formulas work before tap promotion, and runtime activation remains explicit and policy-aware.
+
+Immediate direct Homebrew install:
+
+```bash
+brew install --HEAD https://raw.githubusercontent.com/SourceOS-Linux/agent-machine/main/packaging/homebrew/Formula/agent-machine.rb
+```
+
+Preferred SourceOS tap install:
+
+```bash
+brew install SourceOS-Linux/tap/agent-machine
+```
+
+Current tap HEAD formula flow:
+
+```bash
+brew install --HEAD SourceOS-Linux/tap/agent-machine
+```
+
+Local checkout flow:
+
+```bash
+brew install --HEAD ./packaging/homebrew/Formula/agent-machine.rb
+```
+
+Validate:
+
+```bash
+agent-machine version && agent-machine paths && agent-machine probe --format json
+```
+
+See `docs/install.md` for installer philosophy, runtime directory targets, future setup commands, and M2 Asahi notes.
+
 ## Core boundary
 
 | Resource | Meaning |
@@ -72,12 +108,14 @@ macOS Apple Silicon may use oMLX/MLX as an optional backend, but this repo remai
 
 ```text
 agent-machine/
+├── bin/                    # Bootstrap CLI
 ├── contracts/              # Draft JSON Schemas before promotion to sourceos-spec
 ├── docs/
 │   ├── adr/                # Architecture decision records
 │   ├── architecture/       # Runtime, profile, scheduling, and provider docs
 │   └── integration/        # AgentPlane, Policy Fabric, AgentTerm, TopoLVM edges
 ├── examples/               # Conforming example payloads
+├── packaging/              # Homebrew and future package/install surfaces
 ├── deploy/                 # Future systemd, Quadlet, SELinux, and Kubernetes assets
 ├── adapters/               # Future provider adapter implementation lanes
 └── tools/                  # Future probe and conformance tooling
