@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:inference-provider:v0.1.0",
+  "title": "InferenceProvider",
+  "description": "Backend-neutral inference provider declaration for Agent Machine.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specVersion",
+    "id",
+    "kind",
+    "providerType",
+    "status",
+    "apiSurfaces",
+    "runtime",
+    "modelStore",
+    "policy"
+  ],
+  "properties": {
+    "specVersion": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:inference-provider:[a-z0-9][a-z0-9-]*$"
+    },
+    "kind": {
+      "type": "string",
+      "const": "InferenceProvider"
+    },
+    "providerType": {
+      "type": "string",
+      "enum": [
+        "llama.cpp",
+        "vllm",
+        "sglang",
+        "omlx",
+        "mlx-lm",
+        "ollama-compatible",
+        "openai-compatible-local",
+        "anthropic-compatible-local",
+        "remote-governed"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["enabled", "disabled", "probe-only", "unavailable"]
+    },
+    "profileSupport": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "m2-asahi-linux",
+          "sourceos-workstation",
+          "fedora-silverblue",
+          "linux-gpu-node",
+          "linux-edge-node",
+          "kubernetes-node",
+          "macos-apple-silicon-compat"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "apiSurfaces": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "openai-chat-completions",
+          "openai-completions",
+          "openai-embeddings",
+          "openai-rerank",
+          "anthropic-messages",
+          "mcp-tools",
+          "vlm",
+          "ocr",
+          "native-cli",
+          "native-http"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "acceleration", "commandRef"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["local-process", "systemd", "podman", "podman-quadlet", "docker", "kubernetes", "remote-endpoint"]
+        },
+        "acceleration": {
+          "type": "string",
+          "enum": ["cpu", "vulkan", "cuda", "rocm", "metal", "mlx", "unknown"]
+        },
+        "commandRef": {
+          "type": "string",
+          "description": "Binary, unit, container image, service name, or endpoint reference. Do not store credentials."
+        },
+        "version": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "healthPath": {
+          "type": "string"
+        }
+      }
+    },
+    "modelStore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "format"],
+      "properties": {
+        "path": { "type": "string" },
+        "format": {
+          "type": "string",
+          "enum": ["gguf", "safetensors", "mlx", "onnx", "mixed", "unknown"]
+        },
+        "requiresDigest": { "type": "boolean", "default": true },
+        "cacheTierId": { "type": "string" }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "textGeneration": { "type": "boolean" },
+        "toolCalling": { "type": "boolean" },
+        "embeddings": { "type": "boolean" },
+        "reranking": { "type": "boolean" },
+        "vision": { "type": "boolean" },
+        "ocr": { "type": "boolean" },
+        "continuousBatching": { "type": "boolean" },
+        "prefixCache": { "type": "boolean" },
+        "kvCache": { "type": "boolean" }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policyFabricRequired", "agentRegistryRequired", "receiptRequired", "allowSecretInConfig"],
+      "properties": {
+        "policyFabricRequired": { "type": "boolean" },
+        "agentRegistryRequired": { "type": "boolean" },
+        "receiptRequired": { "type": "boolean" },
+        "allowSecretInConfig": { "type": "boolean", "const": false },
+        "cacheReuseRequiresPolicy": { "type": "boolean" },
+        "toolUseRequiresGrant": { "type": "boolean" }
+      }
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}
