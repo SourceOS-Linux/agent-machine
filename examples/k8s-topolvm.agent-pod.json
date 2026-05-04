@@ -1,0 +1,122 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:agent-pod:k8s-topolvm-llama-cpp",
+  "kind": "AgentPod",
+  "podType": "kubernetes-pod",
+  "profile": "kubernetes-node",
+  "workload": {
+    "name": "k8s-llama-cpp-provider",
+    "purpose": "inference-provider",
+    "description": "Kubernetes AgentPod using TopoLVM-backed PVCs for model, warm cache, scratch, and evidence volumes.",
+    "agentIdentityRequired": true,
+    "agentIdentityRef": "urn:srcos:agent:k8s-inference-provider",
+    "workroomRef": "urn:srcos:workroom:cluster-default",
+    "topicRef": "urn:srcos:topic:agent-machine"
+  },
+  "runtime": {
+    "mode": "kubernetes",
+    "imageOrCommand": "ghcr.io/ggerganov/llama.cpp:server",
+    "entrypoint": "llama-server",
+    "args": [
+      "--host",
+      "0.0.0.0",
+      "--port",
+      "8080"
+    ],
+    "networkMode": "kubernetes-service",
+    "restartPolicy": "policy-managed",
+    "serviceAccountName": "agent-machine-provider",
+    "namespace": "agent-machine"
+  },
+  "resources": {
+    "cpu": {
+      "request": "2",
+      "limit": "8"
+    },
+    "memoryBytes": {
+      "request": 17179869184,
+      "limit": 68719476736
+    },
+    "accelerators": [
+      {
+        "type": "cpu",
+        "required": true,
+        "count": 1
+      },
+      {
+        "type": "cuda",
+        "required": false,
+        "count": 1
+      }
+    ]
+  },
+  "storage": [
+    {
+      "cacheTierId": "urn:srcos:agent-machine:cache-tier:k8s-topolvm-models",
+      "volumeClass": "agent-models",
+      "mountPath": "/models",
+      "pvcName": "agent-models-llama-cpp",
+      "storageClassName": "topolvm-provisioner",
+      "accessMode": "read-only",
+      "sensitive": true
+    },
+    {
+      "cacheTierId": "urn:srcos:agent-machine:cache-tier:k8s-topolvm-warm-cache",
+      "volumeClass": "agent-cache-warm",
+      "mountPath": "/agent/cache/warm",
+      "pvcName": "agent-cache-warm-llama-cpp",
+      "storageClassName": "topolvm-provisioner",
+      "accessMode": "runtime-managed",
+      "sensitive": true
+    },
+    {
+      "cacheTierId": "urn:srcos:agent-machine:cache-tier:k8s-topolvm-scratch",
+      "volumeClass": "agent-scratch",
+      "mountPath": "/agent/scratch",
+      "pvcName": "agent-scratch-llama-cpp",
+      "storageClassName": "topolvm-provisioner",
+      "accessMode": "read-write",
+      "sensitive": true
+    },
+    {
+      "cacheTierId": "urn:srcos:agent-machine:cache-tier:k8s-topolvm-evidence",
+      "volumeClass": "agent-evidence",
+      "mountPath": "/agent/evidence",
+      "pvcName": "agent-evidence-llama-cpp",
+      "storageClassName": "topolvm-provisioner",
+      "accessMode": "read-write",
+      "sensitive": false
+    }
+  ],
+  "ports": [
+    {
+      "name": "openai-compatible-http",
+      "containerPort": 8080,
+      "exposure": "cluster"
+    }
+  ],
+  "policy": {
+    "policyFabricRequired": true,
+    "agentRegistryRequired": true,
+    "networkPolicyRequired": true,
+    "egressPolicyRequired": true,
+    "allowPrivileged": false,
+    "allowHostNetwork": false,
+    "allowSecretInSpec": false,
+    "toolUseRequiresGrant": true,
+    "cacheReuseRequiresPolicy": true
+  },
+  "receipts": {
+    "required": true,
+    "emitPlacement": true,
+    "emitStorage": true,
+    "emitRuntime": true,
+    "includeRawContent": false
+  },
+  "labels": {
+    "sourceos.profile": "kubernetes-node",
+    "sourceos.runtime": "kubernetes",
+    "sourceos.storage": "topolvm-k8s",
+    "sourceos.provider": "llama.cpp"
+  }
+}
