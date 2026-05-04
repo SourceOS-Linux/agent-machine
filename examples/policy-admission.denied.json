@@ -1,0 +1,60 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:policy-admission:denied-host-network",
+  "kind": "PolicyAdmission",
+  "request": {
+    "requestId": "urn:srcos:agent-machine:policy-request:denied-host-network",
+    "requestType": "activation",
+    "agentMachineId": "urn:srcos:agent-machine:m2-asahi-local",
+    "agentPodId": "urn:srcos:agent-machine:agent-pod:local-podman-llama-cpp",
+    "providerId": "urn:srcos:agent-machine:inference-provider:asahi-llama-cpp",
+    "deploymentReceiptId": "urn:srcos:agent-machine:deployment-receipt:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "planDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "manifestDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "decision": {
+    "status": "denied",
+    "authorizationGranted": false,
+    "decisionRef": "urn:srcos:policy-decision:denied-host-network",
+    "decisionDigest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "reason": "Host network exposure is not allowed for local inference provider activation.",
+    "policyBundleRef": "urn:srcos:policy-bundle:agent-machine-bootstrap",
+    "policyBundleDigest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  },
+  "scope": {
+    "allowed": {
+      "networkExposure": ["loopback"],
+      "storageClasses": ["local-lvm"],
+      "volumeClasses": ["agent-models", "agent-cache-warm", "agent-evidence"],
+      "providerIds": ["urn:srcos:agent-machine:inference-provider:asahi-llama-cpp"],
+      "cacheReuse": false,
+      "sideEffects": ["render-plan", "render-quadlet"]
+    },
+    "denied": {
+      "networkExposure": ["host", "ingress"],
+      "storageClasses": [],
+      "volumeClasses": [],
+      "providerIds": [],
+      "cacheReuse": true,
+      "sideEffects": ["start-provider", "reuse-cache"]
+    }
+  },
+  "obligations": {
+    "requiredReceipts": ["deployment", "runtime"],
+    "expiresAt": "2026-05-04T13:48:00Z",
+    "revocationRef": "urn:srcos:revocation:policy-denied-host-network",
+    "constraints": ["loopback-only", "do-not-activate"]
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "rawPromptContentIncluded": false,
+    "rawKvCacheContentIncluded": false,
+    "secretValuesIncluded": false,
+    "privateMemoryIncluded": false
+  },
+  "decidedAt": "2026-05-04T12:48:00Z",
+  "labels": {
+    "sourceos.policy.prototype": "true",
+    "sourceos.policy.result": "denied"
+  }
+}
