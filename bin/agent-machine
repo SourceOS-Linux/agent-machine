@@ -8,6 +8,42 @@ json_escape() {
   printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
 }
 
+script_dir() {
+  CDPATH= cd -- "$(dirname -- "$0")" && pwd
+}
+
+repo_root_guess() {
+  DIR="$(script_dir)"
+  if [ -d "$DIR/../src/agent_machine" ]; then
+    CDPATH= cd -- "$DIR/.." && pwd
+    return 0
+  fi
+  if [ -d "$DIR/../libexec/src/agent_machine" ]; then
+    CDPATH= cd -- "$DIR/../libexec" && pwd
+    return 0
+  fi
+  if [ -d "$DIR/../share/agent-machine/src/agent_machine" ]; then
+    CDPATH= cd -- "$DIR/../share/agent-machine" && pwd
+    return 0
+  fi
+  return 1
+}
+
+delegate_python_cli() {
+  ROOT="$(repo_root_guess || true)"
+  if [ -n "${ROOT:-}" ] && [ -d "$ROOT/src/agent_machine" ]; then
+    PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}" python3 -m agent_machine.cli "$@"
+    return $?
+  fi
+  if command -v agent-machine-py >/dev/null 2>&1; then
+    agent-machine-py "$@"
+    return $?
+  fi
+  printf '%s\n' "agent-machine: Python package CLI unavailable; cannot delegate command: $1" >&2
+  printf '%s\n' "Install from a repo checkout, install the Python package, or use agent-machine-py." >&2
+  return 127
+}
+
 print_help() {
   cat <<'EOF'
 agent-machine: SourceOS Agent Machine local node substrate CLI
@@ -18,6 +54,10 @@ Usage:
   agent-machine paths
   agent-machine doctor [--format json]
   agent-machine probe [--format json] [--fail-closed]
+  agent-machine render plan <agentpod.json> [--pretty]
+  agent-machine render receipt <agentpod.json> [--pretty] [--artifact-path <path>]
+  agent-machine render quadlet <agentpod.json> [--compare <file>]
+  agent-machine render k8s <agentpod.json> [--compare <file>]
 
 This is the bootstrap CLI. It is intentionally conservative: it discovers host/runtime hints and never emits secrets, raw prompts, raw KV-cache contents, or credentials.
 EOF
@@ -229,6 +269,10 @@ case "$COMMAND" in
     else
       probe_text
     fi
+    ;;
+  render)
+    shift || true
+    delegate_python_cli render "$@"
     ;;
   *)
     print_help
