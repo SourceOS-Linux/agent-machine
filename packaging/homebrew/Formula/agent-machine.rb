@@ -13,6 +13,9 @@ class AgentMachine < Formula
     pkgshare.install "contracts"
     pkgshare.install "docs"
     pkgshare.install "examples"
+    pkgshare.install "src"
+    pkgshare.install "pyproject.toml"
+    pkgshare.install "requirements-dev.txt"
   end
 
   def caveats
@@ -23,8 +26,16 @@ class AgentMachine < Formula
         agent-machine doctor --format json
         agent-machine probe --format json
 
-      This formula installs contracts, docs, and examples under:
+      This formula installs contracts, docs, examples, and Python package source under:
         #{pkgshare}
+
+      The bootstrap CLI can delegate render commands to the installed package source:
+        agent-machine render plan <agentpod.json> --pretty
+        agent-machine render quadlet <agentpod.json>
+        agent-machine render k8s <agentpod.json>
+
+      Render commands require the Python dependencies listed in:
+        #{pkgshare}/requirements-dev.txt
 
       Runtime directories are not created automatically yet. The future installer
       lane will manage /etc/agent-machine, /var/lib/agent-machine, and
@@ -40,5 +51,7 @@ class AgentMachine < Formula
     probe = shell_output("#{bin}/agent-machine probe --format json")
     assert_match '"kind": "AgentMachineProbe"', probe
     assert_match '"secretValuesIncluded": false', probe
+    assert_predicate pkgshare/"src/agent_machine/cli.py", :exist?
+    assert_predicate pkgshare/"requirements-dev.txt", :exist?
   end
 end
