@@ -14,8 +14,10 @@ if str(SRC_ROOT) not in sys.path:
 
 def main() -> int:
     import agent_machine
+    import agent_machine.activation
     import agent_machine.cli
     import agent_machine.evidence
+    import agent_machine.governance
     import agent_machine.renderers.k8s
     import agent_machine.renderers.plan
     import agent_machine.renderers.quadlet
@@ -29,12 +31,17 @@ def main() -> int:
     if examples_dir(root) != REPO_ROOT / "examples":
         raise AssertionError("examples_dir(root) did not resolve to repository examples/")
     mapping = schema_by_kind(root)
-    if "AgentPod" not in mapping:
-        raise AssertionError("schema_by_kind(root) missing AgentPod")
-    if "AgentPlaneRuntimeEvidence" not in mapping:
-        raise AssertionError("schema_by_kind(root) missing AgentPlaneRuntimeEvidence")
-    if "StorageReceipt" not in mapping:
-        raise AssertionError("schema_by_kind(root) missing StorageReceipt")
+    required_kinds = {
+        "ActivationDecision",
+        "AgentPod",
+        "AgentPlaneRuntimeEvidence",
+        "AgentRegistryGrant",
+        "PolicyAdmission",
+        "StorageReceipt",
+    }
+    missing = sorted(required_kinds - set(mapping))
+    if missing:
+        raise AssertionError(f"schema_by_kind(root) missing: {', '.join(missing)}")
     if stable_digest({"b": 2, "a": 1}) != stable_digest({"a": 1, "b": 2}):
         raise AssertionError("stable_digest must be key-order independent")
     if not stable_text_digest("agent-machine").startswith("sha256:"):
