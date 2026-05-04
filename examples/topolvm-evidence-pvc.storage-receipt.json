@@ -1,0 +1,101 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:storage-receipt:topolvm-evidence-pvc",
+  "kind": "StorageReceipt",
+  "agentMachineId": "urn:srcos:agent-machine:k8s-agent-node",
+  "agentPodId": "urn:srcos:agent-machine:agent-pod:k8s-topolvm-llama-cpp",
+  "backend": "topolvm-k8s",
+  "volumeClass": "agent-evidence",
+  "tier": "evidence",
+  "purpose": [
+    "execution-evidence"
+  ],
+  "reference": {
+    "referenceType": "topolvm-pvc",
+    "mountPath": "/agent/evidence",
+    "pvcName": "agent-evidence-llama-cpp",
+    "storageClassName": "topolvm-provisioner",
+    "namespace": "agent-machine"
+  },
+  "filesystem": {
+    "type": "xfs",
+    "mountOptions": [
+      "nodev",
+      "nosuid"
+    ],
+    "uid": 1000,
+    "gid": 1000,
+    "mode": "0750",
+    "selinuxLabel": null,
+    "worldWritable": false,
+    "symlinkTraversalObserved": false
+  },
+  "capacity": {
+    "sizeBytes": 21474836480,
+    "freeBytes": 19327352832,
+    "usedBytes": 2147483648,
+    "reservedBytes": null,
+    "inodeCapacity": null,
+    "inodeFree": null
+  },
+  "encryption": {
+    "required": true,
+    "observed": false,
+    "mode": "unknown",
+    "keyScope": "unknown",
+    "keyIdDigest": null
+  },
+  "quota": {
+    "required": true,
+    "observed": true,
+    "sizeBytes": 21474836480,
+    "maxInodes": null,
+    "policyRef": "urn:srcos:policy:agent-machine-evidence-quota"
+  },
+  "policy": {
+    "policyDomain": "urn:srcos:policy-domain:cluster-default",
+    "cacheReuseRequiresPolicy": false,
+    "policyDecisionRef": null,
+    "agentRegistryGrantRef": null,
+    "wipeReceiptRequired": true
+  },
+  "sensitivity": {
+    "class": "mixed",
+    "promptLikeContentPossible": false,
+    "secretLikeContentPossible": false,
+    "classificationRef": "urn:srcos:classification:agent-evidence-secret-free"
+  },
+  "snapshot": {
+    "snapshotAllowed": true,
+    "snapshotObserved": false,
+    "snapshotId": null,
+    "parentSnapshotId": null,
+    "lineageDigest": null
+  },
+  "lifecycle": {
+    "durability": "durable",
+    "ttlSeconds": null,
+    "evictionPolicy": "manual",
+    "wipeStatus": "not-requested",
+    "lastWipeReceiptRef": null
+  },
+  "runtime": {
+    "probeVersion": "0.1.0-dev",
+    "runtimeVersion": "0.1.0-dev",
+    "providerId": "urn:srcos:agent-machine:inference-provider:asahi-llama-cpp",
+    "modelDigest": null,
+    "tokenizerDigest": null
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "rawPromptContentIncluded": false,
+    "rawKvCacheContentIncluded": false,
+    "secretValuesIncluded": false
+  },
+  "observedAt": "2026-05-04T12:45:00Z",
+  "labels": {
+    "sourceos.storage.profile": "topolvm-k8s",
+    "sourceos.receipt.prototype": "true",
+    "sourceos.evidence.secret-free": "true"
+  }
+}
