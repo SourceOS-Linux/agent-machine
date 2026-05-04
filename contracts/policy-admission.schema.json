@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:policy-admission:v0.1.0",
+  "title": "PolicyAdmission",
+  "description": "Secret-free Policy Fabric admission decision/stub for Agent Machine AgentPod placement, activation, render, cache reuse, and side-effect gating.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specVersion",
+    "id",
+    "kind",
+    "request",
+    "decision",
+    "scope",
+    "obligations",
+    "receiptSafety",
+    "decidedAt"
+  ],
+  "properties": {
+    "specVersion": { "type": "string", "const": "0.1.0" },
+    "id": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:policy-admission:[a-z0-9][a-z0-9-]*$"
+    },
+    "kind": { "type": "string", "const": "PolicyAdmission" },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requestId", "requestType", "agentMachineId", "agentPodId", "deploymentReceiptId"],
+      "properties": {
+        "requestId": { "type": "string" },
+        "requestType": {
+          "type": "string",
+          "enum": ["placement", "activation", "render", "cache-reuse", "side-effect", "teardown", "wipe"]
+        },
+        "agentMachineId": {
+          "type": "string",
+          "pattern": "^urn:srcos:agent-machine:[a-z0-9][a-z0-9-]*$"
+        },
+        "agentPodId": {
+          "type": "string",
+          "pattern": "^urn:srcos:agent-machine:agent-pod:[a-z0-9][a-z0-9-]*$"
+        },
+        "providerId": {
+          "type": ["string", "null"],
+          "pattern": "^urn:srcos:agent-machine:inference-provider:[a-z0-9][a-z0-9-]*$"
+        },
+        "deploymentReceiptId": {
+          "type": "string",
+          "pattern": "^urn:srcos:agent-machine:deployment-receipt:[a-f0-9]{16,64}$"
+        },
+        "planDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" },
+        "manifestDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "authorizationGranted", "decisionRef", "decisionDigest"],
+      "properties": {
+        "status": { "type": "string", "enum": ["missing", "allowed", "denied", "not-required", "unknown"] },
+        "authorizationGranted": { "type": "boolean" },
+        "decisionRef": { "type": ["string", "null"] },
+        "decisionDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" },
+        "reason": { "type": ["string", "null"] },
+        "policyBundleRef": { "type": ["string", "null"] },
+        "policyBundleDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed", "denied"],
+      "properties": {
+        "allowed": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "networkExposure": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "storageClasses": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "volumeClasses": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "providerIds": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "cacheReuse": { "type": "boolean" },
+            "sideEffects": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+          }
+        },
+        "denied": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "networkExposure": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "storageClasses": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "volumeClasses": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "providerIds": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "cacheReuse": { "type": "boolean" },
+            "sideEffects": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+          }
+        }
+      }
+    },
+    "obligations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requiredReceipts", "expiresAt", "revocationRef"],
+      "properties": {
+        "requiredReceipts": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["deployment", "storage", "runtime", "wipe", "teardown", "cache-reuse"] },
+          "uniqueItems": true
+        },
+        "expiresAt": { "type": ["string", "null"] },
+        "revocationRef": { "type": ["string", "null"] },
+        "constraints": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    },
+    "receiptSafety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["includeRawContent", "rawPromptContentIncluded", "rawKvCacheContentIncluded", "secretValuesIncluded", "privateMemoryIncluded"],
+      "properties": {
+        "includeRawContent": { "type": "boolean", "const": false },
+        "rawPromptContentIncluded": { "type": "boolean", "const": false },
+        "rawKvCacheContentIncluded": { "type": "boolean", "const": false },
+        "secretValuesIncluded": { "type": "boolean", "const": false },
+        "privateMemoryIncluded": { "type": "boolean", "const": false }
+      }
+    },
+    "decidedAt": { "type": "string" },
+    "labels": { "type": "object", "additionalProperties": { "type": "string" } }
+  }
+}
