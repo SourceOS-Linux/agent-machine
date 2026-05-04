@@ -23,6 +23,8 @@ validate-quadlet:
 validate-render:
 	$(PYTHON) scripts/render-agentpod-plan.py $(LOCAL_AGENTPOD) --pretty >/tmp/agent-machine-local-agentpod-plan.json
 	$(PYTHON) scripts/render-agentpod-plan.py $(K8S_AGENTPOD) --pretty >/tmp/agent-machine-k8s-agentpod-plan.json
+	$(PYTHON) scripts/render-agentpod-plan.py $(LOCAL_AGENTPOD) --receipt --artifact-path /tmp/agent-machine-local-agentpod-plan.json --pretty >/tmp/agent-machine-local-deployment-receipt.json
+	$(PYTHON) scripts/render-agentpod-plan.py $(K8S_AGENTPOD) --receipt --artifact-path /tmp/agent-machine-k8s-agentpod-plan.json --pretty >/tmp/agent-machine-k8s-deployment-receipt.json
 
 validate-cli:
 	sh -n $(CLI)
