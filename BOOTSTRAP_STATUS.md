@@ -1,6 +1,6 @@
 # Agent Machine Bootstrap Status
 
-Agent Machine has reached bootstrap-runtime-control-substrate status. It is not production-ready. The remaining bootstrap blocker is external validation proof: `make validate` must be proven in a real runner and GitHub Actions visibility must be resolved or explicitly explained.
+Agent Machine has reached bootstrap-runtime-control-substrate status. It is not production-ready. The bootstrap MVP now has real GitHub Actions validation proof through PR #9: workflow run `25322297618` completed successfully and ran the canonical `make validate` path before merge.
 
 ## Current status
 
@@ -16,13 +16,14 @@ Agent Machine has reached bootstrap-runtime-control-substrate status. It is not 
 | Storage receipt resolver | Complete for bootstrap | Activation evaluator resolves StorageReceipt objects from files or directories and fails closed on unsafe receipts. |
 | CLI | Complete for bootstrap | Bootstrap shell CLI delegates render and activation evaluation to Python package CLI. |
 | Docs | Complete for bootstrap | README, docs index, quickstart, install, troubleshooting, readiness, release gate, ADRs, and integration stubs exist. |
-| CI visibility | Blocked | Connector repeatedly returns no workflow runs/statuses. Tracked in Issue #2. |
+| CI validation proof | Complete for bootstrap | PR #9 validation run `25322297618` passed before merge. |
+| Main-branch CI visibility | Open follow-up | Post-merge push-run visibility remains uncertain through the connector/API path. Tracked in Issue #2. |
 | Runtime provider activation | Not implemented | Activation is still a dry-run decision artifact, not runtime mutation. |
 | Production readiness | Blocked | Release gate remains open. |
 
 ## Bootstrap-complete checklist
 
-The bootstrap MVP should be considered complete only when all items below are checked.
+The bootstrap MVP is structurally complete. It remains bounded to dry-run/runtime-control evaluation, not live provider activation.
 
 - [x] Repository boundary documented.
 - [x] Homebrew bootstrap strategy documented.
@@ -43,8 +44,9 @@ The bootstrap MVP should be considered complete only when all items below are ch
 - [x] Shell CLI delegates render commands to the Python package CLI.
 - [x] Shell CLI delegates activation evaluation to the Python package CLI.
 - [x] `make validate` includes JSON, YAML, Quadlet, render, evidence, governance, activation, package, CLI, and formula checks.
-- [ ] `make validate` is proven green in a real runner.
-- [ ] GitHub Actions visibility is resolved or explicitly documented as unavailable through the connector/API path.
+- [x] `make validate` is proven green in a real GitHub Actions runner through PR #9 run `25322297618`.
+- [x] PR-triggered GitHub Actions visibility is confirmed through the connector/API path.
+- [ ] Main-branch push workflow visibility is resolved or explicitly documented as unavailable through the connector/API path.
 
 ## Canonical validation command
 
@@ -90,6 +92,20 @@ activationAllowed: true
 
 This is still dry-run control-plane evaluation. It does not start a provider.
 
+## CI proof record
+
+The first real validation proof was produced through PR #9.
+
+| Field | Value |
+| --- | --- |
+| PR | `#9` — Harden validation workflow for bootstrap proof |
+| Successful run | `25322297618` |
+| Successful job | `Validate contracts, examples, CLI, formula, and docs` |
+| Canonical command | `make validate` |
+| Merge commit | `bceca6e92847edb19c2fd0f45709de45fe430e03` |
+
+The PR run proved that the validation path can pass in GitHub Actions. Post-merge push-run discovery still returned no visible run through the connector at the time of update, so Issue #2 remains open for main-branch visibility.
+
 ## Fail-closed guarantees at bootstrap
 
 Agent Machine currently fails closed when activation evaluation sees:
@@ -113,7 +129,7 @@ Agent Machine currently fails closed when activation evaluation sees:
 
 The following remain production-blocking:
 
-- visible green CI run;
+- main-branch CI visibility and branch-protection policy;
 - image digest pinning and provenance gate;
 - real Policy Fabric client or endpoint;
 - real Agent Registry grant resolver;
@@ -127,4 +143,4 @@ The following remain production-blocking:
 
 ## Decision
 
-Agent Machine is bootstrap-ready pending external validation proof. It remains production-blocked by design.
+Agent Machine is bootstrap-ready as a dry-run runtime-control substrate. It remains production-blocked by design.
