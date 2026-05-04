@@ -1,0 +1,172 @@
+#!/usr/bin/env sh
+set -eu
+
+VERSION="0.1.0-dev"
+COMMAND="${1:-help}"
+
+json_escape() {
+  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
+print_help() {
+  cat <<'EOF'
+agent-machine: SourceOS Agent Machine local node substrate CLI
+
+Usage:
+  agent-machine help
+  agent-machine version
+  agent-machine paths
+  agent-machine probe [--format json] [--fail-closed]
+
+This is the bootstrap CLI. It is intentionally conservative: it discovers host/runtime hints and never emits secrets, raw prompts, raw KV-cache contents, or credentials.
+EOF
+}
+
+print_version() {
+  printf 'agent-machine %s\n' "$VERSION"
+}
+
+print_paths() {
+  cat <<'EOF'
+Agent Machine default paths:
+  config:   /etc/agent-machine
+  state:    /var/lib/agent-machine
+  models:   /var/lib/agent-machine/models
+  cache:    /var/lib/agent-machine/cache
+  evidence: /var/lib/agent-machine/evidence
+  runtime:  /run/agent-machine
+EOF
+}
+
+have_cmd() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+probe_json() {
+  HOSTNAME_VALUE="$(hostname 2>/dev/null || printf 'unknown')"
+  OS_VALUE="$(uname -s 2>/dev/null || printf 'unknown')"
+  KERNEL_VALUE="$(uname -r 2>/dev/null || printf 'unknown')"
+  ARCH_VALUE="$(uname -m 2>/dev/null || printf 'unknown')"
+  SELINUX_VALUE="unknown"
+  if have_cmd getenforce; then
+    SELINUX_VALUE="$(getenforce 2>/dev/null || printf 'unknown')"
+  fi
+  CGROUP_VALUE="unknown"
+  if [ -f /sys/fs/cgroup/cgroup.controllers ]; then
+    CGROUP_VALUE="v2"
+  elif [ -d /sys/fs/cgroup ]; then
+    CGROUP_VALUE="v1"
+  fi
+  PODMAN_AVAILABLE="false"
+  DOCKER_AVAILABLE="false"
+  SYSTEMD_AVAILABLE="false"
+  LVM_AVAILABLE="false"
+  VULKAN_AVAILABLE="false"
+  CUDA_AVAILABLE="false"
+  ROCM_AVAILABLE="false"
+
+  have_cmd podman && PODMAN_AVAILABLE="true"
+  have_cmd docker && DOCKER_AVAILABLE="true"
+  have_cmd systemctl && SYSTEMD_AVAILABLE="true"
+  have_cmd lvs && LVM_AVAILABLE="true"
+  have_cmd vulkaninfo && VULKAN_AVAILABLE="true"
+  have_cmd nvidia-smi && CUDA_AVAILABLE="true"
+  have_cmd rocminfo && ROCM_AVAILABLE="true"
+
+  HOSTNAME_ESCAPED="$(json_escape "$HOSTNAME_VALUE")"
+  OS_ESCAPED="$(json_escape "$OS_VALUE")"
+  KERNEL_ESCAPED="$(json_escape "$KERNEL_VALUE")"
+  ARCH_ESCAPED="$(json_escape "$ARCH_VALUE")"
+  SELINUX_ESCAPED="$(json_escape "$SELINUX_VALUE")"
+  CGROUP_ESCAPED="$(json_escape "$CGROUP_VALUE")"
+
+  cat <<EOF
+{
+  "specVersion": "0.1.0",
+  "kind": "AgentMachineProbe",
+  "host": {
+    "hostname": "$HOSTNAME_ESCAPED",
+    "os": "$OS_ESCAPED",
+    "kernel": "$KERNEL_ESCAPED",
+    "arch": "$ARCH_ESCAPED"
+  },
+  "runtime": {
+    "systemdAvailable": $SYSTEMD_AVAILABLE,
+    "podmanAvailable": $PODMAN_AVAILABLE,
+    "dockerAvailable": $DOCKER_AVAILABLE,
+    "selinuxMode": "$SELINUX_ESCAPED",
+    "cgroupMode": "$CGROUP_ESCAPED"
+  },
+  "storage": {
+    "lvmAvailable": $LVM_AVAILABLE,
+    "modelCache": "/var/lib/agent-machine/models",
+    "runtimeCache": "/var/lib/agent-machine/cache",
+    "evidencePath": "/var/lib/agent-machine/evidence"
+  },
+  "accelerators": {
+    "cpuAvailable": true,
+    "vulkanProbeAvailable": $VULKAN_AVAILABLE,
+    "cudaProbeAvailable": $CUDA_AVAILABLE,
+    "rocmProbeAvailable": $ROCM_AVAILABLE,
+    "metalAvailable": false
+  },
+  "safety": {
+    "rawPromptContentIncluded": false,
+    "rawKvCacheContentIncluded": false,
+    "secretValuesIncluded": false
+  }
+}
+EOF
+}
+
+probe_text() {
+  printf 'Agent Machine probe summary\n'
+  printf '  host: %s %s %s\n' "$(uname -s 2>/dev/null || printf unknown)" "$(uname -r 2>/dev/null || printf unknown)" "$(uname -m 2>/dev/null || printf unknown)"
+  if have_cmd podman; then printf '  podman: available\n'; else printf '  podman: unavailable\n'; fi
+  if have_cmd docker; then printf '  docker: available\n'; else printf '  docker: unavailable\n'; fi
+  if have_cmd lvs; then printf '  lvm: available\n'; else printf '  lvm: unavailable\n'; fi
+  if have_cmd vulkaninfo; then printf '  vulkan probe: available\n'; else printf '  vulkan probe: unavailable\n'; fi
+  printf '  metal: unavailable on Linux profiles\n'
+}
+
+case "$COMMAND" in
+  help|-h|--help)
+    print_help
+    ;;
+  version|--version)
+    print_version
+    ;;
+  paths)
+    print_paths
+    ;;
+  probe)
+    shift || true
+    FORMAT="text"
+    while [ "$#" -gt 0 ]; do
+      case "$1" in
+        --format)
+          shift
+          FORMAT="${1:-text}"
+          ;;
+        --format=json)
+          FORMAT="json"
+          ;;
+        --fail-closed)
+          # Reserved for future strict safety enforcement.
+          ;;
+        *)
+          ;;
+      esac
+      shift || true
+    done
+    if [ "$FORMAT" = "json" ]; then
+      probe_json
+    else
+      probe_text
+    fi
+    ;;
+  *)
+    print_help
+    exit 2
+    ;;
+esac
