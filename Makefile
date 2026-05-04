@@ -1,4 +1,4 @@
-.PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-package validate-cli validate-formula doctor probe
+.PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-package validate-cli validate-formula doctor probe
 
 PYTHON ?= python3
 RUBY ?= ruby
@@ -6,6 +6,7 @@ CLI := bin/agent-machine
 BOOTSTRAP_CLI := sh $(CLI)
 FORMULA := packaging/homebrew/Formula/agent-machine.rb
 LOCAL_AGENTPOD := examples/local-podman-llama-cpp.agent-pod.json
+PINNED_AGENTPOD := examples/local-podman-llama-cpp.pinned.agent-pod.json
 K8S_AGENTPOD := examples/k8s-topolvm.agent-pod.json
 LOCAL_QUADLET := deploy/quadlet/agent-machine-llama-cpp.container
 K8S_MANIFEST := deploy/k8s/llama-cpp-topolvm-pod.yaml
@@ -17,8 +18,9 @@ RECEIPT_DIR := examples
 DEPLOYMENT_RECEIPT_ID := urn:srcos:agent-machine:deployment-receipt:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 DECIDED_AT := 2026-05-04T12:51:00Z
 PYCLI := PYTHONPATH=src $(PYTHON) -m agent_machine.cli
+PYMOD := PYTHONPATH=src $(PYTHON) -m
 
-validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-package validate-cli validate-formula
+validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-package validate-cli validate-formula
 
 validate-json:
 	$(PYTHON) scripts/validate-json.py
@@ -55,6 +57,10 @@ validate-activation:
 	$(PYTHON) scripts/evaluate-activation.py $(LOCAL_AGENTPOD) $(READY_POLICY) $(READY_GRANT) --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --storage-receipt-dir $(RECEIPT_DIR) --decided-at $(DECIDED_AT) --decision-id urn:srcos:agent-machine:activation-decision:local-llama-cpp-allowed --pretty >/tmp/agent-machine-evaluate-activation-allowed.json
 	$(PYCLI) activate evaluate $(LOCAL_AGENTPOD) $(FAIL_POLICY) $(FAIL_GRANT) --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --storage-receipt-dir $(RECEIPT_DIR) --decided-at $(DECIDED_AT) --decision-id urn:srcos:agent-machine:activation-decision:local-llama-cpp-fail-closed --pretty >/tmp/agent-machine-pycli-evaluate-activation-fail-closed.json
 	$(BOOTSTRAP_CLI) activate evaluate $(LOCAL_AGENTPOD) $(READY_POLICY) $(READY_GRANT) --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --storage-receipt-dir $(RECEIPT_DIR) --decided-at $(DECIDED_AT) --decision-id urn:srcos:agent-machine:activation-decision:local-llama-cpp-allowed --pretty >/tmp/agent-machine-bootstrap-evaluate-activation-allowed.json
+
+validate-supply-chain:
+	$(PYTHON) scripts/validate-supply-chain.py
+	$(PYMOD) agent_machine.supply_chain $(PINNED_AGENTPOD) --strict
 
 validate-package:
 	$(PYTHON) scripts/validate-package.py

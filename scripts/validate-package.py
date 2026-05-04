@@ -18,6 +18,7 @@ def main() -> int:
     import agent_machine.cli
     import agent_machine.evidence
     import agent_machine.governance
+    import agent_machine.supply_chain
     import agent_machine.renderers.k8s
     import agent_machine.renderers.plan
     import agent_machine.renderers.quadlet
@@ -46,6 +47,8 @@ def main() -> int:
         raise AssertionError("stable_digest must be key-order independent")
     if not stable_text_digest("agent-machine").startswith("sha256:"):
         raise AssertionError("stable_text_digest must return sha256: prefixed digest")
+    if not agent_machine.supply_chain.is_sha256_digest("sha256:" + "a" * 64):
+        raise AssertionError("supply_chain.is_sha256_digest rejected valid digest")
     if str(default_model_cache_path()) != "/var/lib/agent-machine/models":
         raise AssertionError("unexpected default model cache path")
     if str(default_evidence_path()) != "/var/lib/agent-machine/evidence":

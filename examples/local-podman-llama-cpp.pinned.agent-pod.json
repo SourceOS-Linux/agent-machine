@@ -1,13 +1,13 @@
 {
   "specVersion": "0.1.0",
-  "id": "urn:srcos:agent-machine:agent-pod:local-podman-llama-cpp",
+  "id": "urn:srcos:agent-machine:agent-pod:local-podman-llama-cpp-pinned",
   "kind": "AgentPod",
   "podType": "local-podman-quadlet",
   "profile": "m2-asahi-linux",
   "workload": {
-    "name": "local-llama-cpp-provider",
+    "name": "local-llama-cpp-provider-pinned",
     "purpose": "inference-provider",
-    "description": "Local llama.cpp OpenAI-compatible provider for M2 Asahi and SourceOS workstations.",
+    "description": "Digest-pinned local llama.cpp provider example for release-candidate supply-chain validation.",
     "agentIdentityRequired": true,
     "agentIdentityRef": "urn:srcos:agent:local-inference-provider",
     "workroomRef": "urn:srcos:workroom:local-default",
@@ -15,8 +15,11 @@
   },
   "runtime": {
     "mode": "podman-quadlet",
-    "imageOrCommand": "ghcr.io/ggerganov/llama.cpp:server",
-    "imageReferencePolicy": "tag-allowed-bootstrap",
+    "imageOrCommand": "ghcr.io/ggerganov/llama.cpp@sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "imageDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "imageReferencePolicy": "digest-pinned",
+    "sbomRef": "urn:srcos:sbom:llama-cpp-server-placeholder",
+    "provenanceRef": "urn:srcos:provenance:llama-cpp-server-placeholder",
     "entrypoint": "llama-server",
     "args": [
       "--host",
@@ -105,6 +108,7 @@
     "sourceos.profile": "m2-asahi-linux",
     "sourceos.runtime": "podman-quadlet",
     "sourceos.provider": "llama.cpp",
-    "sourceos.exposure": "loopback-only"
+    "sourceos.exposure": "loopback-only",
+    "sourceos.supply-chain": "digest-pinned-placeholder"
   }
 }
