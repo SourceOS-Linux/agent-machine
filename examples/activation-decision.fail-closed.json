@@ -37,8 +37,8 @@
   "obligations": {
     "requiredReceipts": [
       "deployment",
-      "storage",
-      "runtime"
+      "runtime",
+      "storage"
     ],
     "policyDecisionRef": null,
     "agentRegistryGrantRef": null,
