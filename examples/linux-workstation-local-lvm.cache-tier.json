@@ -1,0 +1,55 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:cache-tier:linux-workstation-warm-cache",
+  "kind": "CacheTier",
+  "backend": "local-lvm",
+  "volumeClass": "agent-cache-warm",
+  "tier": "warm",
+  "purpose": [
+    "kv-cache",
+    "prompt-prefix-cache",
+    "embedding-index",
+    "retrieval-pack"
+  ],
+  "sensitivity": "sensitive",
+  "policyDomain": "urn:srcos:policy-domain:local-workstation-default",
+  "identityScopeRequired": true,
+  "encryption": {
+    "required": true,
+    "observed": true,
+    "mode": "luks"
+  },
+  "lifecycle": {
+    "durability": "semi-durable",
+    "ttlSeconds": 604800,
+    "evictionPolicy": "policy",
+    "snapshotAllowed": false,
+    "wipeReceiptRequired": true
+  },
+  "quota": {
+    "sizeBytes": 85899345920,
+    "reservedBytes": 10737418240,
+    "maxInodes": null
+  },
+  "mount": {
+    "mode": "runtime-managed",
+    "hostPath": "/var/lib/agent-machine/cache/warm",
+    "containerPath": "/agent/cache/warm",
+    "filesystem": "xfs",
+    "mountOptions": [
+      "nodev",
+      "nosuid"
+    ]
+  },
+  "receipt": {
+    "required": true,
+    "includeFreeBytes": true,
+    "includeSnapshotLineage": false,
+    "includeRawContent": false
+  },
+  "labels": {
+    "sourceos.storage.profile": "local-lvm",
+    "sourceos.runtime.preferred": "podman-quadlet",
+    "sourceos.cache.scope": "identity-policy-domain"
+  }
+}
