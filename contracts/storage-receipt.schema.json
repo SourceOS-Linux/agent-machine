@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:storage-receipt:v0.1.0",
+  "title": "StorageReceipt",
+  "description": "Secret-free evidence for Agent Machine storage/cache/evidence volumes across local filesystem, local LVM, TopoLVM, tmpfs, object-store, and remote-volume backends.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specVersion",
+    "id",
+    "kind",
+    "agentMachineId",
+    "backend",
+    "volumeClass",
+    "tier",
+    "reference",
+    "filesystem",
+    "capacity",
+    "encryption",
+    "quota",
+    "policy",
+    "sensitivity",
+    "lifecycle",
+    "runtime",
+    "receiptSafety",
+    "observedAt"
+  ],
+  "properties": {
+    "specVersion": { "type": "string", "const": "0.1.0" },
+    "id": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:storage-receipt:[a-z0-9][a-z0-9-]*$"
+    },
+    "kind": { "type": "string", "const": "StorageReceipt" },
+    "agentMachineId": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:[a-z0-9][a-z0-9-]*$"
+    },
+    "agentPodId": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:agent-pod:[a-z0-9][a-z0-9-]*$"
+    },
+    "backend": {
+      "type": "string",
+      "enum": ["filesystem", "local-lvm", "topolvm-k8s", "tmpfs", "object-store", "remote-volume"]
+    },
+    "volumeClass": {
+      "type": "string",
+      "enum": [
+        "agent-models",
+        "agent-cache-hot",
+        "agent-cache-warm",
+        "agent-cache-cold",
+        "agent-scratch",
+        "agent-evidence",
+        "agent-artifacts"
+      ]
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["hot", "warm", "cold", "scratch", "evidence", "artifact", "model"]
+    },
+    "purpose": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "model-artifacts",
+          "tokenizer-assets",
+          "kv-cache",
+          "prompt-prefix-cache",
+          "embedding-index",
+          "reranker-state",
+          "retrieval-pack",
+          "scratch-workspace",
+          "execution-evidence",
+          "user-artifact"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["referenceType"],
+      "properties": {
+        "referenceType": {
+          "type": "string",
+          "enum": ["host-path", "lvm-logical-volume", "topolvm-pvc", "tmpfs-mount", "object-uri", "remote-volume"]
+        },
+        "hostPath": { "type": "string" },
+        "containerPath": { "type": "string" },
+        "mountPath": { "type": "string" },
+        "volumeGroup": { "type": "string" },
+        "logicalVolume": { "type": "string" },
+        "thinPool": { "type": "string" },
+        "pvcName": { "type": "string" },
+        "storageClassName": { "type": "string" },
+        "namespace": { "type": "string" },
+        "objectUriDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "description": "Digest of an object URI/reference when the raw URI should not be exposed."
+        }
+      }
+    },
+    "filesystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "mountOptions"],
+      "properties": {
+        "type": { "type": "string" },
+        "mountOptions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "uid": { "type": ["integer", "null"], "minimum": 0 },
+        "gid": { "type": ["integer", "null"], "minimum": 0 },
+        "mode": { "type": ["string", "null"], "pattern": "^[0-7]{3,4}$" },
+        "selinuxLabel": { "type": ["string", "null"] },
+        "worldWritable": { "type": "boolean" },
+        "symlinkTraversalObserved": { "type": "boolean" }
+      }
+    },
+    "capacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sizeBytes", "freeBytes"],
+      "properties": {
+        "sizeBytes": { "type": ["integer", "null"], "minimum": 0 },
+        "freeBytes": { "type": ["integer", "null"], "minimum": 0 },
+        "usedBytes": { "type": ["integer", "null"], "minimum": 0 },
+        "reservedBytes": { "type": ["integer", "null"], "minimum": 0 },
+        "inodeCapacity": { "type": ["integer", "null"], "minimum": 0 },
+        "inodeFree": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "encryption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "observed", "mode"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "observed": { "type": "boolean" },
+        "mode": { "type": "string", "enum": ["none", "fscrypt", "luks", "dm-crypt", "hardware", "unknown"] },
+        "keyScope": { "type": ["string", "null"], "enum": ["machine", "user", "agent", "policy-domain", "unknown", null] },
+        "keyIdDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" }
+      }
+    },
+    "quota": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "observed"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "observed": { "type": "boolean" },
+        "sizeBytes": { "type": ["integer", "null"], "minimum": 0 },
+        "maxInodes": { "type": ["integer", "null"], "minimum": 0 },
+        "policyRef": { "type": ["string", "null"] }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policyDomain", "cacheReuseRequiresPolicy", "wipeReceiptRequired"],
+      "properties": {
+        "policyDomain": { "type": "string" },
+        "cacheReuseRequiresPolicy": { "type": "boolean" },
+        "policyDecisionRef": { "type": ["string", "null"] },
+        "agentRegistryGrantRef": { "type": ["string", "null"] },
+        "wipeReceiptRequired": { "type": "boolean" }
+      }
+    },
+    "sensitivity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class", "promptLikeContentPossible", "secretLikeContentPossible"],
+      "properties": {
+        "class": { "type": "string", "enum": ["public", "internal", "sensitive", "secret", "mixed"] },
+        "promptLikeContentPossible": { "type": "boolean" },
+        "secretLikeContentPossible": { "type": "boolean" },
+        "classificationRef": { "type": ["string", "null"] }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "snapshotAllowed": { "type": "boolean" },
+        "snapshotObserved": { "type": "boolean" },
+        "snapshotId": { "type": ["string", "null"] },
+        "parentSnapshotId": { "type": ["string", "null"] },
+        "lineageDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["durability", "ttlSeconds", "evictionPolicy", "wipeStatus"],
+      "properties": {
+        "durability": { "type": "string", "enum": ["ephemeral", "semi-durable", "durable"] },
+        "ttlSeconds": { "type": ["integer", "null"], "minimum": 0 },
+        "evictionPolicy": { "type": "string", "enum": ["manual", "lru", "ttl", "quota", "policy", "none"] },
+        "wipeStatus": { "type": "string", "enum": ["not-requested", "pending", "completed", "failed", "not-applicable"] },
+        "lastWipeReceiptRef": { "type": ["string", "null"] }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["probeVersion", "runtimeVersion"],
+      "properties": {
+        "probeVersion": { "type": "string" },
+        "runtimeVersion": { "type": "string" },
+        "providerId": { "type": ["string", "null"] },
+        "modelDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" },
+        "tokenizerDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" }
+      }
+    },
+    "receiptSafety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["includeRawContent", "rawPromptContentIncluded", "rawKvCacheContentIncluded", "secretValuesIncluded"],
+      "properties": {
+        "includeRawContent": { "type": "boolean", "const": false },
+        "rawPromptContentIncluded": { "type": "boolean", "const": false },
+        "rawKvCacheContentIncluded": { "type": "boolean", "const": false },
+        "secretValuesIncluded": { "type": "boolean", "const": false }
+      }
+    },
+    "observedAt": { "type": "string" },
+    "labels": { "type": "object", "additionalProperties": { "type": "string" } }
+  }
+}
