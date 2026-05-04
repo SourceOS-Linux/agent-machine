@@ -22,13 +22,15 @@ from agent_machine.governance import (  # noqa: E402
 POLICY_EXAMPLES = {
     "missing": REPO_ROOT / "examples" / "policy-admission.missing.json",
     "denied": REPO_ROOT / "examples" / "policy-admission.denied.json",
-    "allowed": REPO_ROOT / "examples" / "policy-admission.allowed.json",
+    "allowed_render": REPO_ROOT / "examples" / "policy-admission.allowed.json",
+    "allowed_activation": REPO_ROOT / "examples" / "policy-admission.allowed-activation.json",
 }
 
 GRANT_EXAMPLES = {
     "missing": REPO_ROOT / "examples" / "agent-registry-grant.missing.json",
     "revoked": REPO_ROOT / "examples" / "agent-registry-grant.revoked.json",
-    "active": REPO_ROOT / "examples" / "agent-registry-grant.active.json",
+    "active_render": REPO_ROOT / "examples" / "agent-registry-grant.active.json",
+    "active_activation": REPO_ROOT / "examples" / "agent-registry-grant.active-activation.json",
 }
 
 
@@ -53,13 +55,16 @@ def validate_grant_examples() -> dict[str, dict]:
 
 
 def validate_activation_matrix(policies: dict[str, dict], grants: dict[str, dict]) -> None:
-    # Missing/denied policy or missing/revoked grant must fail closed.
     fail_closed_cases = [
         ("missing", "missing"),
         ("denied", "missing"),
         ("denied", "revoked"),
-        ("allowed", "missing"),
-        ("allowed", "revoked"),
+        ("allowed_render", "missing"),
+        ("allowed_render", "revoked"),
+        ("allowed_render", "active_render"),
+        ("allowed_activation", "active_render"),
+        ("allowed_render", "active_activation"),
+        ("allowed_activation", "revoked"),
     ]
     for policy_name, grant_name in fail_closed_cases:
         assert_activation_fails_closed(
@@ -69,11 +74,12 @@ def validate_activation_matrix(policies: dict[str, dict], grants: dict[str, dict
         )
         print(f"VALID activation fail-closed policy={policy_name} grant={grant_name}")
 
-    # Current active grant + allowed policy is render-only in examples but semantically
-    # activation-ready at the primitive gate level. Higher-level activation policy will
-    # still restrict actual side effects by scope. This validates the primitive AND gate.
-    assert_activation_ready(policies["allowed"], grants["active"], source="activation:allowed:active")
-    print("VALID activation primitive-ready policy=allowed grant=active")
+    assert_activation_ready(
+        policies["allowed_activation"],
+        grants["active_activation"],
+        source="activation:allowed_activation:active_activation",
+    )
+    print("VALID activation ready policy=allowed_activation grant=active_activation")
 
 
 def main() -> int:
