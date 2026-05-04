@@ -18,7 +18,7 @@ try:
     from jsonschema.validators import validator_for
 except ImportError as exc:  # pragma: no cover - exercised in environments without deps
     raise SystemExit(
-        "Missing dependency: jsonschema. Install with `python -m pip install jsonschema`."
+        "Missing dependency: jsonschema. Install with `python -m pip install -r requirements-dev.txt`."
     ) from exc
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -28,6 +28,7 @@ EXAMPLES_DIR = REPO_ROOT / "examples"
 SCHEMA_BY_KIND = {
     "AgentMachine": CONTRACTS_DIR / "agent-machine.schema.json",
     "CacheTier": CONTRACTS_DIR / "cache-tier.schema.json",
+    "InferenceProvider": CONTRACTS_DIR / "inference-provider.schema.json",
 }
 
 
