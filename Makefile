@@ -7,6 +7,7 @@ FORMULA := packaging/homebrew/Formula/agent-machine.rb
 LOCAL_AGENTPOD := examples/local-podman-llama-cpp.agent-pod.json
 K8S_AGENTPOD := examples/k8s-topolvm.agent-pod.json
 LOCAL_QUADLET := deploy/quadlet/agent-machine-llama-cpp.container
+K8S_MANIFEST := deploy/k8s/llama-cpp-topolvm-pod.yaml
 
 validate: validate-json validate-yaml validate-quadlet validate-render validate-cli validate-formula
 
@@ -25,6 +26,7 @@ validate-render:
 	$(PYTHON) scripts/render-agentpod-plan.py $(K8S_AGENTPOD) --pretty >/tmp/agent-machine-k8s-agentpod-plan.json
 	$(PYTHON) scripts/render-agentpod-plan.py $(LOCAL_AGENTPOD) --receipt --artifact-path /tmp/agent-machine-local-agentpod-plan.json --pretty >/tmp/agent-machine-local-deployment-receipt.json
 	$(PYTHON) scripts/render-agentpod-plan.py $(K8S_AGENTPOD) --receipt --artifact-path /tmp/agent-machine-k8s-agentpod-plan.json --pretty >/tmp/agent-machine-k8s-deployment-receipt.json
+	$(PYTHON) scripts/render-agentpod-k8s.py $(K8S_AGENTPOD) --compare $(K8S_MANIFEST)
 
 validate-cli:
 	sh -n $(CLI)
