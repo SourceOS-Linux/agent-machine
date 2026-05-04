@@ -49,9 +49,11 @@ def schema_by_kind(root: Path | None = None) -> dict[str, Path]:
         "AgentPlaneRuntimeEvidence": base / "agentplane-runtime-evidence.schema.json",
         "AgentPod": base / "agent-pod.schema.json",
         "AgentPodDeploymentPlan": base / "agentpod-deployment-plan.schema.json",
+        "AgentRegistryGrant": base / "agent-registry-grant.schema.json",
         "CacheTier": base / "cache-tier.schema.json",
         "DeploymentReceipt": base / "deployment-receipt.schema.json",
         "InferenceProvider": base / "inference-provider.schema.json",
+        "PolicyAdmission": base / "policy-admission.schema.json",
         "StorageReceipt": base / "storage-receipt.schema.json",
     }
 
