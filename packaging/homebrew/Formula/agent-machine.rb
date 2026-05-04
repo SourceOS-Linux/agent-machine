@@ -20,6 +20,7 @@ class AgentMachine < Formula
       Agent Machine installed the bootstrap CLI:
         agent-machine version
         agent-machine paths
+        agent-machine doctor --format json
         agent-machine probe --format json
 
       This formula installs contracts, docs, and examples under:
@@ -33,6 +34,9 @@ class AgentMachine < Formula
 
   test do
     assert_match "agent-machine", shell_output("#{bin}/agent-machine version")
+    doctor = shell_output("#{bin}/agent-machine doctor --format json")
+    assert_match '"kind": "AgentMachineDoctor"', doctor
+    assert_match '"bootstrapOnly": true', doctor
     probe = shell_output("#{bin}/agent-machine probe --format json")
     assert_match '"kind": "AgentMachineProbe"', probe
     assert_match '"secretValuesIncluded": false', probe
