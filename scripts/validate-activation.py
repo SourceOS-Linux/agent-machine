@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -19,11 +20,16 @@ FAIL_POLICY = REPO_ROOT / "examples" / "policy-admission.missing.json"
 FAIL_GRANT = REPO_ROOT / "examples" / "agent-registry-grant.missing.json"
 READY_POLICY = REPO_ROOT / "examples" / "policy-admission.allowed-activation.json"
 READY_GRANT = REPO_ROOT / "examples" / "agent-registry-grant.active-activation.json"
+STORAGE_RECEIPT = REPO_ROOT / "examples" / "local-lvm-warm-cache.storage-receipt.json"
 FAIL_DECISION = REPO_ROOT / "examples" / "activation-decision.fail-closed.json"
 READY_DECISION = REPO_ROOT / "examples" / "activation-decision.allowed.json"
 DEPLOYMENT_RECEIPT_ID = "urn:srcos:agent-machine:deployment-receipt:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 STORAGE_RECEIPT_REFS = ["urn:srcos:agent-machine:storage-receipt:local-lvm-warm-cache"]
 DECIDED_AT = "2026-05-04T12:51:00Z"
+
+
+def canonical(value: dict) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))
 
 
 def assert_decision_shape(path: Path, expected_allowed: bool) -> None:
@@ -35,27 +41,42 @@ def assert_decision_shape(path: Path, expected_allowed: bool) -> None:
     print(f"VALID activation decision example {path.relative_to(REPO_ROOT)}")
 
 
-def assert_evaluator(policy_path: Path, grant_path: Path, expected_allowed: bool, label: str) -> None:
+def render_decision(policy_path: Path, grant_path: Path, decision_id: str) -> dict:
     decision = evaluate_activation(
         agentpod=load_json(LOCAL_AGENTPOD),
         policy=load_json(policy_path),
         grant=load_json(grant_path),
         deployment_receipt_id=DEPLOYMENT_RECEIPT_ID,
         storage_receipt_refs=STORAGE_RECEIPT_REFS,
+        storage_receipts=[load_json(STORAGE_RECEIPT)],
         decided_at=DECIDED_AT,
+        decision_id=decision_id,
+        root=REPO_ROOT,
     )
     validate_activation_decision_payload(decision, REPO_ROOT)
-    observed = decision["decision"]["activationAllowed"]
-    if observed is not expected_allowed:
-        raise AssertionError(f"{label}: expected activationAllowed={expected_allowed}, observed {observed}")
-    print(f"VALID activation evaluator {label}")
+    return decision
+
+
+def assert_evaluator(policy_path: Path, grant_path: Path, expected_path: Path, expected_allowed: bool, label: str) -> None:
+    expected = load_json(expected_path)
+    observed = render_decision(policy_path, grant_path, expected["id"])
+    if observed["decision"]["activationAllowed"] is not expected_allowed:
+        raise AssertionError(
+            f"{label}: expected activationAllowed={expected_allowed}, observed {observed['decision']['activationAllowed']}"
+        )
+    if canonical(observed) != canonical(expected):
+        raise AssertionError(
+            f"{label}: evaluator output drifted from {expected_path.relative_to(REPO_ROOT)}\n"
+            f"expected={canonical(expected)}\nobserved={canonical(observed)}"
+        )
+    print(f"VALID activation evaluator {label} matches {expected_path.relative_to(REPO_ROOT)}")
 
 
 def main() -> int:
     assert_decision_shape(FAIL_DECISION, expected_allowed=False)
     assert_decision_shape(READY_DECISION, expected_allowed=True)
-    assert_evaluator(FAIL_POLICY, FAIL_GRANT, expected_allowed=False, label="fail-closed")
-    assert_evaluator(READY_POLICY, READY_GRANT, expected_allowed=True, label="allowed")
+    assert_evaluator(FAIL_POLICY, FAIL_GRANT, FAIL_DECISION, expected_allowed=False, label="fail-closed")
+    assert_evaluator(READY_POLICY, READY_GRANT, READY_DECISION, expected_allowed=True, label="allowed")
     return 0
 
 
