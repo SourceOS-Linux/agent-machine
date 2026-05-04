@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:release-evidence-bundle:v0.1.0",
+  "title": "ReleaseEvidenceBundle",
+  "description": "Secret-free release evidence bundle tying together validation proof, commit identity, schema inventory, rendered artifact digests, supply-chain posture, and known blockers.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specVersion",
+    "id",
+    "kind",
+    "release",
+    "source",
+    "validation",
+    "inventories",
+    "renderedArtifacts",
+    "supplyChain",
+    "readiness",
+    "knownBlockers",
+    "receiptSafety",
+    "generatedAt"
+  ],
+  "properties": {
+    "specVersion": { "type": "string", "const": "0.1.0" },
+    "id": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:release-evidence-bundle:[a-z0-9][a-z0-9-]*$"
+    },
+    "kind": { "type": "string", "const": "ReleaseEvidenceBundle" },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "maturity", "productionReady"],
+      "properties": {
+        "name": { "type": "string" },
+        "maturity": { "type": "string", "enum": ["prototype", "bootstrap-ready", "release-candidate", "production-blocked", "production-ready"] },
+        "productionReady": { "type": "boolean" },
+        "notes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "branch", "commitSha"],
+      "properties": {
+        "repository": { "type": "string" },
+        "branch": { "type": "string" },
+        "commitSha": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "pullRequest": { "type": ["integer", "null"], "minimum": 1 }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonicalCommand", "status", "workflowRunId", "workflowJobName"],
+      "properties": {
+        "canonicalCommand": { "type": "string" },
+        "status": { "type": "string", "enum": ["passed", "failed", "unknown", "not-run"] },
+        "workflowRunId": { "type": ["integer", "null"], "minimum": 1 },
+        "workflowJobName": { "type": ["string", "null"] },
+        "validatedAt": { "type": ["string", "null"] }
+      }
+    },
+    "inventories": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemas", "examples", "docs"],
+      "properties": {
+        "schemas": { "$ref": "#/$defs/digestedFileList" },
+        "examples": { "$ref": "#/$defs/digestedFileList" },
+        "docs": { "$ref": "#/$defs/digestedFileList" }
+      }
+    },
+    "renderedArtifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "artifactKind", "digest"],
+        "properties": {
+          "name": { "type": "string" },
+          "artifactKind": { "type": "string" },
+          "path": { "type": ["string", "null"] },
+          "digest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+        }
+      }
+    },
+    "supplyChain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strictModeAvailable", "strictExamples", "mutableBootstrapExamples"],
+      "properties": {
+        "strictModeAvailable": { "type": "boolean" },
+        "strictExamples": { "$ref": "#/$defs/digestedFileList" },
+        "mutableBootstrapExamples": { "$ref": "#/$defs/digestedFileList" }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bootstrapReady", "productionReady", "releaseGateRef"],
+      "properties": {
+        "bootstrapReady": { "type": "boolean" },
+        "productionReady": { "type": "boolean" },
+        "releaseGateRef": { "type": "string" },
+        "statusRef": { "type": ["string", "null"] }
+      }
+    },
+    "knownBlockers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "receiptSafety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["includeRawContent", "rawPromptContentIncluded", "rawKvCacheContentIncluded", "secretValuesIncluded", "privateMemoryIncluded"],
+      "properties": {
+        "includeRawContent": { "type": "boolean", "const": false },
+        "rawPromptContentIncluded": { "type": "boolean", "const": false },
+        "rawKvCacheContentIncluded": { "type": "boolean", "const": false },
+        "secretValuesIncluded": { "type": "boolean", "const": false },
+        "privateMemoryIncluded": { "type": "boolean", "const": false }
+      }
+    },
+    "generatedAt": { "type": "string" }
+  },
+  "$defs": {
+    "digestedFileList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "digest"],
+        "properties": {
+          "path": { "type": "string" },
+          "digest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+        }
+      }
+    }
+  }
+}
