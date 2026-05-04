@@ -46,6 +46,7 @@ def schema_by_kind(root: Path | None = None) -> dict[str, Path]:
     base = contracts_dir(root)
     return {
         "AgentMachine": base / "agent-machine.schema.json",
+        "AgentPlaneRuntimeEvidence": base / "agentplane-runtime-evidence.schema.json",
         "AgentPod": base / "agent-pod.schema.json",
         "AgentPodDeploymentPlan": base / "agentpod-deployment-plan.schema.json",
         "CacheTier": base / "cache-tier.schema.json",
