@@ -1,0 +1,106 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:storage-receipt:local-lvm-warm-cache",
+  "kind": "StorageReceipt",
+  "agentMachineId": "urn:srcos:agent-machine:m2-asahi-local",
+  "agentPodId": "urn:srcos:agent-machine:agent-pod:local-podman-llama-cpp",
+  "backend": "local-lvm",
+  "volumeClass": "agent-cache-warm",
+  "tier": "warm",
+  "purpose": [
+    "kv-cache",
+    "prompt-prefix-cache",
+    "embedding-index",
+    "retrieval-pack"
+  ],
+  "reference": {
+    "referenceType": "lvm-logical-volume",
+    "hostPath": "/var/lib/agent-machine/cache/warm",
+    "containerPath": "/agent/cache/warm",
+    "mountPath": "/var/lib/agent-machine/cache/warm",
+    "volumeGroup": "agent-machine-vg",
+    "logicalVolume": "agent-cache-warm",
+    "thinPool": "agent-machine-thinpool"
+  },
+  "filesystem": {
+    "type": "xfs",
+    "mountOptions": [
+      "nodev",
+      "nosuid"
+    ],
+    "uid": 0,
+    "gid": 0,
+    "mode": "0750",
+    "selinuxLabel": "system_u:object_r:container_file_t:s0",
+    "worldWritable": false,
+    "symlinkTraversalObserved": false
+  },
+  "capacity": {
+    "sizeBytes": 85899345920,
+    "freeBytes": 64424509440,
+    "usedBytes": 21474836480,
+    "reservedBytes": 10737418240,
+    "inodeCapacity": null,
+    "inodeFree": null
+  },
+  "encryption": {
+    "required": true,
+    "observed": true,
+    "mode": "luks",
+    "keyScope": "machine",
+    "keyIdDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "quota": {
+    "required": true,
+    "observed": true,
+    "sizeBytes": 85899345920,
+    "maxInodes": null,
+    "policyRef": "urn:srcos:policy:agent-machine-cache-quota"
+  },
+  "policy": {
+    "policyDomain": "urn:srcos:policy-domain:local-workstation-default",
+    "cacheReuseRequiresPolicy": true,
+    "policyDecisionRef": null,
+    "agentRegistryGrantRef": null,
+    "wipeReceiptRequired": true
+  },
+  "sensitivity": {
+    "class": "sensitive",
+    "promptLikeContentPossible": true,
+    "secretLikeContentPossible": true,
+    "classificationRef": "urn:srcos:classification:agent-cache-sensitive"
+  },
+  "snapshot": {
+    "snapshotAllowed": false,
+    "snapshotObserved": false,
+    "snapshotId": null,
+    "parentSnapshotId": null,
+    "lineageDigest": null
+  },
+  "lifecycle": {
+    "durability": "semi-durable",
+    "ttlSeconds": 604800,
+    "evictionPolicy": "policy",
+    "wipeStatus": "not-requested",
+    "lastWipeReceiptRef": null
+  },
+  "runtime": {
+    "probeVersion": "0.1.0-dev",
+    "runtimeVersion": "0.1.0-dev",
+    "providerId": "urn:srcos:agent-machine:inference-provider:asahi-llama-cpp",
+    "modelDigest": null,
+    "tokenizerDigest": null
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "rawPromptContentIncluded": false,
+    "rawKvCacheContentIncluded": false,
+    "secretValuesIncluded": false
+  },
+  "observedAt": "2026-05-04T12:45:00Z",
+  "labels": {
+    "sourceos.storage.profile": "local-lvm",
+    "sourceos.cache.scope": "identity-policy-domain",
+    "sourceos.receipt.prototype": "true"
+  }
+}
