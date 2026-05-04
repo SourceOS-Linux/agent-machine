@@ -6,15 +6,18 @@ import json
 from pathlib import Path
 from typing import Any
 
-try:
-    import jsonschema
-    from jsonschema.validators import validator_for
-except ImportError as exc:  # pragma: no cover - exercised in environments without deps
-    raise RuntimeError(
-        "Missing dependency: jsonschema. Install with `python -m pip install -r requirements-dev.txt`."
-    ) from exc
-
 from agent_machine.paths import repo_root_from_file
+
+
+def jsonschema_validator_for() -> Any:
+    """Import jsonschema lazily so non-validation commands stay dependency-light."""
+    try:
+        from jsonschema.validators import validator_for
+    except ImportError as exc:  # pragma: no cover - exercised in environments without deps
+        raise RuntimeError(
+            "Missing dependency: jsonschema. Install with `python -m pip install -r requirements-dev.txt`."
+        ) from exc
+    return validator_for
 
 
 def repo_root() -> Path:
@@ -59,7 +62,7 @@ def iter_json_files(directory: Path) -> list[Path]:
 
 def check_schema(path: Path) -> dict[str, Any]:
     schema = load_json(path)
-    validator_cls = validator_for(schema)
+    validator_cls = jsonschema_validator_for()(schema)
     validator_cls.check_schema(schema)
     return schema
 
@@ -67,7 +70,7 @@ def check_schema(path: Path) -> dict[str, Any]:
 def validate_instance(instance_path: Path, schema_path: Path) -> None:
     schema = load_json(schema_path)
     instance = load_json(instance_path)
-    validator_cls = validator_for(schema)
+    validator_cls = jsonschema_validator_for()(schema)
     validator_cls.check_schema(schema)
     validator = validator_cls(schema)
     errors = sorted(validator.iter_errors(instance), key=lambda err: list(err.path))
