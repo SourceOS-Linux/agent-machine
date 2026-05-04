@@ -17,6 +17,9 @@ dependencies = [
   "PyYAML>=6.0,<7"
 ]
 
+[project.scripts]
+agent-machine-py = "agent_machine.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/SourceOS-Linux/agent-machine"
 Repository = "https://github.com/SourceOS-Linux/agent-machine"
@@ -26,4 +29,5 @@ where = ["src"]
 
 [tool.agent-machine]
 bootstrap_cli = "bin/agent-machine"
+python_cli = "agent-machine-py"
 canonical_validation = "make validate"
