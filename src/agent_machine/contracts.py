@@ -56,6 +56,7 @@ def schema_by_kind(root: Path | None = None) -> dict[str, Path]:
         "ExternalTrustSignalProvider": base / "external-trust-signal-provider.schema.json",
         "InferenceProvider": base / "inference-provider.schema.json",
         "PolicyAdmission": base / "policy-admission.schema.json",
+        "ReleaseEvidenceBundle": base / "release-evidence-bundle.schema.json",
         "StorageReceipt": base / "storage-receipt.schema.json",
     }
 
