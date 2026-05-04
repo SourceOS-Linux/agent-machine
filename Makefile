@@ -1,4 +1,4 @@
-.PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-package validate-cli validate-formula doctor probe
+.PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-release-bundle validate-package validate-cli validate-formula doctor probe
 
 PYTHON ?= python3
 RUBY ?= ruby
@@ -20,7 +20,7 @@ DECIDED_AT := 2026-05-04T12:51:00Z
 PYCLI := PYTHONPATH=src $(PYTHON) -m agent_machine.cli
 PYMOD := PYTHONPATH=src $(PYTHON) -m
 
-validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-package validate-cli validate-formula
+validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-release-bundle validate-package validate-cli validate-formula
 
 validate-json:
 	$(PYTHON) scripts/validate-json.py
@@ -61,6 +61,10 @@ validate-activation:
 validate-supply-chain:
 	$(PYTHON) scripts/validate-supply-chain.py
 	$(PYMOD) agent_machine.supply_chain $(PINNED_AGENTPOD) --strict
+
+validate-release-bundle:
+	$(PYTHON) scripts/validate-release-bundle.py
+	$(PYTHON) scripts/generate-release-evidence.py --pretty >/tmp/agent-machine-release-evidence-bundle.json
 
 validate-package:
 	$(PYTHON) scripts/validate-package.py
