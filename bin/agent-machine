@@ -16,6 +16,7 @@ Usage:
   agent-machine help
   agent-machine version
   agent-machine paths
+  agent-machine doctor [--format json]
   agent-machine probe [--format json] [--fail-closed]
 
 This is the bootstrap CLI. It is intentionally conservative: it discovers host/runtime hints and never emits secrets, raw prompts, raw KV-cache contents, or credentials.
@@ -42,36 +43,47 @@ have_cmd() {
   command -v "$1" >/dev/null 2>&1
 }
 
+bool_cmd() {
+  if have_cmd "$1"; then
+    printf 'true'
+  else
+    printf 'false'
+  fi
+}
+
+selinux_mode() {
+  if have_cmd getenforce; then
+    getenforce 2>/dev/null || printf 'unknown'
+  else
+    printf 'unknown'
+  fi
+}
+
+cgroup_mode() {
+  if [ -f /sys/fs/cgroup/cgroup.controllers ]; then
+    printf 'v2'
+  elif [ -d /sys/fs/cgroup ]; then
+    printf 'v1'
+  else
+    printf 'unknown'
+  fi
+}
+
 probe_json() {
   HOSTNAME_VALUE="$(hostname 2>/dev/null || printf 'unknown')"
   OS_VALUE="$(uname -s 2>/dev/null || printf 'unknown')"
   KERNEL_VALUE="$(uname -r 2>/dev/null || printf 'unknown')"
   ARCH_VALUE="$(uname -m 2>/dev/null || printf 'unknown')"
-  SELINUX_VALUE="unknown"
-  if have_cmd getenforce; then
-    SELINUX_VALUE="$(getenforce 2>/dev/null || printf 'unknown')"
-  fi
-  CGROUP_VALUE="unknown"
-  if [ -f /sys/fs/cgroup/cgroup.controllers ]; then
-    CGROUP_VALUE="v2"
-  elif [ -d /sys/fs/cgroup ]; then
-    CGROUP_VALUE="v1"
-  fi
-  PODMAN_AVAILABLE="false"
-  DOCKER_AVAILABLE="false"
-  SYSTEMD_AVAILABLE="false"
-  LVM_AVAILABLE="false"
-  VULKAN_AVAILABLE="false"
-  CUDA_AVAILABLE="false"
-  ROCM_AVAILABLE="false"
+  SELINUX_VALUE="$(selinux_mode)"
+  CGROUP_VALUE="$(cgroup_mode)"
 
-  have_cmd podman && PODMAN_AVAILABLE="true"
-  have_cmd docker && DOCKER_AVAILABLE="true"
-  have_cmd systemctl && SYSTEMD_AVAILABLE="true"
-  have_cmd lvs && LVM_AVAILABLE="true"
-  have_cmd vulkaninfo && VULKAN_AVAILABLE="true"
-  have_cmd nvidia-smi && CUDA_AVAILABLE="true"
-  have_cmd rocminfo && ROCM_AVAILABLE="true"
+  PODMAN_AVAILABLE="$(bool_cmd podman)"
+  DOCKER_AVAILABLE="$(bool_cmd docker)"
+  SYSTEMD_AVAILABLE="$(bool_cmd systemctl)"
+  LVM_AVAILABLE="$(bool_cmd lvs)"
+  VULKAN_AVAILABLE="$(bool_cmd vulkaninfo)"
+  CUDA_AVAILABLE="$(bool_cmd nvidia-smi)"
+  ROCM_AVAILABLE="$(bool_cmd rocminfo)"
 
   HOSTNAME_ESCAPED="$(json_escape "$HOSTNAME_VALUE")"
   OS_ESCAPED="$(json_escape "$OS_VALUE")"
@@ -129,6 +141,67 @@ probe_text() {
   printf '  metal: unavailable on Linux profiles\n'
 }
 
+doctor_json() {
+  BREW_AVAILABLE="$(bool_cmd brew)"
+  PODMAN_AVAILABLE="$(bool_cmd podman)"
+  LVM_AVAILABLE="$(bool_cmd lvs)"
+  PROBE_SECRET_FREE="true"
+  cat <<EOF
+{
+  "specVersion": "0.1.0",
+  "kind": "AgentMachineDoctor",
+  "install": {
+    "cliVersion": "$VERSION",
+    "homebrewAvailable": $BREW_AVAILABLE,
+    "bootstrapOnly": true,
+    "runtimeDirectoriesManaged": false
+  },
+  "readiness": {
+    "podmanAvailable": $PODMAN_AVAILABLE,
+    "lvmAvailable": $LVM_AVAILABLE,
+    "probeSecretFree": $PROBE_SECRET_FREE
+  },
+  "nextActions": [
+    "agent-machine probe --format json",
+    "review docs/install.md before privileged runtime activation"
+  ]
+}
+EOF
+}
+
+doctor_text() {
+  printf 'Agent Machine doctor\n'
+  print_version | sed 's/^/  /'
+  if have_cmd brew; then printf '  homebrew: available\n'; else printf '  homebrew: unavailable\n'; fi
+  if have_cmd podman; then printf '  podman: available\n'; else printf '  podman: unavailable\n'; fi
+  if have_cmd lvs; then printf '  lvm: available\n'; else printf '  lvm: unavailable\n'; fi
+  printf '  bootstrap-only install: true\n'
+  printf '  runtime directories managed automatically: false\n'
+  printf '  next: agent-machine probe --format json\n'
+}
+
+parse_format() {
+  FORMAT="text"
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --format)
+        shift
+        FORMAT="${1:-text}"
+        ;;
+      --format=json)
+        FORMAT="json"
+        ;;
+      --fail-closed)
+        # Reserved for future strict safety enforcement.
+        ;;
+      *)
+        ;;
+    esac
+    shift || true
+  done
+  printf '%s' "$FORMAT"
+}
+
 case "$COMMAND" in
   help|-h|--help)
     print_help
@@ -139,26 +212,18 @@ case "$COMMAND" in
   paths)
     print_paths
     ;;
+  doctor)
+    shift || true
+    FORMAT="$(parse_format "$@")"
+    if [ "$FORMAT" = "json" ]; then
+      doctor_json
+    else
+      doctor_text
+    fi
+    ;;
   probe)
     shift || true
-    FORMAT="text"
-    while [ "$#" -gt 0 ]; do
-      case "$1" in
-        --format)
-          shift
-          FORMAT="${1:-text}"
-          ;;
-        --format=json)
-          FORMAT="json"
-          ;;
-        --fail-closed)
-          # Reserved for future strict safety enforcement.
-          ;;
-        *)
-          ;;
-      esac
-      shift || true
-    done
+    FORMAT="$(parse_format "$@")"
     if [ "$FORMAT" = "json" ]; then
       probe_json
     else
