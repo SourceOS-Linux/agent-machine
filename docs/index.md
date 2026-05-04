@@ -20,6 +20,7 @@ Agent Machine is a bootstrap runtime-control substrate for SourceOS agent worklo
 | [AgentPod manifest generation](architecture/agentpod-manifest-generation.md) | Contract-to-plan-to-manifest generation rules. |
 | [Deployment safety](architecture/deployment-safety.md) | Skeleton-vs-production manifest rules and safety gates. |
 | [Receipt chain](architecture/receipt-chain.md) | AgentPod source to plan, manifest, receipt, policy, registry, and AgentPlane evidence. |
+| [Image digest pinning and provenance](architecture/image-digest-pinning-and-provenance.md) | Supply-chain strict-mode gate for digest-pinned release-candidate artifacts. |
 | [Runtime package layout](architecture/runtime-package-layout.md) | Migration from loose scripts to `src/agent_machine/` package modules. |
 | [Homebrew Python dependencies](architecture/homebrew-python-dependencies.md) | Current dependency strategy for render/evaluation commands. |
 | [Local LVM and TopoLVM profile](architecture/local-lvm-and-topolvm-profile.md) | Local and Kubernetes storage/cache/evidence profile. |
@@ -89,6 +90,7 @@ validate-render
 validate-evidence
 validate-governance
 validate-activation
+validate-supply-chain
 validate-package
 validate-cli
 validate-formula
@@ -100,8 +102,8 @@ Agent Machine remains production-blocked by design until the release gate passes
 
 Current blockers:
 
-- visible green CI run;
-- image digest pinning and provenance gate;
+- main-branch CI visibility and branch protection;
+- real image digest pinning/provenance from trusted build artifacts;
 - real Policy Fabric client or endpoint;
 - real Agent Registry grant resolver;
 - real AgentPlane evidence submission/staging client;
