@@ -1,0 +1,214 @@
+# Agent Machine Kubernetes llama.cpp provider using TopoLVM-backed volumes.
+#
+# This manifest mirrors examples/k8s-topolvm.agent-pod.json. It is a skeleton
+# target, not a production release manifest. Admission, network policy, image
+# digest pinning, signed provenance, and Agent Registry grants must be added
+# before real sensitive workloads use it.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agent-machine
+  labels:
+    app.kubernetes.io/name: agent-machine
+    app.kubernetes.io/component: namespace
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agent-machine-provider
+  namespace: agent-machine
+  labels:
+    app.kubernetes.io/name: agent-machine
+    app.kubernetes.io/component: inference-provider
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: agent-models-llama-cpp
+  namespace: agent-machine
+  labels:
+    app.kubernetes.io/name: agent-machine
+    agent-machine.sourceos.dev/volume-class: agent-models
+    agent-machine.sourceos.dev/storage-profile: topolvm-k8s
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: topolvm-provisioner
+  resources:
+    requests:
+      storage: 120Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: agent-cache-warm-llama-cpp
+  namespace: agent-machine
+  labels:
+    app.kubernetes.io/name: agent-machine
+    agent-machine.sourceos.dev/volume-class: agent-cache-warm
+    agent-machine.sourceos.dev/storage-profile: topolvm-k8s
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: topolvm-provisioner
+  resources:
+    requests:
+      storage: 80Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: agent-scratch-llama-cpp
+  namespace: agent-machine
+  labels:
+    app.kubernetes.io/name: agent-machine
+    agent-machine.sourceos.dev/volume-class: agent-scratch
+    agent-machine.sourceos.dev/storage-profile: topolvm-k8s
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: topolvm-provisioner
+  resources:
+    requests:
+      storage: 40Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: agent-evidence-llama-cpp
+  namespace: agent-machine
+  labels:
+    app.kubernetes.io/name: agent-machine
+    agent-machine.sourceos.dev/volume-class: agent-evidence
+    agent-machine.sourceos.dev/storage-profile: topolvm-k8s
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: topolvm-provisioner
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: llama-cpp-provider
+  namespace: agent-machine
+  labels:
+    app.kubernetes.io/name: agent-machine
+    app.kubernetes.io/component: inference-provider
+    agent-machine.sourceos.dev/provider: llama.cpp
+    agent-machine.sourceos.dev/storage-profile: topolvm-k8s
+  annotations:
+    agent-machine.sourceos.dev/agent-pod-id: urn:srcos:agent-machine:agent-pod:k8s-topolvm-llama-cpp
+    agent-machine.sourceos.dev/receipts-required: "true"
+    agent-machine.sourceos.dev/raw-content-in-receipts: "false"
+spec:
+  serviceAccountName: agent-machine-provider
+  restartPolicy: Always
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: llama-cpp
+      image: ghcr.io/ggerganov/llama.cpp:server
+      imagePullPolicy: IfNotPresent
+      args:
+        - --host
+        - 0.0.0.0
+        - --port
+        - "8080"
+      ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+      env:
+        - name: AGENT_MACHINE_PROFILE
+          value: kubernetes-node
+        - name: AGENT_MACHINE_PROVIDER
+          value: llama.cpp
+        - name: AGENT_MACHINE_RECEIPTS_REQUIRED
+          value: "true"
+      resources:
+        requests:
+          cpu: "2"
+          memory: 16Gi
+        limits:
+          cpu: "8"
+          memory: 64Gi
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      volumeMounts:
+        - name: models
+          mountPath: /models
+          readOnly: true
+        - name: warm-cache
+          mountPath: /agent/cache/warm
+        - name: scratch
+          mountPath: /agent/scratch
+        - name: evidence
+          mountPath: /agent/evidence
+        - name: tmp
+          mountPath: /tmp
+  volumes:
+    - name: models
+      persistentVolumeClaim:
+        claimName: agent-models-llama-cpp
+        readOnly: true
+    - name: warm-cache
+      persistentVolumeClaim:
+        claimName: agent-cache-warm-llama-cpp
+    - name: scratch
+      persistentVolumeClaim:
+        claimName: agent-scratch-llama-cpp
+    - name: evidence
+      persistentVolumeClaim:
+        claimName: agent-evidence-llama-cpp
+    - name: tmp
+      emptyDir:
+        medium: Memory
+        sizeLimit: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llama-cpp-provider
+  namespace: agent-machine
+  labels:
+    app.kubernetes.io/name: agent-machine
+    app.kubernetes.io/component: inference-provider
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: agent-machine
+    app.kubernetes.io/component: inference-provider
+    agent-machine.sourceos.dev/provider: llama.cpp
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: llama-cpp-provider-default-deny-egress
+  namespace: agent-machine
+  labels:
+    app.kubernetes.io/name: agent-machine
+    app.kubernetes.io/component: inference-provider
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: agent-machine
+      app.kubernetes.io/component: inference-provider
+      agent-machine.sourceos.dev/provider: llama.cpp
+  policyTypes:
+    - Egress
+  egress: []
