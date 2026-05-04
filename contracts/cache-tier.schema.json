@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:cache-tier:v0.1.0",
+  "title": "CacheTier",
+  "description": "Storage/cache tier declaration for Agent Machine local and Kubernetes-backed workloads.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specVersion",
+    "id",
+    "kind",
+    "backend",
+    "volumeClass",
+    "tier",
+    "sensitivity",
+    "lifecycle",
+    "mount"
+  ],
+  "properties": {
+    "specVersion": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:cache-tier:[a-z0-9][a-z0-9-]*$"
+    },
+    "kind": {
+      "type": "string",
+      "const": "CacheTier"
+    },
+    "backend": {
+      "type": "string",
+      "enum": [
+        "filesystem",
+        "local-lvm",
+        "topolvm-k8s",
+        "tmpfs",
+        "object-store",
+        "remote-volume"
+      ]
+    },
+    "volumeClass": {
+      "type": "string",
+      "enum": [
+        "agent-models",
+        "agent-cache-hot",
+        "agent-cache-warm",
+        "agent-cache-cold",
+        "agent-scratch",
+        "agent-evidence",
+        "agent-artifacts"
+      ]
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["hot", "warm", "cold", "scratch", "evidence", "artifact", "model"]
+    },
+    "purpose": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "model-artifacts",
+          "tokenizer-assets",
+          "kv-cache",
+          "prompt-prefix-cache",
+          "embedding-index",
+          "reranker-state",
+          "retrieval-pack",
+          "scratch-workspace",
+          "execution-evidence",
+          "user-artifact"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": ["public", "internal", "sensitive", "secret", "mixed"]
+    },
+    "policyDomain": {
+      "type": "string",
+      "description": "Policy domain, workroom, tenant, or isolation scope that controls cache reuse and access."
+    },
+    "identityScopeRequired": {
+      "type": "boolean",
+      "default": true
+    },
+    "encryption": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": { "type": "boolean" },
+        "observed": { "type": "boolean" },
+        "mode": {
+          "type": "string",
+          "enum": ["none", "fscrypt", "luks", "dm-crypt", "hardware", "unknown"]
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["durability", "ttlSeconds", "evictionPolicy", "wipeReceiptRequired"],
+      "properties": {
+        "durability": {
+          "type": "string",
+          "enum": ["ephemeral", "semi-durable", "durable"]
+        },
+        "ttlSeconds": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "evictionPolicy": {
+          "type": "string",
+          "enum": ["manual", "lru", "ttl", "quota", "policy", "none"]
+        },
+        "snapshotAllowed": { "type": "boolean" },
+        "wipeReceiptRequired": { "type": "boolean" }
+      }
+    },
+    "quota": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sizeBytes": { "type": ["integer", "null"], "minimum": 0 },
+        "reservedBytes": { "type": ["integer", "null"], "minimum": 0 },
+        "maxInodes": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "mount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["read-only", "read-write", "runtime-managed"] },
+        "hostPath": { "type": "string" },
+        "containerPath": { "type": "string" },
+        "pvcName": { "type": "string" },
+        "storageClassName": { "type": "string" },
+        "filesystem": { "type": "string" },
+        "mountOptions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": { "type": "boolean" },
+        "includeFreeBytes": { "type": "boolean" },
+        "includeSnapshotLineage": { "type": "boolean" },
+        "includeRawContent": { "type": "boolean", "const": false }
+      }
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}
