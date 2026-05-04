@@ -15,93 +15,315 @@
     "receiptSafety",
     "issuedAt"
   ],
+  "$defs": {
+    "scopeRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "registryScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "providerIds",
+        "modelRefs",
+        "toolRefs",
+        "cacheScopeRefs",
+        "memoryScopeRefs",
+        "storageScopeRefs",
+        "evidenceScopeRefs"
+      ],
+      "properties": {
+        "providerIds": {
+          "$ref": "#/$defs/scopeRefs"
+        },
+        "modelRefs": {
+          "$ref": "#/$defs/scopeRefs"
+        },
+        "toolRefs": {
+          "$ref": "#/$defs/scopeRefs"
+        },
+        "cacheScopeRefs": {
+          "$ref": "#/$defs/scopeRefs"
+        },
+        "memoryScopeRefs": {
+          "$ref": "#/$defs/scopeRefs"
+        },
+        "storageScopeRefs": {
+          "$ref": "#/$defs/scopeRefs"
+        },
+        "evidenceScopeRefs": {
+          "$ref": "#/$defs/scopeRefs"
+        }
+      }
+    },
+    "externalTrustSignal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "providerRef",
+        "signalType",
+        "signalRef",
+        "signalDigest",
+        "verifiedAt",
+        "authority"
+      ],
+      "properties": {
+        "providerRef": {
+          "type": "string"
+        },
+        "signalType": {
+          "type": "string",
+          "enum": [
+            "agent-identity",
+            "cert-tier",
+            "reputation-score",
+            "counterparty-check",
+            "registry-lookup",
+            "other"
+          ]
+        },
+        "signalRef": {
+          "type": "string"
+        },
+        "signalDigest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "verifiedAt": {
+          "type": "string"
+        },
+        "authority": {
+          "type": "string",
+          "enum": [
+            "non-authoritative-verifier-input"
+          ]
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
   "properties": {
-    "specVersion": { "type": "string", "const": "0.1.0" },
+    "specVersion": {
+      "type": "string",
+      "const": "0.1.0"
+    },
     "id": {
       "type": "string",
       "pattern": "^urn:srcos:agent-machine:agent-registry-grant:[a-z0-9][a-z0-9-]*$"
     },
-    "kind": { "type": "string", "const": "AgentRegistryGrant" },
+    "kind": {
+      "type": "string",
+      "const": "AgentRegistryGrant"
+    },
     "request": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["requestId", "agentPodId", "requestedAgentIdentityRef", "sessionRef"],
+      "required": [
+        "requestId",
+        "agentPodId",
+        "requestedAgentIdentityRef",
+        "sessionRef",
+        "workroomRef",
+        "topicRef",
+        "requestedScope",
+        "requestedExpiresAt"
+      ],
       "properties": {
-        "requestId": { "type": "string" },
+        "requestId": {
+          "type": "string"
+        },
         "agentMachineId": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "pattern": "^urn:srcos:agent-machine:[a-z0-9][a-z0-9-]*$"
         },
         "agentPodId": {
           "type": "string",
           "pattern": "^urn:srcos:agent-machine:agent-pod:[a-z0-9][a-z0-9-]*$"
         },
-        "requestedAgentIdentityRef": { "type": "string" },
-        "sessionRef": { "type": "string" },
-        "workroomRef": { "type": ["string", "null"] },
-        "topicRef": { "type": ["string", "null"] }
+        "requestedAgentIdentityRef": {
+          "type": "string"
+        },
+        "sessionRef": {
+          "type": "string"
+        },
+        "workroomRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "topicRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "requestedScope": {
+          "$ref": "#/$defs/registryScope"
+        },
+        "requestedExpiresAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
     "grant": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "authorizationGranted", "grantRef", "grantDigest"],
+      "required": [
+        "status",
+        "authorizationGranted",
+        "grantRef",
+        "grantDigest",
+        "reason",
+        "expiresAt",
+        "revocationStatus",
+        "revocationRef",
+        "revocationHookRef"
+      ],
       "properties": {
-        "status": { "type": "string", "enum": ["missing", "active", "expired", "revoked", "denied", "unknown"] },
-        "authorizationGranted": { "type": "boolean" },
-        "grantRef": { "type": ["string", "null"] },
-        "grantDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" },
-        "reason": { "type": ["string", "null"] },
-        "expiresAt": { "type": ["string", "null"] },
-        "revocationRef": { "type": ["string", "null"] }
+        "status": {
+          "type": "string",
+          "enum": [
+            "missing",
+            "active",
+            "expired",
+            "revoked",
+            "denied",
+            "unknown"
+          ]
+        },
+        "authorizationGranted": {
+          "type": "boolean"
+        },
+        "grantRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "grantDigest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expiresAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revocationStatus": {
+          "type": "string",
+          "enum": [
+            "active",
+            "revoked",
+            "expired",
+            "denied",
+            "unavailable"
+          ]
+        },
+        "revocationRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revocationHookRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "externalTrustSignals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/externalTrustSignal"
+          }
+        }
       }
     },
     "scope": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["allowed", "denied"],
+      "required": [
+        "allowed",
+        "denied"
+      ],
       "properties": {
         "allowed": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "providerIds": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-            "modelRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-            "toolRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-            "cacheScopeRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-            "memoryScopeRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-            "storageScopeRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-            "evidenceScopeRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
-          }
+          "$ref": "#/$defs/registryScope"
         },
         "denied": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "providerIds": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-            "modelRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-            "toolRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-            "cacheScopeRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-            "memoryScopeRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-            "storageScopeRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-            "evidenceScopeRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
-          }
+          "$ref": "#/$defs/registryScope"
         }
       }
     },
     "receiptSafety": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["includeRawContent", "rawPromptContentIncluded", "rawKvCacheContentIncluded", "secretValuesIncluded", "privateMemoryIncluded"],
+      "required": [
+        "includeRawContent",
+        "rawPromptContentIncluded",
+        "rawKvCacheContentIncluded",
+        "secretValuesIncluded",
+        "privateMemoryIncluded"
+      ],
       "properties": {
-        "includeRawContent": { "type": "boolean", "const": false },
-        "rawPromptContentIncluded": { "type": "boolean", "const": false },
-        "rawKvCacheContentIncluded": { "type": "boolean", "const": false },
-        "secretValuesIncluded": { "type": "boolean", "const": false },
-        "privateMemoryIncluded": { "type": "boolean", "const": false }
+        "includeRawContent": {
+          "type": "boolean",
+          "const": false
+        },
+        "rawPromptContentIncluded": {
+          "type": "boolean",
+          "const": false
+        },
+        "rawKvCacheContentIncluded": {
+          "type": "boolean",
+          "const": false
+        },
+        "secretValuesIncluded": {
+          "type": "boolean",
+          "const": false
+        },
+        "privateMemoryIncluded": {
+          "type": "boolean",
+          "const": false
+        }
       }
     },
-    "issuedAt": { "type": "string" },
-    "labels": { "type": "object", "additionalProperties": { "type": "string" } }
+    "issuedAt": {
+      "type": "string"
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
   }
 }
