@@ -32,6 +32,9 @@ validate-render:
 	$(PYCLI) render receipt $(K8S_AGENTPOD) --artifact-path /tmp/agent-machine-pycli-k8s-agentpod-plan.json --pretty >/tmp/agent-machine-pycli-k8s-deployment-receipt.json
 	$(PYCLI) render quadlet $(LOCAL_AGENTPOD) --compare $(LOCAL_QUADLET)
 	$(PYCLI) render k8s $(K8S_AGENTPOD) --compare $(K8S_MANIFEST)
+	$(CLI) render plan $(LOCAL_AGENTPOD) --pretty >/tmp/agent-machine-bootstrap-local-agentpod-plan.json
+	$(CLI) render quadlet $(LOCAL_AGENTPOD) --compare $(LOCAL_QUADLET)
+	$(CLI) render k8s $(K8S_AGENTPOD) --compare $(K8S_MANIFEST)
 
 validate-package:
 	$(PYTHON) scripts/validate-package.py
@@ -45,6 +48,8 @@ validate-cli:
 	$(CLI) probe --format json
 	$(PYCLI) version
 	$(PYCLI) paths --format json
+	$(PYCLI) doctor --format json
+	$(PYCLI) probe --format json
 
 validate-formula:
 	$(RUBY) -c $(FORMULA)
