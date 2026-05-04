@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:agentplane-runtime-evidence:v0.1.0",
+  "title": "AgentPlaneRuntimeEvidence",
+  "description": "Secret-free runtime evidence emitted or staged by Agent Machine for AgentPlane after placement, activation, runtime status, teardown, or wipe events.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specVersion",
+    "id",
+    "kind",
+    "evidenceType",
+    "agentMachineId",
+    "agentPodId",
+    "providerId",
+    "deploymentReceiptId",
+    "policyFabric",
+    "agentRegistry",
+    "artifacts",
+    "storageReceiptRefs",
+    "cache",
+    "runtime",
+    "receiptSafety",
+    "observedAt"
+  ],
+  "properties": {
+    "specVersion": { "type": "string", "const": "0.1.0" },
+    "id": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:agentplane-runtime-evidence:[a-z0-9][a-z0-9-]*$"
+    },
+    "kind": { "type": "string", "const": "AgentPlaneRuntimeEvidence" },
+    "evidenceType": {
+      "type": "string",
+      "enum": ["placement", "activation", "runtime-status", "teardown", "wipe"]
+    },
+    "agentMachineId": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:[a-z0-9][a-z0-9-]*$"
+    },
+    "agentPodId": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:agent-pod:[a-z0-9][a-z0-9-]*$"
+    },
+    "providerId": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:inference-provider:[a-z0-9][a-z0-9-]*$"
+    },
+    "deploymentReceiptId": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:deployment-receipt:[a-f0-9]{16,64}$"
+    },
+    "policyFabric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "decisionRef", "decisionDigest", "admissionStatus"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "decisionRef": { "type": ["string", "null"] },
+        "decisionDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" },
+        "admissionStatus": { "type": "string", "enum": ["missing", "allowed", "denied", "not-required", "unknown"] },
+        "obligationsRef": { "type": ["string", "null"] },
+        "expiresAt": { "type": ["string", "null"] }
+      }
+    },
+    "agentRegistry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "grantRef", "grantDigest", "grantStatus"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "grantRef": { "type": ["string", "null"] },
+        "grantDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" },
+        "grantStatus": { "type": "string", "enum": ["missing", "active", "expired", "revoked", "not-required", "unknown"] },
+        "revocationRef": { "type": ["string", "null"] },
+        "expiresAt": { "type": ["string", "null"] }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["imageRef", "imageDigest", "modelDigest", "tokenizerDigest"],
+      "properties": {
+        "imageRef": { "type": ["string", "null"] },
+        "imageDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" },
+        "modelDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" },
+        "tokenizerDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" },
+        "manifestDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" },
+        "sbomRef": { "type": ["string", "null"] },
+        "provenanceRef": { "type": ["string", "null"] }
+      }
+    },
+    "storageReceiptRefs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^urn:srcos:agent-machine:storage-receipt:[a-z0-9][a-z0-9-]*$"
+      },
+      "uniqueItems": true
+    },
+    "cache": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cacheReuseRequested", "cacheReuseAllowed", "cachePolicyRef", "cacheReceiptRefs"],
+      "properties": {
+        "cacheReuseRequested": { "type": "boolean" },
+        "cacheReuseAllowed": { "type": "boolean" },
+        "cachePolicyRef": { "type": ["string", "null"] },
+        "cacheReceiptRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^urn:srcos:agent-machine:storage-receipt:[a-z0-9][a-z0-9-]*$"
+          },
+          "uniqueItems": true
+        },
+        "cacheReuseDecisionRef": { "type": ["string", "null"] }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "runtimeVersion", "probeVersion"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["planned", "placed", "activating", "running", "degraded", "failed", "completed", "tearing-down", "wiped"]
+        },
+        "runtimeVersion": { "type": "string" },
+        "probeVersion": { "type": "string" },
+        "nodeName": { "type": ["string", "null"] },
+        "namespace": { "type": ["string", "null"] },
+        "serviceAccountName": { "type": ["string", "null"] },
+        "pid": { "type": ["integer", "null"], "minimum": 0 },
+        "containerIdDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" },
+        "startedAt": { "type": ["string", "null"] },
+        "completedAt": { "type": ["string", "null"] },
+        "failureReason": { "type": ["string", "null"] }
+      }
+    },
+    "receiptSafety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["includeRawContent", "rawPromptContentIncluded", "rawKvCacheContentIncluded", "secretValuesIncluded", "privateMemoryIncluded"],
+      "properties": {
+        "includeRawContent": { "type": "boolean", "const": false },
+        "rawPromptContentIncluded": { "type": "boolean", "const": false },
+        "rawKvCacheContentIncluded": { "type": "boolean", "const": false },
+        "secretValuesIncluded": { "type": "boolean", "const": false },
+        "privateMemoryIncluded": { "type": "boolean", "const": false }
+      }
+    },
+    "observedAt": { "type": "string" },
+    "labels": { "type": "object", "additionalProperties": { "type": "string" } }
+  }
+}
