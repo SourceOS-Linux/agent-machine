@@ -10,7 +10,7 @@ This grant is a local SourceOS control-plane artifact. It may consume external i
 AgentPod
   -> Policy Fabric admission
   -> Agent Registry grant request
-  -> optional external verifier inputs
+  -> optional ExternalTrustSignalProvider verifier inputs
   -> local grant resolution
   -> ActivationDecision
   -> runtime placement or fail-closed
@@ -56,9 +56,11 @@ Allowed scope must be no broader than the requested scope. Denied scope is expli
 
 ## External trust signals
 
-External systems can be useful for agent identity verification, reputation, counterparty checks, and certificate-tier claims. They are not the Agent Registry.
+External systems can be useful for agent identity verification, reputation, counterparty checks, registry lookup, and certificate-tier claims. They are not the Agent Registry.
 
-When used, external trust signals must be recorded under `grant.externalTrustSignals` with:
+`ExternalTrustSignalProvider` artifacts represent those adapter results. A usable result can be considered by the local Agent Registry grant resolver only when it is fresh, signed when signatures are required, scoped to the requested provider and signal types, and marked with `authority: non-authoritative-verifier-input`.
+
+When used inside an `AgentRegistryGrant`, external trust signals must be recorded under `grant.externalTrustSignals` with:
 
 - the provider reference;
 - the signal type;
@@ -67,7 +69,7 @@ When used, external trust signals must be recorded under `grant.externalTrustSig
 - verification time;
 - `authority: non-authoritative-verifier-input`.
 
-This keeps PCH/ERC-8004-style identity, reputation, and certificate-tier checks pluggable without making any external gateway the SourceOS root of trust.
+This keeps PCH/ERC-8004-style identity, reputation, registry lookup, and certificate-tier checks pluggable without making any external gateway the SourceOS root of trust.
 
 ## Fail-closed rules
 
@@ -79,10 +81,11 @@ Activation fails closed when:
 - the requested provider is not present in allowed provider scope;
 - required activation tools are absent from allowed tool scope;
 - the grant is missing a revocation hook;
-- the grant payload includes secrets, raw prompts, raw KV-cache contents, or private memory contents.
+- required external trust signals are unavailable, stale, malformed, unsigned when signatures are required, or authority-elevated;
+- the grant or external trust payload includes secrets, raw prompts, raw KV-cache contents, private memory contents, API keys, private wallet keys, raw credentials, or raw user data.
 
 ## Relation to receipts
 
-`DeploymentReceipt` proves deterministic derivation. `PolicyAdmission` proves policy admission. `AgentRegistryGrant` proves identity/session/tool/provider/storage authorization. `ActivationDecision` combines those inputs and either permits scoped activation or records fail-closed reasons.
+`DeploymentReceipt` proves deterministic derivation. `PolicyAdmission` proves policy admission. `ExternalTrustSignalProvider` proves optional verifier-input posture. `AgentRegistryGrant` proves identity/session/tool/provider/storage authorization. `ActivationDecision` combines those inputs and either permits scoped activation or records fail-closed reasons.
 
 None of these artifacts should include raw prompt content, KV-cache contents, secret values, private memory, or raw user data.
