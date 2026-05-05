@@ -17,6 +17,7 @@ def main() -> int:
     import agent_machine.activation
     import agent_machine.cli
     import agent_machine.evidence
+    import agent_machine.external_trust
     import agent_machine.governance
     import agent_machine.release_bundle
     import agent_machine.supply_chain
@@ -38,6 +39,7 @@ def main() -> int:
         "AgentPod",
         "AgentPlaneRuntimeEvidence",
         "AgentRegistryGrant",
+        "ExternalTrustSignalProvider",
         "PolicyAdmission",
         "ReleaseEvidenceBundle",
         "StorageReceipt",
@@ -53,6 +55,8 @@ def main() -> int:
         raise AssertionError("supply_chain.is_sha256_digest rejected valid digest")
     if agent_machine.release_bundle.DEFAULT_REPOSITORY != "SourceOS-Linux/agent-machine":
         raise AssertionError("unexpected release_bundle default repository")
+    if agent_machine.external_trust.AUTHORITY != "non-authoritative-verifier-input":
+        raise AssertionError("unexpected external trust authority")
     if str(default_model_cache_path()) != "/var/lib/agent-machine/models":
         raise AssertionError("unexpected default model cache path")
     if str(default_evidence_path()) != "/var/lib/agent-machine/evidence":
