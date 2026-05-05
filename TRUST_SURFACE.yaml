@@ -1,0 +1,108 @@
+schema_version: "1.0"
+component: agent-machine
+repo: SourceOS-Linux/agent-machine
+owner: SourceOS-Linux
+runtime_classes:
+  - cli
+  - container_runtime
+  - model_gateway
+  - agent_orchestrator
+  - policy_engine
+authority_summary: >-
+  Agent Machine is the Linux-first node substrate for local and clustered agent execution.
+  It owns hardware/runtime probing, inference provider lifecycle, model residency, cache-aware scheduling facts,
+  AgentPod envelopes, governed side-effect boundaries, activation decisions, and execution receipts.
+  This first-pass trust surface keeps production runtime activation blocked until provider, policy, registry, and evidence gates are declared.
+
+entrypoints:
+  - type: cli
+    path: agent-machine
+    purpose: Bootstrap CLI for version, paths, doctor, probe, render, and activation evaluation.
+  - type: renderer
+    path: agent-machine render
+    purpose: Render local AgentPod plans, Quadlet assets, Kubernetes assets, and evidence artifacts.
+  - type: activation_evaluator
+    path: agent-machine activate evaluate
+    purpose: Produce dry-run activation decisions before runtime side effects.
+
+launch_services: []
+containers: []
+
+network:
+  plaintext_non_loopback_allowed: false
+  listeners: []
+  egress: []
+
+filesystem:
+  host_mounts: []
+  writable_paths:
+    - ~/.local/state/agent-machine/
+    - ~/.config/agent-machine/
+    - ~/.cache/agent-machine/
+  cache_paths:
+    - ~/.cache/agent-machine/
+  log_paths:
+    - ~/.local/state/agent-machine/logs/
+
+credentials:
+  expected_secrets: []
+  secret_locations: []
+  inherits_ssh_agent: false
+  redaction_required: true
+
+policy:
+  filesystem: render_and_probe_only_until_activation_gates_land
+  network: no_runtime_provider_listener_or_egress_until_declared
+  execution: dry_run_render_and_evaluate_only_by_default
+  approval: policy_admission_required_for_provider_activation_side_effects_teardown_and_wipe
+  workspace_scope: declared_agentpod_workspace_or_none
+
+model_providers:
+  - llama.cpp planned
+  - vLLM planned
+  - SGLang planned
+  - Ollama-compatible planned
+  - oMLX optional macOS compatibility planned
+
+browser_surfaces: []
+update_channels:
+  - type: homebrew_formula
+    url_or_ref: SourceOS-Linux/tap/agent-machine
+    signature_required: true
+  - type: direct_homebrew_formula
+    url_or_ref: https://raw.githubusercontent.com/SourceOS-Linux/agent-machine/main/packaging/homebrew/Formula/agent-machine.rb
+    signature_required: true
+remote_config: []
+
+purge:
+  commands:
+    - rm -rf ~/.local/state/agent-machine ~/.config/agent-machine ~/.cache/agent-machine
+  removes:
+    - Agent Machine state directory
+    - Agent Machine config directory
+    - Agent Machine cache directory
+    - Agent Machine logs
+    - any future rendered local provider services declared in this file
+
+prove_clean:
+  checks:
+    - no process matching agent-machine
+    - no LaunchAgent, LaunchDaemon, systemd unit, Quadlet unit, or scheduled task matching agent-machine
+    - no listener owned by agent-machine
+    - no model-provider process started by agent-machine
+    - no credentials owned by agent-machine
+    - no state, config, cache, or log residue unless explicitly retained by user
+
+known_risks:
+  - Provider activation can start high-authority local inference runtimes.
+  - Rendered Quadlet, systemd, Kubernetes, or container assets may create persistence or network listeners.
+  - Model/cache/scratch/evidence storage may contain sensitive path, prompt, workload, or identity metadata.
+  - Cache reuse is unsafe without identity, tenant, policy, and evidence boundaries.
+  - Activation decisions are not authorization unless Policy Fabric and Agent Registry gates are enforced.
+
+compensating_controls:
+  - Keep production activation blocked until release gate passes.
+  - Require PolicyAdmission for model load, cache reuse, side effects, teardown, and wipe.
+  - Require AgentRegistryGrant for agent identity, session, provider, model, tool, cache, memory, storage, and evidence scopes.
+  - Emit secret-free AgentPlane runtime evidence.
+  - Prefer dry-run evaluation artifacts until provider lifecycle controls are implemented.
