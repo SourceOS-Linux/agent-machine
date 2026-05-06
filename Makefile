@@ -1,4 +1,4 @@
-.PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula doctor probe
+.PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula validate-runtime-install-receipts doctor probe
 
 PYTHON ?= python3
 RUBY ?= ruby
@@ -20,7 +20,7 @@ DECIDED_AT := 2026-05-04T12:51:00Z
 PYCLI := PYTHONPATH=src $(PYTHON) -m agent_machine.cli
 PYMOD := PYTHONPATH=src $(PYTHON) -m
 
-validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula
+validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula validate-runtime-install-receipts
 
 validate-json:
 	$(PYTHON) scripts/validate-json.py
@@ -85,6 +85,9 @@ validate-cli:
 
 validate-formula:
 	$(RUBY) -c $(FORMULA)
+
+validate-runtime-install-receipts:
+	$(PYTHON) scripts/validate-runtime-install-receipts.py
 
 doctor:
 	$(BOOTSTRAP_CLI) doctor --format json
