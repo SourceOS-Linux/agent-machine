@@ -15,6 +15,7 @@ if str(SRC_ROOT) not in sys.path:
 def main() -> int:
     import agent_machine
     import agent_machine.activation
+    import agent_machine.agent_registry
     import agent_machine.cli
     import agent_machine.evidence
     import agent_machine.governance
@@ -57,6 +58,8 @@ def main() -> int:
         raise AssertionError("unexpected release_bundle default repository")
     if agent_machine.policy_fabric.DEFAULT_DECIDED_AT != "1970-01-01T00:00:00Z":
         raise AssertionError("unexpected policy_fabric default decided_at")
+    if agent_machine.agent_registry.DEFAULT_ISSUED_AT != "1970-01-01T00:00:00Z":
+        raise AssertionError("unexpected agent_registry default issued_at")
     if str(default_model_cache_path()) != "/var/lib/agent-machine/models":
         raise AssertionError("unexpected default model cache path")
     if str(default_evidence_path()) != "/var/lib/agent-machine/evidence":
