@@ -20,6 +20,7 @@ Agent Machine is a bootstrap runtime-control substrate for SourceOS agent worklo
 | [AgentPod manifest generation](architecture/agentpod-manifest-generation.md) | Contract-to-plan-to-manifest generation rules. |
 | [Deployment safety](architecture/deployment-safety.md) | Skeleton-vs-production manifest rules and safety gates. |
 | [Receipt chain](architecture/receipt-chain.md) | AgentPod source to plan, manifest, receipt, policy, registry, and AgentPlane evidence. |
+| [PolicyAdmission resolution](architecture/policy-admission-resolution.md) | Local Policy Fabric admission resolver and fail-closed missing-decision behavior. |
 | [Image digest pinning and provenance](architecture/image-digest-pinning-and-provenance.md) | Supply-chain strict-mode gate for digest-pinned release-candidate artifacts. |
 | [Release evidence bundle](architecture/release-evidence-bundle.md) | Deterministic validation/source/inventory/render/supply-chain/readiness bundle. |
 | [Signed release bundle envelope](architecture/signed-release-bundle-envelope.md) | Signing envelope contract for release evidence bundles. |
@@ -93,9 +94,11 @@ validate-quadlet
 validate-render
 validate-evidence
 validate-governance
+validate-policy-fabric
 validate-activation
 validate-supply-chain
 validate-release-bundle
+validate-sourceos-projections
 validate-package
 validate-cli
 validate-formula
