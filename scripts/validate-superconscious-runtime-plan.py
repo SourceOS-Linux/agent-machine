@@ -14,7 +14,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-FIXTURE = ROOT / "examples" / "superconscious-reasoning-runtime-plan.json"
+FIXTURE = ROOT / "fixtures" / "superconscious" / "reasoning-runtime-plan.json"
 
 
 def fail(message: str) -> int:
