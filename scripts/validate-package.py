@@ -18,6 +18,7 @@ def main() -> int:
     import agent_machine.cli
     import agent_machine.evidence
     import agent_machine.governance
+    import agent_machine.policy_fabric
     import agent_machine.release_bundle
     import agent_machine.supply_chain
     import agent_machine.renderers.k8s
@@ -54,6 +55,8 @@ def main() -> int:
         raise AssertionError("supply_chain.is_sha256_digest rejected valid digest")
     if agent_machine.release_bundle.DEFAULT_REPOSITORY != "SourceOS-Linux/agent-machine":
         raise AssertionError("unexpected release_bundle default repository")
+    if agent_machine.policy_fabric.DEFAULT_DECIDED_AT != "1970-01-01T00:00:00Z":
+        raise AssertionError("unexpected policy_fabric default decided_at")
     if str(default_model_cache_path()) != "/var/lib/agent-machine/models":
         raise AssertionError("unexpected default model cache path")
     if str(default_evidence_path()) != "/var/lib/agent-machine/evidence":
