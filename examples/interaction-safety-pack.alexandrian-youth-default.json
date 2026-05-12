@@ -1,0 +1,89 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:interaction-safety-pack:alexandrian-youth-default",
+  "kind": "InteractionSafetyPack",
+  "domain": "digital-first-homeschool-learning",
+  "roles": [
+    "LearnerMinor",
+    "LearnerAdult",
+    "Guardian",
+    "DelegatedGuardian",
+    "Provider",
+    "SafeguardingModerator",
+    "Evaluator",
+    "AlumniGuildMember"
+  ],
+  "spaces": [
+    {"name": "CourseSpace", "minorAccess": "allowed"},
+    {"name": "CohortSpace", "minorAccess": "allowed"},
+    {"name": "WorkshopSpace", "minorAccess": "allowed"},
+    {"name": "ApprenticeshipSpace", "minorAccess": "allowed"},
+    {"name": "GuildSpace", "minorAccess": "read-only"},
+    {"name": "SupportSpace", "minorAccess": "allowed"}
+  ],
+  "communicationPrimitives": [
+    {
+      "name": "Broadcast",
+      "allowed": true,
+      "safetyProperties": ["one-to-many", "guardian-observable"]
+    },
+    {
+      "name": "ArtifactSubmission",
+      "allowed": true,
+      "safetyProperties": ["structured-feedback", "no-open-ended-private-chat"]
+    },
+    {
+      "name": "ModeratedForum",
+      "allowed": true,
+      "safetyProperties": ["anti-bullying-controls", "guardian-configurable-visibility"]
+    },
+    {
+      "name": "AdHocPrivateAdultMinorChat",
+      "allowed": false,
+      "safetyProperties": ["blocked"]
+    },
+    {
+      "name": "LiveSession",
+      "allowed": true,
+      "safetyProperties": ["scheduled", "rostered", "logged", "de-identified-transcript"]
+    }
+  ],
+  "nonNegotiables": [
+    "no-private-adult-minor-messaging",
+    "block-off-platform-contact-exchange",
+    "safeguarding-overrides-revenue",
+    "no-raw-audio-video-by-default"
+  ],
+  "incidentSeverity": [
+    {"level": "S0", "targetTimeline": "<=72h", "requiresContainment": false, "requiresEvidencePreservation": false},
+    {"level": "S1", "targetTimeline": "<=24h", "requiresContainment": true, "requiresEvidencePreservation": false},
+    {"level": "S2", "targetTimeline": "<=4h", "requiresContainment": true, "requiresEvidencePreservation": true},
+    {"level": "S3", "targetTimeline": "<=1h", "requiresContainment": true, "requiresEvidencePreservation": true},
+    {"level": "S4", "targetTimeline": "<=15-60m", "requiresContainment": true, "requiresEvidencePreservation": true},
+    {"level": "S5", "targetTimeline": "immediate", "requiresContainment": true, "requiresEvidencePreservation": true}
+  ],
+  "dataGovernance": {
+    "userRecordsPlane": "family-owned-local-first",
+    "safetyEvidencePlane": "minimal-centralized-sealed-packets",
+    "rawAudioVideoDefault": "off"
+  },
+  "jurisdiction": {
+    "packRef": null,
+    "reviewed": false,
+    "defaultWhenUncertain": "stricter-policy"
+  },
+  "launchGate": {
+    "providerMinorInteractionEnabled": false,
+    "requiresReviewedJurisdictionPack": true
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "secretValuesIncluded": false,
+    "privateMemoryIncluded": false
+  },
+  "issuedAt": "2026-05-12T20:30:00Z",
+  "labels": {
+    "source": "alexandrian-safeguarding",
+    "status": "draft"
+  }
+}
