@@ -88,6 +88,8 @@ validate-cli:
 	printf '%s\n' '{"prompt":"Write one short sentence about Paris.","model_id":"gpt2-small","steering":{"feature_id":"10200","layer":"6-res-jb","strength":5}}' >/tmp/agent-machine-steer-request.json
 	$(PYCLI) steer stub-response /tmp/agent-machine-steer-request.json --pretty >/tmp/agent-machine-pycli-steer-stub-response.json
 	$(BOOTSTRAP_CLI) steer stub-response /tmp/agent-machine-steer-request.json --pretty >/tmp/agent-machine-bootstrap-steer-stub-response.json
+	$(PYCLI) steer preflight --sourceset gpt2-small.res-jb --pretty >/tmp/agent-machine-pycli-steer-preflight.json
+	$(BOOTSTRAP_CLI) steer preflight --sourceset gpt2-small.res-jb --pretty >/tmp/agent-machine-bootstrap-steer-preflight.json
 	$(PYCLI) version
 	$(PYCLI) paths --format json
 	$(PYCLI) doctor --format json

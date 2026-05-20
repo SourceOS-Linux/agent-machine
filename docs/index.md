@@ -14,6 +14,7 @@ Agent Machine is a bootstrap runtime-control substrate for SourceOS agent worklo
 | [Local SAE steering inference readiness](inference-local-steering.md) | Inspection record for Neuronpedia-compatible local steering readiness and current gaps. |
 | [Local /steer endpoint contract](local-steer-endpoint.md) | Noetica-compatible local steering endpoint contract and stub behavior. |
 | [Steering sourceset registry](steering-sourcesets.md) | Registered model/SAE sourceset records for local steering work. |
+| [GPT-2 Small steering activation path](steering-activation-path.md) | Fail-closed real-path entrypoint and remaining blockers for controlled activation. |
 
 ## Architecture
 
