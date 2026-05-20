@@ -14,6 +14,7 @@ Agent Machine is a bootstrap runtime-control substrate for SourceOS agent worklo
 | [Local SAE steering inference readiness](inference-local-steering.md) | Inspection record for Neuronpedia-compatible local steering readiness and current gaps. |
 | [Local /steer endpoint contract](local-steer-endpoint.md) | Noetica-compatible local steering endpoint contract and stub behavior. |
 | [Steering sourceset registry](steering-sourcesets.md) | Registered model/SAE sourceset records for local steering work. |
+| [Steering artifact receipts](steering-artifact-receipts.md) | Artifact-resolution receipt contract for model and SAE files. |
 | [GPT-2 Small steering activation path](steering-activation-path.md) | Fail-closed real-path entrypoint and remaining blockers for controlled activation. |
 
 ## Architecture
@@ -72,6 +73,7 @@ Important contract families:
 | `AgentPod` | Schedulable local or Kubernetes workload envelope. |
 | `InferenceProvider` | Backend-neutral inference provider declaration. |
 | `SteeringSourceset` | Model/SAE artifact registry record for local steering work. |
+| `SteeringArtifactReceipt` | Model/SAE artifact-resolution receipt for local steering work. |
 | `CacheTier` | Model/cache/scratch/evidence storage tier declaration. |
 | `StorageReceipt` | Secret-free storage/cache/evidence proof. |
 | `DeploymentReceipt` | Proof that an artifact was derived from a typed source by a generator. |

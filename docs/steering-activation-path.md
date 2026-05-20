@@ -42,12 +42,38 @@ agent-machine steer serve-stub --host 127.0.0.1 --port 8080 --status not_configu
 
 It must not return `status: "applied"` until a real forward pass and feature injection succeed.
 
+## Artifact receipt gate
+
+Before any local smoke can be accepted, Agent Machine must emit a complete `SteeringArtifactReceipt` for `gpt2-small.res-jb`.
+
+The receipt must include, for every model, tokenizer, and SAE file used by the runtime:
+
+- source repository
+- exact file path
+- resolved revision, commit SHA, or immutable tag
+- local path
+- file size in bytes
+- SHA-256 digest
+- digest verification status
+
+The receipt contract is defined in:
+
+```text
+contracts/steering-artifact-receipt.schema.json
+```
+
+and documented in:
+
+```text
+docs/steering-artifact-receipts.md
+```
+
 ## Remaining blockers before #34 can close
 
 - optional ML dependencies installed from `requirements-steering.txt`
 - verified GPT-2 Small model artifacts
 - verified SAE artifacts for SAELens release `gpt2-small-res-jb`, SAE id `blocks.6.hook_resid_pre`
-- digest locks for model and SAE artifacts
+- artifact receipt with exact repo, file path, resolved revision, and SHA-256 digest for each model/SAE file
 - storage receipt for the resolved artifact locations
 - policy admission and agent-registry grant records
 - real activation injection implementation
