@@ -12,6 +12,7 @@ Agent Machine is a bootstrap runtime-control substrate for SourceOS agent worklo
 | [Bootstrap MVP readiness](architecture/bootstrap-mvp-readiness.md) | Current maturity state, implemented surfaces, blockers, and recommended next work. |
 | [World-class release gate](architecture/world-class-release-gate.md) | Release-blocking gates and production-readiness criteria. |
 | [Local SAE steering inference readiness](inference-local-steering.md) | Inspection record for Neuronpedia-compatible local steering readiness and current gaps. |
+| [Local /steer endpoint contract](local-steer-endpoint.md) | Noetica-compatible local steering endpoint contract and stub behavior. |
 
 ## Architecture
 
