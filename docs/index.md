@@ -16,6 +16,7 @@ Agent Machine is a bootstrap runtime-control substrate for SourceOS agent worklo
 | [Steering sourceset registry](steering-sourcesets.md) | Registered model/SAE sourceset records for local steering work. |
 | [Steering artifact receipts](steering-artifact-receipts.md) | Artifact-resolution receipt contract for model and SAE files. |
 | [Steering artifact resolution](steering-artifact-resolution.md) | Operator command for resolving model/SAE files and emitting a complete receipt. |
+| [Steering receipt loader](steering-loader.md) | Fail-closed receipt path and digest verification before runtime loading. |
 | [GPT-2 Small steering activation path](steering-activation-path.md) | Fail-closed real-path entrypoint and remaining blockers for controlled activation. |
 
 ## Architecture
