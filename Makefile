@@ -90,6 +90,7 @@ validate-cli:
 	$(BOOTSTRAP_CLI) steer stub-response /tmp/agent-machine-steer-request.json --pretty >/tmp/agent-machine-bootstrap-steer-stub-response.json
 	$(PYCLI) steer preflight --sourceset gpt2-small.res-jb --pretty >/tmp/agent-machine-pycli-steer-preflight.json
 	$(BOOTSTRAP_CLI) steer preflight --sourceset gpt2-small.res-jb --pretty >/tmp/agent-machine-bootstrap-steer-preflight.json
+	$(PYCLI) steer resolve-artifacts --sourceset gpt2-small.res-jb --local-dir /tmp/agent-machine-steering-artifacts --receipt-out /tmp/agent-machine-steering-artifact-receipt.json --dry-run --pretty >/tmp/agent-machine-pycli-artifact-receipt.json
 	$(PYCLI) version
 	$(PYCLI) paths --format json
 	$(PYCLI) doctor --format json
