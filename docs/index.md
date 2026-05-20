@@ -13,6 +13,7 @@ Agent Machine is a bootstrap runtime-control substrate for SourceOS agent worklo
 | [World-class release gate](architecture/world-class-release-gate.md) | Release-blocking gates and production-readiness criteria. |
 | [Local SAE steering inference readiness](inference-local-steering.md) | Inspection record for Neuronpedia-compatible local steering readiness and current gaps. |
 | [Local /steer endpoint contract](local-steer-endpoint.md) | Noetica-compatible local steering endpoint contract and stub behavior. |
+| [Steering sourceset registry](steering-sourcesets.md) | Registered model/SAE sourceset records for local steering work. |
 
 ## Architecture
 
@@ -69,6 +70,7 @@ Important contract families:
 | `AgentMachine` | Host/node substrate. |
 | `AgentPod` | Schedulable local or Kubernetes workload envelope. |
 | `InferenceProvider` | Backend-neutral inference provider declaration. |
+| `SteeringSourceset` | Model/SAE artifact registry record for local steering work. |
 | `CacheTier` | Model/cache/scratch/evidence storage tier declaration. |
 | `StorageReceipt` | Secret-free storage/cache/evidence proof. |
 | `DeploymentReceipt` | Proof that an artifact was derived from a typed source by a generator. |
