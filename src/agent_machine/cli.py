@@ -289,30 +289,18 @@ def resolve_activation_policy_and_grant(args: argparse.Namespace, agentpod: dict
     """Resolve activation policy/grant from explicit files or local policy store."""
     policy_json = args.policy_json
     grant_json = args.grant_json
-
-    # Backward-compatible shorthand:
-    # agent-machine activate evaluate <agentpod.json> <grant.json> --policy-dir examples ...
-    # argparse first assigns the single optional positional to policy_json, so we
-    # reinterpret it as grant_json when a policy store/resolver option is present.
     resolver_requested = bool(args.policy_file or args.policy_dir or args.policy_id or args.expected_status)
     if grant_json is None and policy_json is not None and resolver_requested:
         grant_json = policy_json
         policy_json = None
-
     if grant_json is None:
         raise AssertionError(
             "grant JSON is required. Use either `<agentpod> <policy.json> <grant.json>` "
             "or `<agentpod> <grant.json> --policy-dir <dir>`"
         )
-
     if policy_json is not None:
         return load_json(policy_json), load_json(grant_json)
-
-    policies = policy_fabric.load_policy_admissions(
-        files=args.policy_file,
-        directories=args.policy_dir,
-        root=REPO_ROOT,
-    )
+    policies = policy_fabric.load_policy_admissions(files=args.policy_file, directories=args.policy_dir, root=REPO_ROOT)
     policy = policy_fabric.resolve_policy_admission(
         policies=policies,
         agentpod_id=str(agentpod.get("id")),
@@ -334,10 +322,7 @@ def cmd_activate_evaluate(args: argparse.Namespace) -> int:
     policy_fabric = import_renderer(lambda: __import__("agent_machine.policy_fabric", fromlist=["_unused"]))
     agentpod = load_json(args.agentpod_json)
     policy, grant = resolve_activation_policy_and_grant(args, agentpod, policy_fabric)
-    storage_receipts = activation.load_storage_receipts(
-        files=args.storage_receipt_file,
-        directories=args.storage_receipt_dir,
-    )
+    storage_receipts = activation.load_storage_receipts(files=args.storage_receipt_file, directories=args.storage_receipt_dir)
     storage_receipt_refs = list(args.storage_receipt_ref or [])
     if not storage_receipt_refs and storage_receipts:
         storage_receipt_refs = [str(receipt.get("id")) for receipt in storage_receipts]
@@ -364,16 +349,25 @@ def cmd_steer_stub_response(args: argparse.Namespace) -> int:
     steering_stub = __import__("agent_machine.steering_stub", fromlist=["_unused"])
     request = steering_stub.load_steer_request(str(args.request_json))
     result = steering_stub.build_stub_steer_result(request, status=args.status)
-    if args.pretty:
-        print(json.dumps(result, indent=2, sort_keys=True))
-    else:
-        print(json.dumps(result, sort_keys=True, separators=(",", ":")))
+    print(json.dumps(result, indent=2 if args.pretty else None, sort_keys=True))
     return 0
 
 
 def cmd_steer_serve_stub(args: argparse.Namespace) -> int:
     steering_stub = __import__("agent_machine.steering_stub", fromlist=["_unused"])
     return int(steering_stub.serve_stub(host=args.host, port=args.port, status=args.status))
+
+
+def cmd_steer_preflight(args: argparse.Namespace) -> int:
+    steering_runtime = __import__("agent_machine.steering_runtime", fromlist=["_unused"])
+    result = steering_runtime.runtime_preflight(args.sourceset)
+    print(json.dumps(result, indent=2 if args.pretty else None, sort_keys=True))
+    return 0
+
+
+def cmd_steer_serve(args: argparse.Namespace) -> int:
+    steering_runtime = __import__("agent_machine.steering_runtime", fromlist=["_unused"])
+    return int(steering_runtime.serve_sourceset(args.sourceset, host=args.host, port=args.port))
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -459,7 +453,7 @@ def build_parser() -> argparse.ArgumentParser:
     activate_evaluate.add_argument("--pretty", action="store_true")
     activate_evaluate.set_defaults(func=cmd_activate_evaluate)
 
-    steer = subcommands.add_parser("steer", help="Inspect or serve local steering endpoint stubs")
+    steer = subcommands.add_parser("steer", help="Inspect or serve local steering endpoints")
     steer_subcommands = steer.add_subparsers(dest="steer_command", required=True)
 
     stub_response = steer_subcommands.add_parser("stub-response", help="Render a Noetica-compatible steering stub response")
@@ -473,6 +467,17 @@ def build_parser() -> argparse.ArgumentParser:
     serve_stub.add_argument("--port", type=int, default=8080)
     serve_stub.add_argument("--status", choices=["not_configured", "noop"], default="not_configured")
     serve_stub.set_defaults(func=cmd_steer_serve_stub)
+
+    preflight = steer_subcommands.add_parser("preflight", help="Inspect readiness for a registered steering sourceset")
+    preflight.add_argument("--sourceset", required=True)
+    preflight.add_argument("--pretty", action="store_true")
+    preflight.set_defaults(func=cmd_steer_preflight)
+
+    serve = steer_subcommands.add_parser("serve", help="Serve sourceset-aware local /steer endpoint in fail-closed mode")
+    serve.add_argument("--sourceset", required=True)
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8080)
+    serve.set_defaults(func=cmd_steer_serve)
 
     return parser
 
