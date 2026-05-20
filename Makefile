@@ -60,7 +60,7 @@ validate-policy-fabric:
 
 validate-activation:
 	$(PYTHON) scripts/validate-activation.py
-	$(PYTHON) scripts/evaluate-activation.py $(LOCAL_AGENTPOD) $(READY_POLICY) $(READY_GRANT) --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --storage-receipt-dir $(RECEIPT_DIR) --decided-at $(DECIDED_AT) --decision-id urn:srcos:agent-machine:activation-decision:local-llama-cpp-allowed --pretty >/tmp/agent-machine-evaluate-activation-allowed.json
+	$(PYTHON) scripts/evaluate-activation.py $(LOCAL_AGENTPOD) $(READY_POLICY) $(READY_GRANT) --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --storage-receipt-dir examples --decided-at $(DECIDED_AT) --decision-id urn:srcos:agent-machine:activation-decision:local-llama-cpp-allowed --pretty >/tmp/agent-machine-evaluate-activation-allowed.json
 	$(PYCLI) activate evaluate $(LOCAL_AGENTPOD) $(FAIL_POLICY) $(FAIL_GRANT) --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --storage-receipt-dir $(RECEIPT_DIR) --decided-at $(DECIDED_AT) --decision-id urn:srcos:agent-machine:activation-decision:local-llama-cpp-fail-closed --pretty >/tmp/agent-machine-pycli-evaluate-activation-fail-closed.json
 	$(PYCLI) activate evaluate $(LOCAL_AGENTPOD) $(READY_GRANT) --policy-dir $(POLICY_DIR) --expected-status allowed --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --agent-machine-id urn:srcos:agent-machine:m2-asahi-local --provider-id urn:srcos:agent-machine:inference-provider:asahi-llama-cpp --storage-receipt-dir $(RECEIPT_DIR) --decided-at $(DECIDED_AT) --decision-id urn:srcos:agent-machine:activation-decision:local-llama-cpp-allowed --pretty >/tmp/agent-machine-pycli-resolved-policy-activation-allowed.json
 	$(BOOTSTRAP_CLI) activate evaluate $(LOCAL_AGENTPOD) $(READY_POLICY) $(READY_GRANT) --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --storage-receipt-dir $(RECEIPT_DIR) --decided-at $(DECIDED_AT) --decision-id urn:srcos:agent-machine:activation-decision:local-llama-cpp-allowed --pretty >/tmp/agent-machine-bootstrap-evaluate-activation-allowed.json
@@ -85,6 +85,9 @@ validate-cli:
 	$(BOOTSTRAP_CLI) paths
 	$(BOOTSTRAP_CLI) doctor --format json
 	$(BOOTSTRAP_CLI) probe --format json
+	printf '%s\n' '{"prompt":"Write one short sentence about Paris.","model_id":"gpt2-small","steering":{"feature_id":"10200","layer":"6-res-jb","strength":5}}' >/tmp/agent-machine-steer-request.json
+	$(PYCLI) steer stub-response /tmp/agent-machine-steer-request.json --pretty >/tmp/agent-machine-pycli-steer-stub-response.json
+	$(BOOTSTRAP_CLI) steer stub-response /tmp/agent-machine-steer-request.json --pretty >/tmp/agent-machine-bootstrap-steer-stub-response.json
 	$(PYCLI) version
 	$(PYCLI) paths --format json
 	$(PYCLI) doctor --format json
