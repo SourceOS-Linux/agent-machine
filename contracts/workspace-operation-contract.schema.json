@@ -1,0 +1,355 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:workspace-operation-contract:v0.1.0",
+  "title": "WorkspaceOperationContract",
+  "description": "Governed local agent-machine execution contract projected into WorkspaceOperation and OperationTask state with delegated authority, policy gates, budgets, auditable commands, and redacted diagnostics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specVersion",
+    "id",
+    "kind",
+    "workspaceOperation",
+    "operationTask",
+    "supportedOperationTypes",
+    "profiles",
+    "artifacts",
+    "controls",
+    "audit"
+  ],
+  "$defs": {
+    "operationType": {
+      "type": "string",
+      "enum": [
+        "agent_machine.profile.create",
+        "agent_machine.execution.start",
+        "agent_machine.execution.cancel",
+        "agent_machine.tool_grant.apply",
+        "agent_machine.tool_grant.revoke",
+        "agent_machine.container.run",
+        "agent_machine.model_provider.bind",
+        "agent_machine.diagnostics.export_redacted"
+      ]
+    },
+    "profileType": {
+      "type": "string",
+      "enum": [
+        "personal",
+        "corporate_firewall",
+        "multi_corporate_firewall",
+        "local_model_provider",
+        "hosted_model_provider",
+        "airgapped_local_only",
+        "user_owned_model"
+      ]
+    },
+    "artifactType": {
+      "type": "string",
+      "enum": [
+        "AgentMachineProfile",
+        "LocalAgentExecution",
+        "ToolGrantRecord",
+        "ContainerExecutionRecord",
+        "ModelProviderBinding",
+        "AgentMachineDiagnosticBundle"
+      ]
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modelCalls",
+        "tokens",
+        "connectorCalls",
+        "cpuGpuComputeSeconds",
+        "localDiskBytes",
+        "sandboxMemoryBytes",
+        "wallClockSeconds",
+        "agentConcurrency"
+      ],
+      "properties": {
+        "modelCalls": { "type": "integer", "minimum": 0 },
+        "tokens": { "type": "integer", "minimum": 0 },
+        "connectorCalls": { "type": "integer", "minimum": 0 },
+        "cpuGpuComputeSeconds": { "type": "integer", "minimum": 0 },
+        "localDiskBytes": { "type": "integer", "minimum": 0 },
+        "sandboxMemoryBytes": { "type": "integer", "minimum": 0 },
+        "wallClockSeconds": { "type": "integer", "minimum": 0 },
+        "agentConcurrency": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "operationEventType": {
+      "type": "string",
+      "enum": ["start", "progress", "failure", "retry", "cancel", "complete"]
+    }
+  },
+  "properties": {
+    "specVersion": { "type": "string", "const": "0.1.0" },
+    "id": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:workspace-operation-contract:[a-z0-9][a-z0-9-]*$"
+    },
+    "kind": { "type": "string", "const": "WorkspaceOperationContract" },
+    "workspaceOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operationId", "operationType", "commandRef"],
+      "properties": {
+        "operationId": { "type": "string" },
+        "operationType": { "$ref": "#/$defs/operationType" },
+        "commandRef": { "type": "string" }
+      }
+    },
+    "operationTask": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["taskId", "state"],
+      "properties": {
+        "taskId": { "type": "string" },
+        "state": {
+          "type": "string",
+          "enum": ["queued", "running", "retrying", "cancelled", "failed", "completed"]
+        }
+      }
+    },
+    "supportedOperationTypes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/operationType" },
+      "uniqueItems": true,
+      "allOf": [
+        { "contains": { "const": "agent_machine.profile.create" } },
+        { "contains": { "const": "agent_machine.execution.start" } },
+        { "contains": { "const": "agent_machine.execution.cancel" } },
+        { "contains": { "const": "agent_machine.tool_grant.apply" } },
+        { "contains": { "const": "agent_machine.tool_grant.revoke" } },
+        { "contains": { "const": "agent_machine.container.run" } },
+        { "contains": { "const": "agent_machine.model_provider.bind" } },
+        { "contains": { "const": "agent_machine.diagnostics.export_redacted" } }
+      ]
+    },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["supported", "inspectableSeparation"],
+      "properties": {
+        "supported": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/profileType" },
+          "uniqueItems": true,
+          "allOf": [
+            { "contains": { "const": "personal" } },
+            { "contains": { "const": "corporate_firewall" } },
+            { "contains": { "const": "multi_corporate_firewall" } },
+            { "contains": { "const": "local_model_provider" } },
+            { "contains": { "const": "hosted_model_provider" } },
+            { "contains": { "const": "airgapped_local_only" } },
+            { "contains": { "const": "user_owned_model" } }
+          ]
+        },
+        "inspectableSeparation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "personalVsCorporateFirewall",
+            "corporateVsMultiCorporateFirewall",
+            "enterpriseFirewallVsUserOwnedModel"
+          ],
+          "properties": {
+            "personalVsCorporateFirewall": { "type": "boolean", "const": true },
+            "corporateVsMultiCorporateFirewall": { "type": "boolean", "const": true },
+            "enterpriseFirewallVsUserOwnedModel": { "type": "boolean", "const": true }
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requiredArtifacts",
+        "agentMachineProfile",
+        "localAgentExecution",
+        "toolGrantRecord",
+        "containerExecutionRecord",
+        "modelProviderBinding",
+        "agentMachineDiagnosticBundle"
+      ],
+      "properties": {
+        "requiredArtifacts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/artifactType" },
+          "uniqueItems": true,
+          "allOf": [
+            { "contains": { "const": "AgentMachineProfile" } },
+            { "contains": { "const": "LocalAgentExecution" } },
+            { "contains": { "const": "ToolGrantRecord" } },
+            { "contains": { "const": "ContainerExecutionRecord" } },
+            { "contains": { "const": "ModelProviderBinding" } },
+            { "contains": { "const": "AgentMachineDiagnosticBundle" } }
+          ]
+        },
+        "agentMachineProfile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "profileType"],
+          "properties": {
+            "kind": { "const": "AgentMachineProfile" },
+            "profileType": { "$ref": "#/$defs/profileType" }
+          }
+        },
+        "localAgentExecution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "delegationRef", "budget"],
+          "properties": {
+            "kind": { "const": "LocalAgentExecution" },
+            "delegationRef": { "type": "string" },
+            "budget": { "$ref": "#/$defs/budget" }
+          }
+        },
+        "toolGrantRecord": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "applyCommandRef", "revokeCommandRef"],
+          "properties": {
+            "kind": { "const": "ToolGrantRecord" },
+            "applyCommandRef": { "type": "string" },
+            "revokeCommandRef": { "type": "string" }
+          }
+        },
+        "containerExecutionRecord": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "operationType"],
+          "properties": {
+            "kind": { "const": "ContainerExecutionRecord" },
+            "operationType": { "const": "agent_machine.container.run" }
+          }
+        },
+        "modelProviderBinding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "operationType", "profileType", "policyGateRef"],
+          "properties": {
+            "kind": { "const": "ModelProviderBinding" },
+            "operationType": { "const": "agent_machine.model_provider.bind" },
+            "profileType": {
+              "type": "string",
+              "enum": ["local_model_provider", "hosted_model_provider", "user_owned_model"]
+            },
+            "policyGateRef": { "type": "string" }
+          }
+        },
+        "agentMachineDiagnosticBundle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "operationType",
+            "credentialsIncluded",
+            "tokensIncluded",
+            "localSecretsIncluded",
+            "sensitivePromptsIncluded"
+          ],
+          "properties": {
+            "kind": { "const": "AgentMachineDiagnosticBundle" },
+            "operationType": { "const": "agent_machine.diagnostics.export_redacted" },
+            "credentialsIncluded": { "type": "boolean", "const": false },
+            "tokensIncluded": { "type": "boolean", "const": false },
+            "localSecretsIncluded": { "type": "boolean", "const": false },
+            "sensitivePromptsIncluded": { "type": "boolean", "const": false }
+          }
+        }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "delegatedAuthorityRequired",
+        "policyGates",
+        "budget",
+        "operationEvents",
+        "durableWorkspaceState",
+        "ambientAuthority"
+      ],
+      "properties": {
+        "delegatedAuthorityRequired": { "type": "boolean", "const": true },
+        "policyGates": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "toolGrant",
+            "modelProviderUse",
+            "networkProfile",
+            "containerExecution",
+            "artifactAccess"
+          ],
+          "properties": {
+            "toolGrant": { "type": "boolean", "const": true },
+            "modelProviderUse": { "type": "boolean", "const": true },
+            "networkProfile": { "type": "boolean", "const": true },
+            "containerExecution": { "type": "boolean", "const": true },
+            "artifactAccess": { "type": "boolean", "const": true }
+          }
+        },
+        "budget": { "$ref": "#/$defs/budget" },
+        "operationEvents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["eventType", "at"],
+            "properties": {
+              "eventType": { "$ref": "#/$defs/operationEventType" },
+              "at": { "type": "string" },
+              "details": { "type": "string" }
+            }
+          },
+          "allOf": [
+            { "contains": { "type": "object", "properties": { "eventType": { "const": "start" } }, "required": ["eventType"] } },
+            { "contains": { "type": "object", "properties": { "eventType": { "const": "progress" } }, "required": ["eventType"] } },
+            { "contains": { "type": "object", "properties": { "eventType": { "const": "failure" } }, "required": ["eventType"] } },
+            { "contains": { "type": "object", "properties": { "eventType": { "const": "retry" } }, "required": ["eventType"] } },
+            { "contains": { "type": "object", "properties": { "eventType": { "const": "cancel" } }, "required": ["eventType"] } },
+            { "contains": { "type": "object", "properties": { "eventType": { "const": "complete" } }, "required": ["eventType"] } }
+          ]
+        },
+        "durableWorkspaceState": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "externalWrites"],
+          "properties": {
+            "mode": { "type": "string", "const": "operation-contract-only" },
+            "externalWrites": { "type": "boolean", "const": false }
+          }
+        },
+        "ambientAuthority": { "type": "boolean", "const": false }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["auditableCommands"],
+      "properties": {
+        "auditableCommands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["operationType", "commandRef", "auditable"],
+            "properties": {
+              "operationType": { "$ref": "#/$defs/operationType" },
+              "commandRef": { "type": "string" },
+              "auditable": { "type": "boolean", "const": true }
+            }
+          },
+          "allOf": [
+            { "contains": { "type": "object", "properties": { "operationType": { "const": "agent_machine.tool_grant.apply" } }, "required": ["operationType"] } },
+            { "contains": { "type": "object", "properties": { "operationType": { "const": "agent_machine.tool_grant.revoke" } }, "required": ["operationType"] } }
+          ]
+        }
+      }
+    }
+  }
+}
