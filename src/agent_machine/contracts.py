@@ -60,6 +60,7 @@ def schema_by_kind(root: Path | None = None) -> dict[str, Path]:
         "SteeringArtifactReceipt": base / "steering-artifact-receipt.schema.json",
         "SteeringSourceset": base / "steering-sourceset.schema.json",
         "StorageReceipt": base / "storage-receipt.schema.json",
+        "WorkspaceOperationContract": base / "workspace-operation-contract.schema.json",
     }
 
 
