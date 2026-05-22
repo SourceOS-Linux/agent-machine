@@ -1,4 +1,4 @@
-.PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-policy-fabric validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula validate-runtime-install-receipts doctor probe
+.PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-policy-fabric validate-agent-registry validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula validate-runtime-install-receipts doctor probe
 
 PYTHON ?= python3
 RUBY ?= ruby
@@ -16,12 +16,13 @@ FAIL_POLICY := examples/policy-admission.missing.json
 FAIL_GRANT := examples/agent-registry-grant.missing.json
 RECEIPT_DIR := examples
 POLICY_DIR := examples
+GRANT_DIR := examples
 DEPLOYMENT_RECEIPT_ID := urn:srcos:agent-machine:deployment-receipt:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 DECIDED_AT := 2026-05-04T12:51:00Z
 PYCLI := PYTHONPATH=src $(PYTHON) -m agent_machine.cli
 PYMOD := PYTHONPATH=src $(PYTHON) -m
 
-validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-policy-fabric validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula validate-runtime-install-receipts
+validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-policy-fabric validate-agent-registry validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula validate-runtime-install-receipts
 
 validate-json:
 	$(PYTHON) scripts/validate-json.py
@@ -57,6 +58,10 @@ validate-policy-fabric:
 	$(PYTHON) scripts/validate-policy-fabric.py
 	$(PYTHON) scripts/resolve-policy-admission.py $(LOCAL_AGENTPOD) --policy-dir $(POLICY_DIR) --expected-status allowed --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --agent-machine-id urn:srcos:agent-machine:m2-asahi-local --provider-id urn:srcos:agent-machine:inference-provider:asahi-llama-cpp --pretty >/tmp/agent-machine-policy-resolve-allowed.json
 	$(PYCLI) policy resolve $(LOCAL_AGENTPOD) --policy-dir $(POLICY_DIR) --expected-status denied --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --agent-machine-id urn:srcos:agent-machine:m2-asahi-local --provider-id urn:srcos:agent-machine:inference-provider:asahi-llama-cpp --pretty >/tmp/agent-machine-pycli-policy-resolve-denied.json
+
+validate-agent-registry:
+	$(PYTHON) scripts/validate-agent-registry.py
+	$(PYTHON) scripts/resolve-agent-registry-grant.py $(LOCAL_AGENTPOD) --grant-dir $(GRANT_DIR) --grant-id urn:srcos:agent-machine:agent-registry-grant:active-loopback-activation --requested-agent-identity-ref urn:srcos:agent:local-inference-provider --session-ref urn:srcos:session:local-bootstrap --agent-machine-id urn:srcos:agent-machine:m2-asahi-local --pretty >/tmp/agent-machine-registry-resolve-active.json
 
 validate-activation:
 	$(PYTHON) scripts/validate-activation.py
