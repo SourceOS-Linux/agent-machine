@@ -18,6 +18,7 @@ def main() -> int:
     import agent_machine.activation
     import agent_machine.cli
     import agent_machine.evidence
+    import agent_machine.external_trust
     import agent_machine.governance
     import agent_machine.policy_fabric
     import agent_machine.release_bundle
@@ -42,6 +43,7 @@ def main() -> int:
         "AgentPod",
         "AgentPlaneRuntimeEvidence",
         "AgentRegistryGrant",
+        "ExternalTrustSignalProvider",
         "PolicyAdmission",
         "ReleaseEvidenceBundle",
         "SignedReleaseBundleEnvelope",
