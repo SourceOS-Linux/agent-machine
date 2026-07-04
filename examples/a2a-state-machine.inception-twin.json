@@ -1,0 +1,45 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:a2a-state-machine:inception-twin-default",
+  "kind": "A2AStateMachine",
+  "participants": {
+    "initiatorAgentRef": "urn:srcos:agent-machine:agent-pod:inception-agent",
+    "responderAgentRef": "urn:srcos:agent-machine:agent-pod:twin-agent",
+    "hostRefs": [
+      "urn:srcos:agent-machine:m2-asahi-local",
+      "urn:srcos:agent-machine:twin-k8s"
+    ]
+  },
+  "planes": {
+    "controlPlane": "a2a",
+    "toolPlane": "mcp",
+    "controlToolSeparationRequired": true
+  },
+  "phases": [
+    "HELLO",
+    "ATTEST",
+    "DISCOVER",
+    "NEGOTIATE",
+    "UX_CONTRACT",
+    "GRANT",
+    "BIND",
+    "EXECUTE",
+    "AUDIT_SETTLE"
+  ],
+  "revocation": {
+    "revocationRequired": true,
+    "revocationBeatsKill": true,
+    "propagationTargetSeconds": 5,
+    "revocationEventRef": "urn:srcos:agent-machine:revocation-event:demo-revoke"
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "secretValuesIncluded": false,
+    "privateMemoryIncluded": false
+  },
+  "issuedAt": "2026-05-12T20:30:00Z",
+  "labels": {
+    "profile": "inception-twin",
+    "status": "draft"
+  }
+}
