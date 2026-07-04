@@ -67,6 +67,9 @@ validate-agent-registry:
 validate-superconscious-runtime-plan:
 	$(PYTHON) scripts/validate-superconscious-runtime-plan.py
 
+validate-superconscious-runtime-plan:
+	$(PYTHON) scripts/validate-superconscious-runtime-plan.py
+
 validate-activation:
 	$(PYTHON) scripts/validate-activation.py
 	$(PYTHON) scripts/evaluate-activation.py $(LOCAL_AGENTPOD) $(READY_POLICY) $(READY_GRANT) --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --storage-receipt-dir examples --decided-at $(DECIDED_AT) --decision-id urn:srcos:agent-machine:activation-decision:local-llama-cpp-allowed --pretty >/tmp/agent-machine-evaluate-activation-allowed.json
