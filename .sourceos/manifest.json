@@ -1,0 +1,46 @@
+{
+  "repo": "SourceOS-Linux/agent-machine",
+  "domain": "agent",
+  "specVersion": "0.1.0",
+  "ownedSchemas": [
+    "AgentRuntimeProfile",
+    "AgentExecutionPlan",
+    "AgentRuntimeEvidence"
+  ],
+  "syncEngines": [],
+  "sourceChannels": [
+    "agent.execute.tool",
+    "agent.access.memory",
+    "agent.access.shell",
+    "agent.model.route",
+    "agent.mcp.invoke"
+  ],
+  "policyClasses": [
+    "critical"
+  ],
+  "auditEvents": [
+    "agent.execution.started",
+    "agent.execution.denied",
+    "agent.execution.completed",
+    "agent.lease.expired",
+    "agent.lease.revoked",
+    "agent.policy.mismatch"
+  ],
+  "dangerousSurfaces": [
+    "agent.execute.tool",
+    "agent.access.memory",
+    "agent.access.shell",
+    "agent.access.network",
+    "agent.model.route",
+    "agent.mcp.invoke",
+    "agent.secret_ref.use"
+  ],
+  "authorityRepos": [
+    "SourceOS-Linux/sourceos-spec",
+    "SocioProphet/agent-registry",
+    "SocioProphet/policy-fabric",
+    "SocioProphet/guardrail-fabric",
+    "SocioProphet/memory-mesh"
+  ],
+  "notes": "Local agent runtime. High-risk execution requires scoped capability leases and policy decisions before tool, memory, shell, network, MCP, model, or secret-reference access."
+}

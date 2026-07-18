@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:signed-release-bundle-envelope:v0.1.0",
+  "title": "SignedReleaseBundleEnvelope",
+  "description": "Secret-free signing envelope for Agent Machine ReleaseEvidenceBundle payloads. Bootstrap supports unsigned and signed-placeholder envelopes; production requires real signature verification.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specVersion",
+    "id",
+    "kind",
+    "subject",
+    "signature",
+    "verification",
+    "receiptSafety",
+    "generatedAt"
+  ],
+  "properties": {
+    "specVersion": { "type": "string", "const": "0.1.0" },
+    "id": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:signed-release-bundle-envelope:[a-z0-9][a-z0-9-]*$"
+    },
+    "kind": { "type": "string", "const": "SignedReleaseBundleEnvelope" },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subjectKind", "subjectRef", "subjectDigest"],
+      "properties": {
+        "subjectKind": { "type": "string", "const": "ReleaseEvidenceBundle" },
+        "subjectRef": { "type": "string" },
+        "subjectDigest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "sourceCommitSha": { "type": ["string", "null"], "pattern": "^[a-f0-9]{40}$" },
+        "workflowRunId": { "type": ["integer", "null"], "minimum": 1 }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "algorithm", "keyRef", "signatureDigest", "signatureRef"],
+      "properties": {
+        "status": { "type": "string", "enum": ["unsigned", "signed-placeholder", "signed"] },
+        "algorithm": { "type": ["string", "null"], "enum": ["cosign-keyless", "cosign-key-pair", "minisign", "ssh-sig", "gpg", "unknown", null] },
+        "keyRef": { "type": ["string", "null"] },
+        "signatureDigest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" },
+        "signatureRef": { "type": ["string", "null"] },
+        "transparencyLogRef": { "type": ["string", "null"] },
+        "certificateRef": { "type": ["string", "null"] }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verified", "verificationStatus", "verifiedAt", "verifierVersion"],
+      "properties": {
+        "verified": { "type": "boolean" },
+        "verificationStatus": { "type": "string", "enum": ["not-implemented", "not-run", "passed", "failed", "unknown"] },
+        "verifiedAt": { "type": ["string", "null"] },
+        "verifierVersion": { "type": ["string", "null"] },
+        "failureReason": { "type": ["string", "null"] }
+      }
+    },
+    "receiptSafety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["includeRawContent", "rawPromptContentIncluded", "rawKvCacheContentIncluded", "secretValuesIncluded", "privateMemoryIncluded"],
+      "properties": {
+        "includeRawContent": { "type": "boolean", "const": false },
+        "rawPromptContentIncluded": { "type": "boolean", "const": false },
+        "rawKvCacheContentIncluded": { "type": "boolean", "const": false },
+        "secretValuesIncluded": { "type": "boolean", "const": false },
+        "privateMemoryIncluded": { "type": "boolean", "const": false }
+      }
+    },
+    "generatedAt": { "type": "string" },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  }
+}
