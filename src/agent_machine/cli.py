@@ -312,6 +312,20 @@ def cmd_activate_evaluate(args: argparse.Namespace) -> int:
     return 0
 
 
+def resolve_activation_policy_and_grant(args: argparse.Namespace, agentpod: dict[str, Any], policy_fabric: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+    policy_json = args.policy_json
+    grant_json = args.grant_json
+    resolver_requested = bool(args.policy_file or args.policy_dir or args.policy_id or args.expected_status)
+    if grant_json is None and policy_json is not None and resolver_requested:
+        grant_json = policy_json
+        policy_json = None
+    if grant_json is None:
+        raise AssertionError("grant JSON is required. Use either `<agentpod> <policy.json> <grant.json>` or `<agentpod> <grant.json> --policy-dir <dir>`")
+    if policy_json is not None:
+        return load_json(policy_json), load_json(grant_json)
+    policies = policy_fabric.load_policy_admissions(files=args.policy_file, directories=args.policy_dir, root=REPO_ROOT)
+    policy = policy_fabric.resolve_policy_admission(policies=policies, agentpod_id=str(agentpod.get("id")), request_type="activation", deployment_receipt_id=args.deployment_receipt_id, agent_machine_id=args.agent_machine_id, provider_id=args.provider_id, policy_id=args.policy_id, expected_status=args.expected_status, allow_missing_stub=not args.no_missing_stub, decided_at=args.decided_at, root=REPO_ROOT)
+    return policy, load_json(grant_json)
 def agentpod_workload_default(agentpod: dict[str, Any], key: str) -> str | None:
     value = agentpod.get("workload", {}).get(key)
     return value if isinstance(value, str) and value else None
@@ -569,7 +583,6 @@ def build_parser() -> argparse.ArgumentParser:
     stub_response.add_argument("--status", choices=["not_configured", "noop"], default="not_configured")
     stub_response.add_argument("--pretty", action="store_true")
     stub_response.set_defaults(func=cmd_steer_stub_response)
-
     serve_stub = steer_subcommands.add_parser("serve-stub", help="Serve local POST /steer contract stub")
     serve_stub.add_argument("--host", default="127.0.0.1")
     serve_stub.add_argument("--port", type=int, default=8080)
