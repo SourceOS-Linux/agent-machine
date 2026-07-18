@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:eval-gate-profile:v0.1.0",
+  "title": "EvalGateProfile",
+  "description": "Secret-free evaluation gate profile for budgeted agent loops, publish/finalize decisions, metric thresholds, and fail-closed behavior.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["specVersion", "id", "kind", "loopBudget", "metrics", "decision", "receiptSafety", "issuedAt"],
+  "properties": {
+    "specVersion": {"type": "string", "const": "0.1.0"},
+    "id": {"type": "string", "pattern": "^urn:srcos:agent-machine:eval-gate-profile:[a-z0-9][a-z0-9-]*$"},
+    "kind": {"type": "string", "const": "EvalGateProfile"},
+    "loopBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxIterations", "onExhaustion"],
+      "properties": {
+        "maxIterations": {"type": "integer", "minimum": 0},
+        "onExhaustion": {"type": "string", "enum": ["deny-finalize", "manual-review"]}
+      }
+    },
+    "metrics": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "minimum", "source"],
+        "properties": {
+          "name": {"type": "string"},
+          "minimum": {"type": "number", "minimum": 0, "maximum": 1},
+          "source": {"type": "string"}
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["defaultDecision", "publishRequiresAllMetrics", "humanReviewOnFailure"],
+      "properties": {
+        "defaultDecision": {"type": "string", "const": "deny"},
+        "publishRequiresAllMetrics": {"type": "boolean", "const": true},
+        "humanReviewOnFailure": {"type": "boolean"}
+      }
+    },
+    "receiptSafety": {"$ref": "#/$defs/receiptSafety"},
+    "issuedAt": {"type": "string"},
+    "labels": {"type": "object", "additionalProperties": {"type": "string"}}
+  },
+  "$defs": {
+    "receiptSafety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["includeRawContent", "secretValuesIncluded", "privateMemoryIncluded"],
+      "properties": {
+        "includeRawContent": {"type": "boolean", "const": false},
+        "secretValuesIncluded": {"type": "boolean", "const": false},
+        "privateMemoryIncluded": {"type": "boolean", "const": false}
+      }
+    }
+  }
+}

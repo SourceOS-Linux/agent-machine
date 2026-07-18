@@ -1,0 +1,10 @@
+# Optional runtime dependencies for local SAE steering activation.
+# These are intentionally not part of requirements-dev.txt or default validation.
+# Install only on an operator machine intended to run the local steering server.
+
+torch
+transformers
+transformer-lens
+sae-lens
+safetensors
+huggingface_hub

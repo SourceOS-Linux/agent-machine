@@ -1,0 +1,31 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:steering-artifact-receipt:gpt2-small.res-jb.pending",
+  "kind": "SteeringArtifactReceipt",
+  "sourcesetId": "gpt2-small.res-jb",
+  "status": "pending",
+  "generatedAt": "1970-01-01T00:00:00Z",
+  "activationIssue": "https://github.com/SourceOS-Linux/agent-machine/issues/34",
+  "artifactRecords": [],
+  "missing": [
+    "resolved model file paths",
+    "resolved model revisions",
+    "model sha256 digests",
+    "resolved SAE file paths",
+    "resolved SAE revisions",
+    "SAE sha256 digests",
+    "storage receipts"
+  ],
+  "storageReceiptRefs": [],
+  "policyRefs": [],
+  "agentRegistryGrantRefs": [],
+  "receiptSafety": {
+    "includeRawArtifacts": false,
+    "includeAuthMaterial": false
+  },
+  "notes": [
+    "This pending fixture validates the receipt envelope before artifacts are resolved.",
+    "A complete receipt must include one artifact record per resolved model, tokenizer, and SAE file.",
+    "Each complete artifact record must include repo, exact filePath, resolvedRevision, localPath, sizeBytes, and SHA-256 digest."
+  ]
+}
