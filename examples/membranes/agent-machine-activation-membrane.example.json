@@ -1,0 +1,48 @@
+{
+  "_comment": "Agent Machine activation membrane crossing examples — admitted, blocked, and revoked cases.",
+  "examples": [
+    {
+      "case": "admitted",
+      "description": "Steering AgentPod admitted after successful preflight: artifact receipts present, policy grants R3, boot phase unlocked.",
+      "activationDecision": {
+        "id": "urn:agent-machine:activation-decision:gpt2-steer-20260718-001",
+        "specVersion": "0.1.0",
+        "agentPodId": "urn:agent-machine:agentpod:gpt2-steer-001",
+        "verdict": "admitted",
+        "capabilityRadius": "R3",
+        "grantRef": "urn:agent-registry:grant:gpt2-steer-op-001",
+        "policyRef": "urn:policy-fabric:decision:gpt2-steer-preflight-001",
+        "artifactReceiptRef": "urn:agent-machine:steering-artifact-receipt:gpt2-small-res-jb-001",
+        "bootPhase": "unlocked-user-session",
+        "admittedAt": "2026-07-18T10:00:00Z"
+      }
+    },
+    {
+      "case": "blocked",
+      "description": "Activation blocked: artifact receipt missing for gpt2-small.res-jb. Fail-closed: pod not started.",
+      "activationDecision": {
+        "id": "urn:agent-machine:activation-decision:gpt2-steer-missing-receipt-001",
+        "specVersion": "0.1.0",
+        "agentPodId": "urn:agent-machine:agentpod:gpt2-steer-002",
+        "verdict": "denied",
+        "rationale": "steering-artifact-receipt-missing",
+        "failClosedStatus": "not_configured",
+        "bootPhase": "unlocked-user-session",
+        "blockedAt": "2026-07-18T10:05:00Z"
+      }
+    },
+    {
+      "case": "revoked",
+      "description": "In-flight pod grant revoked by policy-fabric. Pod terminated, lifecycle event emitted.",
+      "lifecycleEvent": {
+        "id": "urn:agent-machine:lifecycle:gpt2-steer-revoked-001",
+        "specVersion": "0.1.0",
+        "agentPodId": "urn:agent-machine:agentpod:gpt2-steer-001",
+        "event": "terminated",
+        "reason": "grant-revoked",
+        "grantRef": "urn:agent-registry:grant:gpt2-steer-op-001",
+        "revokedAt": "2026-07-18T10:30:00Z"
+      }
+    }
+  ]
+}
