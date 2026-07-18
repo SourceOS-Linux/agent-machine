@@ -215,6 +215,98 @@ def cmd_policy_resolve(args: argparse.Namespace) -> int:
     policy_fabric = import_renderer(lambda: __import__("agent_machine.policy_fabric", fromlist=["_unused"]))
     agentpod = load_json(args.agentpod_json)
     policies = policy_fabric.load_policy_admissions(files=args.policy_file, directories=args.policy_dir, root=REPO_ROOT)
+    policy = policy_fabric.resolve_policy_admission(
+        policies=policies,
+        agentpod_id=str(agentpod.get("id")),
+        request_type=args.request_type,
+        deployment_receipt_id=args.deployment_receipt_id,
+        agent_machine_id=args.agent_machine_id,
+        provider_id=args.provider_id,
+        policy_id=args.policy_id,
+        expected_status=args.expected_status,
+        allow_missing_stub=not args.no_missing_stub,
+        decided_at=args.decided_at,
+        root=REPO_ROOT,
+    )
+    if args.pretty:
+        print(json.dumps(policy, indent=2, sort_keys=True))
+    else:
+        print(json.dumps(policy, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
+def resolve_activation_policy_and_grant(args: argparse.Namespace, agentpod: dict[str, Any], policy_fabric: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Resolve activation policy/grant from explicit files or local policy store."""
+    policy_json = args.policy_json
+    grant_json = args.grant_json
+
+    # Backward-compatible shorthand:
+    # agent-machine activate evaluate <agentpod.json> <grant.json> --policy-dir examples ...
+    # argparse first assigns the single optional positional to policy_json, so we
+    # reinterpret it as grant_json when a policy store/resolver option is present.
+    resolver_requested = bool(args.policy_file or args.policy_dir or args.policy_id or args.expected_status)
+    if grant_json is None and policy_json is not None and resolver_requested:
+        grant_json = policy_json
+        policy_json = None
+
+    if grant_json is None:
+        raise AssertionError(
+            "grant JSON is required. Use either `<agentpod> <policy.json> <grant.json>` "
+            "or `<agentpod> <grant.json> --policy-dir <dir>`"
+        )
+
+    if policy_json is not None:
+        return load_json(policy_json), load_json(grant_json)
+
+    policies = policy_fabric.load_policy_admissions(
+        files=args.policy_file,
+        directories=args.policy_dir,
+        root=REPO_ROOT,
+    )
+    policy = policy_fabric.resolve_policy_admission(
+        policies=policies,
+        agentpod_id=str(agentpod.get("id")),
+        request_type="activation",
+        deployment_receipt_id=args.deployment_receipt_id,
+        agent_machine_id=args.agent_machine_id,
+        provider_id=args.provider_id,
+        policy_id=args.policy_id,
+        expected_status=args.expected_status,
+        allow_missing_stub=not args.no_missing_stub,
+        decided_at=args.decided_at,
+        root=REPO_ROOT,
+    )
+    return policy, load_json(grant_json)
+
+
+def cmd_activate_evaluate(args: argparse.Namespace) -> int:
+    activation = import_renderer(lambda: __import__("agent_machine.activation", fromlist=["_unused"]))
+    policy_fabric = import_renderer(lambda: __import__("agent_machine.policy_fabric", fromlist=["_unused"]))
+    agentpod = load_json(args.agentpod_json)
+    policy, grant = resolve_activation_policy_and_grant(args, agentpod, policy_fabric)
+    storage_receipts = activation.load_storage_receipts(
+        files=args.storage_receipt_file,
+        directories=args.storage_receipt_dir,
+    )
+    storage_receipt_refs = list(args.storage_receipt_ref or [])
+    if not storage_receipt_refs and storage_receipts:
+        storage_receipt_refs = [str(receipt.get("id")) for receipt in storage_receipts]
+    decision = activation.evaluate_activation(
+        agentpod=agentpod,
+        policy=policy,
+        grant=grant,
+        deployment_receipt_id=args.deployment_receipt_id,
+        storage_receipt_refs=storage_receipt_refs,
+        storage_receipts=storage_receipts if storage_receipts else None,
+        decided_at=args.decided_at,
+        decision_id=args.decision_id,
+        root=REPO_ROOT,
+    )
+    activation.validate_activation_decision_payload(decision, REPO_ROOT)
+    if args.pretty:
+        print(json.dumps(decision, indent=2, sort_keys=True))
+    else:
+        print(json.dumps(decision, sort_keys=True, separators=(",", ":")))
     policy = policy_fabric.resolve_policy_admission(policies=policies, agentpod_id=str(agentpod.get("id")), request_type=args.request_type, deployment_receipt_id=args.deployment_receipt_id, agent_machine_id=args.agent_machine_id, provider_id=args.provider_id, policy_id=args.policy_id, expected_status=args.expected_status, allow_missing_stub=not args.no_missing_stub, decided_at=args.decided_at, root=REPO_ROOT)
     print(json.dumps(policy, indent=2 if args.pretty else None, sort_keys=True))
     return 0
@@ -394,6 +486,7 @@ def build_parser() -> argparse.ArgumentParser:
     render_k8s.add_argument("agentpod_json", type=Path)
     render_k8s.add_argument("--compare", type=Path)
     render_k8s.set_defaults(func=cmd_render_k8s)
+
     policy = subcommands.add_parser("policy", help="Resolve Policy Fabric admission artifacts")
     policy_subcommands = policy.add_subparsers(dest="policy_command", required=True)
     policy_resolve = policy_subcommands.add_parser("resolve", help="Resolve a PolicyAdmission from local files/stores")
@@ -428,6 +521,9 @@ def build_parser() -> argparse.ArgumentParser:
     activate_evaluate.add_argument("--policy-dir", action="append", type=Path, default=[])
     activate_evaluate.add_argument("--policy-id")
     activate_evaluate.add_argument("--expected-status", choices=["missing", "allowed", "denied", "not-required", "unknown"])
+    activate_evaluate.add_argument("--no-missing-stub", action="store_true")
+    activate_evaluate.add_argument("--agent-machine-id")
+    activate_evaluate.add_argument("--provider-id")
     add_registry_resolver_args(activate_evaluate)
     activate_evaluate.add_argument("--storage-receipt-ref", action="append", default=[])
     activate_evaluate.add_argument("--storage-receipt-file", action="append", type=Path, default=[])
