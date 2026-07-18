@@ -5,6 +5,14 @@
   "description": "Secret-free adapter request/response contract for optional non-authoritative external identity, reputation, certificate-tier, counterparty, and registry lookup signals used as Agent Registry verifier inputs.",
   "type": "object",
   "additionalProperties": false,
+  "required": ["specVersion", "id", "kind", "request", "response", "receiptSafety", "observedAt"],
+  "$defs": {
+    "signalType": {
+      "type": "string",
+      "enum": ["agent-identity", "cert-tier", "reputation-score", "counterparty-check", "registry-lookup", "other"]
+    },
+    "sha256Digest": {
+      "type": ["string", "null"],
   "required": [
     "specVersion",
     "id",
@@ -36,6 +44,11 @@
     "freshness": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["maxAgeSeconds", "observedAgeSeconds", "fresh"],
+      "properties": {
+        "maxAgeSeconds": { "type": "integer", "minimum": 0 },
+        "observedAgeSeconds": { "type": "integer", "minimum": 0 },
+        "fresh": { "type": "boolean" }
       "required": [
         "maxAgeSeconds",
         "observedAgeSeconds",
@@ -58,6 +71,12 @@
     "signature": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["required", "observed", "signatureRef", "signerRef"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "observed": { "type": "boolean" },
+        "signatureRef": { "type": ["string", "null"] },
+        "signerRef": { "type": ["string", "null"] }
       "required": [
         "required",
         "observed",
@@ -88,6 +107,18 @@
     "externalTrustSignal": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["providerRef", "signalType", "signalRef", "signalDigest", "verifiedAt", "freshness", "signature", "authority", "failureReason"],
+      "properties": {
+        "providerRef": { "type": "string" },
+        "signalType": { "$ref": "#/$defs/signalType" },
+        "signalRef": { "type": "string" },
+        "signalDigest": { "$ref": "#/$defs/sha256Digest" },
+        "verifiedAt": { "type": "string" },
+        "freshness": { "$ref": "#/$defs/freshness" },
+        "signature": { "$ref": "#/$defs/signature" },
+        "authority": { "type": "string", "const": "non-authoritative-verifier-input" },
+        "failureReason": { "type": ["string", "null"] },
+        "notes": { "type": "array", "items": { "type": "string" } }
       "required": [
         "providerRef",
         "signalType",
@@ -141,6 +172,7 @@
     }
   },
   "properties": {
+    "specVersion": { "type": "string", "const": "0.1.0" },
     "specVersion": {
       "type": "string",
       "const": "0.1.0"
@@ -149,6 +181,14 @@
       "type": "string",
       "pattern": "^urn:srcos:agent-machine:external-trust-signal-provider:[a-z0-9][a-z0-9-]*$"
     },
+    "kind": { "type": "string", "const": "ExternalTrustSignalProvider" },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requestId", "providerRef", "agentPodId", "requestedAgentIdentityRef", "sessionRef", "workroomRef", "topicRef", "requestedSignalTypes", "verificationFreshnessSeconds", "requestedExpiresAt", "signatureRequired"],
+      "properties": {
+        "requestId": { "type": "string" },
+        "providerRef": { "type": "string" },
     "kind": {
       "type": "string",
       "const": "ExternalTrustSignalProvider"
@@ -180,6 +220,19 @@
           "type": "string",
           "pattern": "^urn:srcos:agent-machine:agent-pod:[a-z0-9][a-z0-9-]*$"
         },
+        "requestedAgentIdentityRef": { "type": "string" },
+        "sessionRef": { "type": "string" },
+        "workroomRef": { "type": ["string", "null"] },
+        "topicRef": { "type": ["string", "null"] },
+        "requestedSignalTypes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/signalType" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "verificationFreshnessSeconds": { "type": "integer", "minimum": 0 },
+        "requestedExpiresAt": { "type": ["string", "null"] },
+        "signatureRequired": { "type": "boolean" }
         "requestedAgentIdentityRef": {
           "type": "string"
         },
@@ -224,6 +277,22 @@
     "response": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["status", "usableForGrantResolution", "providerRef", "authority", "verifiedAt", "freshness", "signals", "failureReason"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["available", "unavailable", "stale", "malformed", "unsigned", "denied", "error"]
+        },
+        "usableForGrantResolution": { "type": "boolean" },
+        "providerRef": { "type": "string" },
+        "authority": { "type": "string", "const": "non-authoritative-verifier-input" },
+        "verifiedAt": { "type": ["string", "null"] },
+        "freshness": { "$ref": "#/$defs/freshness" },
+        "signals": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/externalTrustSignal" }
+        },
+        "failureReason": { "type": ["string", "null"] }
       "required": [
         "status",
         "usableForGrantResolution",
@@ -283,6 +352,21 @@
     "receiptSafety": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["includeRawContent", "rawPromptContentIncluded", "rawKvCacheContentIncluded", "secretValuesIncluded", "privateMemoryIncluded", "apiKeysIncluded", "walletPrivateKeysIncluded", "rawCredentialsIncluded", "rawUserDataIncluded"],
+      "properties": {
+        "includeRawContent": { "type": "boolean", "const": false },
+        "rawPromptContentIncluded": { "type": "boolean", "const": false },
+        "rawKvCacheContentIncluded": { "type": "boolean", "const": false },
+        "secretValuesIncluded": { "type": "boolean", "const": false },
+        "privateMemoryIncluded": { "type": "boolean", "const": false },
+        "apiKeysIncluded": { "type": "boolean", "const": false },
+        "walletPrivateKeysIncluded": { "type": "boolean", "const": false },
+        "rawCredentialsIncluded": { "type": "boolean", "const": false },
+        "rawUserDataIncluded": { "type": "boolean", "const": false }
+      }
+    },
+    "observedAt": { "type": "string" },
+    "labels": { "type": "object", "additionalProperties": { "type": "string" } }
       "required": [
         "includeRawContent",
         "rawPromptContentIncluded",
