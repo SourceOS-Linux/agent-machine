@@ -1,4 +1,4 @@
-.PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-policy-fabric validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula doctor probe
+.PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-policy-fabric validate-agent-registry validate-superconscious-runtime-plan validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula validate-runtime-install-receipts doctor probe
 
 PYTHON ?= python3
 RUBY ?= ruby
@@ -16,12 +16,13 @@ FAIL_POLICY := examples/policy-admission.missing.json
 FAIL_GRANT := examples/agent-registry-grant.missing.json
 RECEIPT_DIR := examples
 POLICY_DIR := examples
+GRANT_DIR := examples
 DEPLOYMENT_RECEIPT_ID := urn:srcos:agent-machine:deployment-receipt:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 DECIDED_AT := 2026-05-04T12:51:00Z
 PYCLI := PYTHONPATH=src $(PYTHON) -m agent_machine.cli
 PYMOD := PYTHONPATH=src $(PYTHON) -m
 
-validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-policy-fabric validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula
+validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-policy-fabric validate-agent-registry validate-superconscious-runtime-plan validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula validate-runtime-install-receipts
 
 validate-json:
 	$(PYTHON) scripts/validate-json.py
@@ -58,11 +59,23 @@ validate-policy-fabric:
 	$(PYTHON) scripts/resolve-policy-admission.py $(LOCAL_AGENTPOD) --policy-dir $(POLICY_DIR) --expected-status allowed --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --agent-machine-id urn:srcos:agent-machine:m2-asahi-local --provider-id urn:srcos:agent-machine:inference-provider:asahi-llama-cpp --pretty >/tmp/agent-machine-policy-resolve-allowed.json
 	$(PYCLI) policy resolve $(LOCAL_AGENTPOD) --policy-dir $(POLICY_DIR) --expected-status denied --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --agent-machine-id urn:srcos:agent-machine:m2-asahi-local --provider-id urn:srcos:agent-machine:inference-provider:asahi-llama-cpp --pretty >/tmp/agent-machine-pycli-policy-resolve-denied.json
 
+validate-agent-registry:
+	$(PYTHON) scripts/validate-agent-registry.py
+	$(PYTHON) scripts/resolve-agent-registry-grant.py $(LOCAL_AGENTPOD) --grant-dir $(GRANT_DIR) --grant-id urn:srcos:agent-machine:agent-registry-grant:active-loopback-activation --requested-agent-identity-ref urn:srcos:agent:local-inference-provider --session-ref urn:srcos:session:local-bootstrap --agent-machine-id urn:srcos:agent-machine:m2-asahi-local --pretty >/tmp/agent-machine-registry-resolve-active.json
+	$(PYCLI) registry resolve $(LOCAL_AGENTPOD) --grant-dir $(GRANT_DIR) --grant-id urn:srcos:agent-machine:agent-registry-grant:active-loopback-activation --session-ref urn:srcos:session:local-bootstrap --agent-machine-id urn:srcos:agent-machine:m2-asahi-local --pretty >/tmp/agent-machine-pycli-registry-resolve-active.json
+
+validate-superconscious-runtime-plan:
+	$(PYTHON) scripts/validate-superconscious-runtime-plan.py
+
+validate-superconscious-runtime-plan:
+	$(PYTHON) scripts/validate-superconscious-runtime-plan.py
+
 validate-activation:
 	$(PYTHON) scripts/validate-activation.py
 	$(PYTHON) scripts/evaluate-activation.py $(LOCAL_AGENTPOD) $(READY_POLICY) $(READY_GRANT) --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --storage-receipt-dir examples --decided-at $(DECIDED_AT) --decision-id urn:srcos:agent-machine:activation-decision:local-llama-cpp-allowed --pretty >/tmp/agent-machine-evaluate-activation-allowed.json
 	$(PYCLI) activate evaluate $(LOCAL_AGENTPOD) $(FAIL_POLICY) $(FAIL_GRANT) --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --storage-receipt-dir $(RECEIPT_DIR) --decided-at $(DECIDED_AT) --decision-id urn:srcos:agent-machine:activation-decision:local-llama-cpp-fail-closed --pretty >/tmp/agent-machine-pycli-evaluate-activation-fail-closed.json
 	$(PYCLI) activate evaluate $(LOCAL_AGENTPOD) $(READY_GRANT) --policy-dir $(POLICY_DIR) --expected-status allowed --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --agent-machine-id urn:srcos:agent-machine:m2-asahi-local --provider-id urn:srcos:agent-machine:inference-provider:asahi-llama-cpp --storage-receipt-dir $(RECEIPT_DIR) --decided-at $(DECIDED_AT) --decision-id urn:srcos:agent-machine:activation-decision:local-llama-cpp-allowed --pretty >/tmp/agent-machine-pycli-resolved-policy-activation-allowed.json
+	$(PYCLI) activate evaluate $(LOCAL_AGENTPOD) --policy-dir $(POLICY_DIR) --expected-status allowed --grant-dir $(GRANT_DIR) --grant-id urn:srcos:agent-machine:agent-registry-grant:active-loopback-activation --session-ref urn:srcos:session:local-bootstrap --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --agent-machine-id urn:srcos:agent-machine:m2-asahi-local --provider-id urn:srcos:agent-machine:inference-provider:asahi-llama-cpp --storage-receipt-dir $(RECEIPT_DIR) --decided-at $(DECIDED_AT) --decision-id urn:srcos:agent-machine:activation-decision:local-llama-cpp-allowed --pretty >/tmp/agent-machine-pycli-resolved-policy-grant-activation-allowed.json
 	$(BOOTSTRAP_CLI) activate evaluate $(LOCAL_AGENTPOD) $(READY_POLICY) $(READY_GRANT) --deployment-receipt-id $(DEPLOYMENT_RECEIPT_ID) --storage-receipt-dir $(RECEIPT_DIR) --decided-at $(DECIDED_AT) --decision-id urn:srcos:agent-machine:activation-decision:local-llama-cpp-allowed --pretty >/tmp/agent-machine-bootstrap-evaluate-activation-allowed.json
 
 validate-supply-chain:
@@ -92,6 +105,9 @@ validate-cli:
 	$(BOOTSTRAP_CLI) steer preflight --sourceset gpt2-small.res-jb --pretty >/tmp/agent-machine-bootstrap-steer-preflight.json
 	$(PYCLI) steer resolve-artifacts --sourceset gpt2-small.res-jb --local-dir /tmp/agent-machine-steering-artifacts --receipt-out /tmp/agent-machine-steering-artifact-receipt.json --dry-run --pretty >/tmp/agent-machine-pycli-artifact-receipt.json
 	$(PYTHON) scripts/verify-steering-receipt.py examples/steering-artifact-receipts/gpt2-small-res-jb.missing.steering-artifact-receipt.json --expect-status not_configured --pretty >/tmp/agent-machine-steering-load-preflight.json
+	$(PYTHON) scripts/verify-steering-receipt.py examples/steering-artifact-receipts/gpt2-small-res-jb.missing.steering-artifact-receipt.json --expect-status not_configured --pretty >/tmp/agent-machine-steering-verify-preflight.json
+	$(PYTHON) scripts/load-steering-receipt.py examples/steering-artifact-receipts/synthetic.available.steering-artifact-receipt.json --attempt-load --pretty >/tmp/agent-machine-steering-synthetic-load.json
+	$(PYTHON) scripts/run-mock-steering.py /tmp/agent-machine-steer-request.json --pretty >/tmp/agent-machine-mock-steering.json
 	$(PYCLI) version
 	$(PYCLI) paths --format json
 	$(PYCLI) doctor --format json
@@ -99,6 +115,9 @@ validate-cli:
 
 validate-formula:
 	$(RUBY) -c $(FORMULA)
+
+validate-runtime-install-receipts:
+	$(PYTHON) scripts/validate-runtime-install-receipts.py
 
 doctor:
 	$(BOOTSTRAP_CLI) doctor --format json
