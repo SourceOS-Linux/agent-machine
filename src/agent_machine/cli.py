@@ -310,6 +310,10 @@ def cmd_steer_stub_response(args: argparse.Namespace) -> int:
     steering_stub = __import__("agent_machine.steering_stub", fromlist=["_unused"])
     request = steering_stub.load_steer_request(str(args.request_json))
     result = steering_stub.build_stub_steer_result(request, status=args.status)
+    if args.pretty:
+        print(json.dumps(result, indent=2, sort_keys=True))
+    else:
+        print(json.dumps(result, sort_keys=True, separators=(",", ":")))
     print(json.dumps(result, indent=2 if args.pretty else None, sort_keys=True))
     return 0
 
@@ -356,8 +360,6 @@ def add_registry_resolver_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--evidence-scope-ref")
     parser.add_argument("--requested-expires-at")
     parser.add_argument("--issued-at", default="1970-01-01T00:00:00Z")
-
-
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Agent Machine Python CLI")
     subcommands = parser.add_subparsers(dest="command", required=True)
@@ -434,6 +436,9 @@ def build_parser() -> argparse.ArgumentParser:
     activate_evaluate.add_argument("--decision-id")
     activate_evaluate.add_argument("--pretty", action="store_true")
     activate_evaluate.set_defaults(func=cmd_activate_evaluate)
+
+    steer = subcommands.add_parser("steer", help="Inspect or serve local steering endpoint stubs")
+    steer_subcommands = steer.add_subparsers(dest="steer_command", required=True)
     steer = subcommands.add_parser("steer", help="Inspect or serve local steering endpoints")
     steer_subcommands = steer.add_subparsers(dest="steer_command", required=True)
     stub_response = steer_subcommands.add_parser("stub-response", help="Render a Noetica-compatible steering stub response")
@@ -441,6 +446,7 @@ def build_parser() -> argparse.ArgumentParser:
     stub_response.add_argument("--status", choices=["not_configured", "noop"], default="not_configured")
     stub_response.add_argument("--pretty", action="store_true")
     stub_response.set_defaults(func=cmd_steer_stub_response)
+
     serve_stub = steer_subcommands.add_parser("serve-stub", help="Serve local POST /steer contract stub")
     serve_stub.add_argument("--host", default="127.0.0.1")
     serve_stub.add_argument("--port", type=int, default=8080)
