@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate PolicyAdmission and AgentRegistryGrant semantic consistency."""
+"""Validate governance semantic consistency."""
 
 from __future__ import annotations
 
@@ -12,6 +12,10 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from agent_machine.contracts import load_json  # noqa: E402
+from agent_machine.external_trust import (  # noqa: E402
+    external_trust_signal_usable,
+    validate_external_trust_signal_provider_semantics,
+)
 from agent_machine.governance import (  # noqa: E402
     assert_activation_fails_closed,
     assert_activation_ready,
@@ -33,6 +37,11 @@ GRANT_EXAMPLES = {
     "active_activation": REPO_ROOT / "examples" / "agent-registry-grant.active-activation.json",
 }
 
+EXTERNAL_TRUST_EXAMPLES = {
+    "usable": REPO_ROOT / "examples" / "external-trust-signal-provider.active.json",
+    "stale": REPO_ROOT / "examples" / "external-trust-signal-provider.stale.json",
+}
+
 
 def validate_policy_examples() -> dict[str, dict]:
     values = {}
@@ -51,6 +60,22 @@ def validate_grant_examples() -> dict[str, dict]:
         validate_agent_registry_grant_semantics(value, str(path.relative_to(REPO_ROOT)))
         values[name] = value
         print(f"VALID grant semantics {path.relative_to(REPO_ROOT)}")
+    return values
+
+
+def validate_external_trust_examples() -> dict[str, dict]:
+    values = {}
+    for name, path in EXTERNAL_TRUST_EXAMPLES.items():
+        value = load_json(path)
+        validate_external_trust_signal_provider_semantics(value, str(path.relative_to(REPO_ROOT)))
+        values[name] = value
+        print(f"VALID external trust semantics {path.relative_to(REPO_ROOT)}")
+
+    if not external_trust_signal_usable(values["usable"]):
+        raise AssertionError("usable external trust example must be usable for local grant resolution")
+    if external_trust_signal_usable(values["stale"]):
+        raise AssertionError("stale external trust example must not be usable for local grant resolution")
+    print("VALID external trust usable/stale matrix")
     return values
 
 
@@ -85,6 +110,7 @@ def validate_activation_matrix(policies: dict[str, dict], grants: dict[str, dict
 def main() -> int:
     policies = validate_policy_examples()
     grants = validate_grant_examples()
+    validate_external_trust_examples()
     validate_activation_matrix(policies, grants)
     return 0
 

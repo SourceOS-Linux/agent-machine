@@ -1,0 +1,63 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:artifact-boundary:default-deny",
+  "kind": "ArtifactBoundary",
+  "exportPolicy": {
+    "defaultDecision": "deny",
+    "exceptionsRequireJustification": true,
+    "copyToArtifactRequired": true
+  },
+  "pathBuckets": [
+    {
+      "name": "artifact",
+      "defaultExportable": true,
+      "pathPrefixes": ["/mnt/data"]
+    },
+    {
+      "name": "runtime-home",
+      "defaultExportable": false,
+      "pathPrefixes": ["/home/oai"]
+    },
+    {
+      "name": "platform-scaffolding",
+      "defaultExportable": false,
+      "pathPrefixes": ["/home/oai/skills", "/openai"]
+    },
+    {
+      "name": "kernel-pseudo-fs",
+      "defaultExportable": false,
+      "pathPrefixes": ["/proc", "/sys", "/dev"]
+    }
+  ],
+  "symlinkPolicy": {
+    "resolveRealPaths": true,
+    "denyEscapes": true,
+    "overrideAllowed": false
+  },
+  "enumerationPolicy": {
+    "depthCapRequired": true,
+    "defaultMaxDepth": 3,
+    "recursiveExportDenied": true
+  },
+  "manifestPolicy": {
+    "manifestRequired": true,
+    "includeAllowedPaths": true,
+    "includeBlockedPaths": true,
+    "includePolicyDigest": true
+  },
+  "auditLedger": {
+    "ledgerRequired": true,
+    "hashAlgorithm": "sha256",
+    "recordCommand": true
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "secretValuesIncluded": false,
+    "privateMemoryIncluded": false
+  },
+  "issuedAt": "2026-05-12T20:30:00Z",
+  "labels": {
+    "source": "sandbox-lessons",
+    "status": "normative-draft"
+  }
+}

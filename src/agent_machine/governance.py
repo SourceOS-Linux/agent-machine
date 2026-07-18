@@ -20,6 +20,15 @@ GRANT_ACTIVE_STATUSES = {"active", "not-required"}
 GRANT_INACTIVE_STATUSES = {"missing", "expired", "revoked", "denied", "unknown"}
 ACTIVATION_SIDE_EFFECTS = {"start-provider", "mount-cache"}
 ACTIVATION_TOOL_REFS = {"urn:srcos:tool:start-provider", "urn:srcos:tool:mount-cache"}
+GRANT_SCOPE_KEYS = [
+    "providerIds",
+    "modelRefs",
+    "toolRefs",
+    "cacheScopeRefs",
+    "memoryScopeRefs",
+    "storageScopeRefs",
+    "evidenceScopeRefs",
+]
 
 
 def validate_policy_admission_schema(path: Path, root: Path | None = None) -> dict[str, Any]:
@@ -94,16 +103,30 @@ def validate_policy_admission_semantics(policy: dict[str, Any], source: str = "<
 
 
 def validate_agent_registry_grant_semantics(grant_doc: dict[str, Any], source: str = "<grant>") -> None:
+    request = grant_doc.get("request")
     grant = grant_doc.get("grant")
     scope = grant_doc.get("scope")
     safety = grant_doc.get("receiptSafety")
 
+    if not isinstance(request, dict):
+        raise AssertionError(f"{source}: request must be an object")
     if not isinstance(grant, dict):
         raise AssertionError(f"{source}: grant must be an object")
     if not isinstance(scope, dict):
         raise AssertionError(f"{source}: scope must be an object")
     if not isinstance(safety, dict):
         raise AssertionError(f"{source}: receiptSafety must be an object")
+
+    requested_scope = request.get("requestedScope")
+    if not isinstance(requested_scope, dict):
+        raise AssertionError(f"{source}: request.requestedScope must be an object")
+    _assert_registry_scope_shape(requested_scope, f"{source}:request.requestedScope")
+
+    requested_expires_at = request.get("requestedExpiresAt")
+    if "requestedExpiresAt" not in request:
+        raise AssertionError(f"{source}: request must include requestedExpiresAt")
+    if requested_expires_at is not None and not isinstance(requested_expires_at, str):
+        raise AssertionError(f"{source}: request.requestedExpiresAt must be a string or null")
 
     status = grant.get("status")
     granted = grant.get("authorizationGranted")
@@ -115,21 +138,46 @@ def validate_agent_registry_grant_semantics(grant_doc: dict[str, Any], source: s
 
     grant_ref = grant.get("grantRef")
     grant_digest = grant.get("grantDigest")
+    expires_at = grant.get("expiresAt")
+    revocation_status = grant.get("revocationStatus")
+    revocation_hook_ref = grant.get("revocationHookRef")
+
     if status == "active":
         if not grant_ref:
             raise AssertionError(f"{source}: active grant requires grantRef")
         if not grant_digest:
             raise AssertionError(f"{source}: active grant requires grantDigest")
+        if not expires_at:
+            raise AssertionError(f"{source}: active grant requires expiresAt")
+        if revocation_status != "active":
+            raise AssertionError(f"{source}: active grant requires revocationStatus=active")
+        if not revocation_hook_ref:
+            raise AssertionError(f"{source}: active grant requires revocationHookRef")
     if status == "missing":
         if grant_ref is not None or grant_digest is not None:
             raise AssertionError(f"{source}: missing grant must not carry grantRef or grantDigest")
+        if expires_at is not None:
+            raise AssertionError(f"{source}: missing grant must not carry expiresAt")
+        if revocation_status != "unavailable":
+            raise AssertionError(f"{source}: missing grant requires revocationStatus=unavailable")
+        if revocation_hook_ref is not None:
+            raise AssertionError(f"{source}: missing grant must not carry revocationHookRef")
     if status in {"revoked", "expired"} and not grant_ref:
         raise AssertionError(f"{source}: {status} grant should identify the stale grantRef")
+    if status == "revoked" and revocation_status != "revoked":
+        raise AssertionError(f"{source}: revoked grant requires revocationStatus=revoked")
+    if status == "expired" and revocation_status not in {"expired", "unavailable"}:
+        raise AssertionError(f"{source}: expired grant requires revocationStatus=expired or unavailable")
+    if status == "denied" and revocation_status not in {"denied", "unavailable"}:
+        raise AssertionError(f"{source}: denied grant requires revocationStatus=denied or unavailable")
 
     allowed = scope.get("allowed")
     denied = scope.get("denied")
     if not isinstance(allowed, dict) or not isinstance(denied, dict):
         raise AssertionError(f"{source}: scope.allowed and scope.denied must be objects")
+    _assert_registry_scope_shape(allowed, f"{source}:scope.allowed")
+    _assert_registry_scope_shape(denied, f"{source}:scope.denied")
+    _assert_allowed_scope_is_requested(requested_scope, allowed, source)
 
     if status == "missing":
         for key, value in allowed.items():
@@ -139,6 +187,7 @@ def validate_agent_registry_grant_semantics(grant_doc: dict[str, Any], source: s
         if not any(value for value in allowed.values()):
             raise AssertionError(f"{source}: active grant should allow at least one explicit scope")
 
+    _assert_external_trust_signals(grant.get("externalTrustSignals", []), source)
     _assert_secret_free_safety(safety, source)
 
 
@@ -192,6 +241,37 @@ def assert_activation_fails_closed(policy: dict[str, Any], grant: dict[str, Any]
     validate_agent_registry_grant_semantics(grant, source=f"{source}:grant")
     if activation_ready(policy, grant):
         raise AssertionError(f"{source}: expected fail-closed state but policy+grant are activation-ready")
+
+
+def _assert_registry_scope_shape(scope: dict[str, Any], source: str) -> None:
+    for key in GRANT_SCOPE_KEYS:
+        value = scope.get(key)
+        if not isinstance(value, list):
+            raise AssertionError(f"{source}.{key} must be a list")
+        if len(value) != len(set(value)):
+            raise AssertionError(f"{source}.{key} must not contain duplicates")
+        if not all(isinstance(item, str) for item in value):
+            raise AssertionError(f"{source}.{key} must contain only strings")
+
+
+def _assert_allowed_scope_is_requested(requested: dict[str, Any], allowed: dict[str, Any], source: str) -> None:
+    for key in GRANT_SCOPE_KEYS:
+        requested_values = set(requested.get(key) or [])
+        allowed_values = set(allowed.get(key) or [])
+        unrequested = sorted(allowed_values - requested_values)
+        if unrequested:
+            raise AssertionError(f"{source}: scope.allowed.{key} contains unrequested values: {unrequested}")
+
+
+def _assert_external_trust_signals(signals: Any, source: str) -> None:
+    if not isinstance(signals, list):
+        raise AssertionError(f"{source}: grant.externalTrustSignals must be a list when present")
+    for index, signal in enumerate(signals):
+        signal_source = f"{source}:grant.externalTrustSignals[{index}]"
+        if not isinstance(signal, dict):
+            raise AssertionError(f"{signal_source} must be an object")
+        if signal.get("authority") != "non-authoritative-verifier-input":
+            raise AssertionError(f"{signal_source}.authority must be non-authoritative-verifier-input")
 
 
 def _assert_secret_free_safety(safety: dict[str, Any], source: str) -> None:

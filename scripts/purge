@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "${1:-}" != "--confirm" ]; then
+  echo "agent-machine purge is destructive. Re-run with --confirm to remove local state/config/cache."
+  exit 2
+fi
+
+echo "Stopping Agent Machine and known planned provider processes if present..."
+pkill -f 'agent-machine|llama.cpp|llama-server|vllm|sglang|ollama|mlx' 2>/dev/null || true
+
+rm -rf "$HOME/.local/state/agent-machine" "$HOME/.config/agent-machine" "$HOME/.cache/agent-machine"
+
+echo "agent-machine local state/config/cache purged"
