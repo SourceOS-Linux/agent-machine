@@ -1,0 +1,147 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:external-trust-signal-provider:local-pch-style-active",
+  "kind": "ExternalTrustSignalProvider",
+  "request": {
+    "requestId": "urn:srcos:agent-machine:external-trust-request:local-pch-style-active",
+    "providerRef": "urn:srcos:external-trust-provider:pch-style-local-mirror",
+    "agentPodId": "urn:srcos:agent-machine:agent-pod:local-podman-llama-cpp",
+    "requestedAgentIdentityRef": "urn:srcos:agent:local-inference-provider",
+    "sessionRef": "urn:srcos:session:local-bootstrap",
+    "workroomRef": "urn:srcos:workroom:local-default",
+    "topicRef": "urn:srcos:topic:agent-machine",
+    "requestedSignalTypes": [
+      "agent-identity",
+      "cert-tier",
+      "reputation-score",
+      "registry-lookup"
+    ],
+    "verificationFreshnessSeconds": 3600,
+    "requestedExpiresAt": "2026-05-04T13:50:00Z",
+    "signatureRequired": true
+  },
+  "response": {
+    "status": "available",
+    "usableForGrantResolution": true,
+    "providerRef": "urn:srcos:external-trust-provider:pch-style-local-mirror",
+    "authority": "non-authoritative-verifier-input",
+    "verifiedAt": "2026-05-04T12:50:10Z",
+    "freshness": {
+      "maxAgeSeconds": 3600,
+      "observedAgeSeconds": 10,
+      "fresh": true
+    },
+    "signals": [
+      {
+        "providerRef": "urn:srcos:external-trust-provider:pch-style-local-mirror",
+        "signalType": "agent-identity",
+        "signalRef": "urn:srcos:external-trust-signal:local-agent-identity",
+        "signalDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "verifiedAt": "2026-05-04T12:50:10Z",
+        "freshness": {
+          "maxAgeSeconds": 3600,
+          "observedAgeSeconds": 10,
+          "fresh": true
+        },
+        "signature": {
+          "required": true,
+          "observed": true,
+          "signatureRef": "urn:srcos:signature:local-agent-identity",
+          "signerRef": "urn:srcos:signer:local-trust-mirror"
+        },
+        "authority": "non-authoritative-verifier-input",
+        "failureReason": null,
+        "notes": [
+          "Identity signal is adapter input only; local Agent Registry remains authoritative."
+        ]
+      },
+      {
+        "providerRef": "urn:srcos:external-trust-provider:pch-style-local-mirror",
+        "signalType": "cert-tier",
+        "signalRef": "urn:srcos:external-trust-signal:local-agent-cert-tier-bronze",
+        "signalDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "verifiedAt": "2026-05-04T12:50:10Z",
+        "freshness": {
+          "maxAgeSeconds": 3600,
+          "observedAgeSeconds": 10,
+          "fresh": true
+        },
+        "signature": {
+          "required": true,
+          "observed": true,
+          "signatureRef": "urn:srcos:signature:local-agent-cert-tier",
+          "signerRef": "urn:srcos:signer:local-trust-mirror"
+        },
+        "authority": "non-authoritative-verifier-input",
+        "failureReason": null,
+        "notes": [
+          "Cert-tier signal cannot authorize activation by itself."
+        ]
+      },
+      {
+        "providerRef": "urn:srcos:external-trust-provider:pch-style-local-mirror",
+        "signalType": "reputation-score",
+        "signalRef": "urn:srcos:external-trust-signal:local-agent-reputation-score",
+        "signalDigest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "verifiedAt": "2026-05-04T12:50:10Z",
+        "freshness": {
+          "maxAgeSeconds": 3600,
+          "observedAgeSeconds": 10,
+          "fresh": true
+        },
+        "signature": {
+          "required": true,
+          "observed": true,
+          "signatureRef": "urn:srcos:signature:local-agent-reputation-score",
+          "signerRef": "urn:srcos:signer:local-trust-mirror"
+        },
+        "authority": "non-authoritative-verifier-input",
+        "failureReason": null,
+        "notes": [
+          "Reputation score can inform risk but cannot widen requested scope."
+        ]
+      },
+      {
+        "providerRef": "urn:srcos:external-trust-provider:pch-style-local-mirror",
+        "signalType": "registry-lookup",
+        "signalRef": "urn:srcos:external-trust-signal:local-agent-registry-lookup",
+        "signalDigest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "verifiedAt": "2026-05-04T12:50:10Z",
+        "freshness": {
+          "maxAgeSeconds": 3600,
+          "observedAgeSeconds": 10,
+          "fresh": true
+        },
+        "signature": {
+          "required": true,
+          "observed": true,
+          "signatureRef": "urn:srcos:signature:local-agent-registry-lookup",
+          "signerRef": "urn:srcos:signer:local-trust-mirror"
+        },
+        "authority": "non-authoritative-verifier-input",
+        "failureReason": null,
+        "notes": [
+          "Registry lookup is evidence for local grant resolution, not authorization."
+        ]
+      }
+    ],
+    "failureReason": null
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "rawPromptContentIncluded": false,
+    "rawKvCacheContentIncluded": false,
+    "secretValuesIncluded": false,
+    "privateMemoryIncluded": false,
+    "apiKeysIncluded": false,
+    "walletPrivateKeysIncluded": false,
+    "rawCredentialsIncluded": false,
+    "rawUserDataIncluded": false
+  },
+  "observedAt": "2026-05-04T12:50:10Z",
+  "labels": {
+    "sourceos.external-trust.prototype": "true",
+    "sourceos.external-trust.usable": "true",
+    "sourceos.external-trust.authority": "non-authoritative"
+  }
+}

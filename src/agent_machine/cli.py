@@ -234,13 +234,82 @@ def resolve_activation_policy_and_grant(args: argparse.Namespace, agentpod: dict
     policies = policy_fabric.load_policy_admissions(files=args.policy_file, directories=args.policy_dir, root=REPO_ROOT)
     policy = policy_fabric.resolve_policy_admission(policies=policies, agentpod_id=str(agentpod.get("id")), request_type="activation", deployment_receipt_id=args.deployment_receipt_id, agent_machine_id=args.agent_machine_id, provider_id=args.provider_id, policy_id=args.policy_id, expected_status=args.expected_status, allow_missing_stub=not args.no_missing_stub, decided_at=args.decided_at, root=REPO_ROOT)
     return policy, load_json(grant_json)
+def agentpod_workload_default(agentpod: dict[str, Any], key: str) -> str | None:
+    value = agentpod.get("workload", {}).get(key)
+    return value if isinstance(value, str) and value else None
+
+
+def resolve_registry_grant_from_args(args: argparse.Namespace, agentpod: dict[str, Any], agent_registry: Any) -> dict[str, Any]:
+    requested_agent_identity_ref = args.requested_agent_identity_ref or agentpod_workload_default(agentpod, "agentIdentityRef")
+    session_ref = args.session_ref
+    if not requested_agent_identity_ref:
+        raise AssertionError("requested agent identity ref is required; pass --requested-agent-identity-ref or set workload.agentIdentityRef")
+    if not session_ref:
+        raise AssertionError("session ref is required when resolving AgentRegistryGrant; pass --session-ref")
+    requested_scope = agent_registry.requested_scope_from_inputs(
+        provider_id=args.provider_id,
+        model_ref=args.model_ref,
+        tool_refs=args.tool_ref,
+        storage_scope_ref=args.storage_scope_ref,
+        evidence_scope_ref=args.evidence_scope_ref,
+    )
+    grants = agent_registry.load_agent_registry_grants(files=args.grant_file, directories=args.grant_dir, root=REPO_ROOT)
+    return agent_registry.resolve_agent_registry_grant(
+        grants=grants,
+        agentpod_id=str(agentpod.get("id")),
+        requested_agent_identity_ref=requested_agent_identity_ref,
+        session_ref=session_ref,
+        agent_machine_id=args.agent_machine_id,
+        workroom_ref=args.workroom_ref or agentpod_workload_default(agentpod, "workroomRef"),
+        topic_ref=args.topic_ref or agentpod_workload_default(agentpod, "topicRef"),
+        grant_id=args.grant_id,
+        expected_status=args.expected_grant_status,
+        allow_missing_stub=not args.no_missing_stub,
+        issued_at=args.issued_at,
+        requested_scope=requested_scope,
+        requested_expires_at=args.requested_expires_at,
+        root=REPO_ROOT,
+    )
+
+
+def cmd_registry_resolve(args: argparse.Namespace) -> int:
+    agent_registry = import_renderer(lambda: __import__("agent_machine.agent_registry", fromlist=["_unused"]))
+    agentpod = load_json(args.agentpod_json)
+    grant = resolve_registry_grant_from_args(args, agentpod, agent_registry)
+    print(json.dumps(grant, indent=2 if args.pretty else None, sort_keys=True))
+    return 0
+
+
+def resolve_activation_policy_and_grant(args: argparse.Namespace, agentpod: dict[str, Any], policy_fabric: Any, agent_registry: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+    policy_json = args.policy_json
+    grant_json = args.grant_json
+    policy_resolver_requested = bool(args.policy_file or args.policy_dir or args.policy_id or args.expected_status)
+    grant_resolver_requested = bool(args.grant_file or args.grant_dir or args.grant_id or args.expected_grant_status)
+    if grant_json is None and policy_json is not None and policy_resolver_requested and not grant_resolver_requested:
+        grant_json = policy_json
+        policy_json = None
+
+    if policy_json is not None:
+        policy = load_json(policy_json)
+    else:
+        policies = policy_fabric.load_policy_admissions(files=args.policy_file, directories=args.policy_dir, root=REPO_ROOT)
+        policy = policy_fabric.resolve_policy_admission(policies=policies, agentpod_id=str(agentpod.get("id")), request_type="activation", deployment_receipt_id=args.deployment_receipt_id, agent_machine_id=args.agent_machine_id, provider_id=args.provider_id, policy_id=args.policy_id, expected_status=args.expected_status, allow_missing_stub=not args.no_missing_stub, decided_at=args.decided_at, root=REPO_ROOT)
+
+    if grant_json is not None:
+        grant = load_json(grant_json)
+    elif grant_resolver_requested:
+        grant = resolve_registry_grant_from_args(args, agentpod, agent_registry)
+    else:
+        raise AssertionError("grant JSON is required unless --grant-file/--grant-dir resolver inputs are provided")
+    return policy, grant
 
 
 def cmd_activate_evaluate(args: argparse.Namespace) -> int:
     activation = import_renderer(lambda: __import__("agent_machine.activation", fromlist=["_unused"]))
     policy_fabric = import_renderer(lambda: __import__("agent_machine.policy_fabric", fromlist=["_unused"]))
+    agent_registry = import_renderer(lambda: __import__("agent_machine.agent_registry", fromlist=["_unused"]))
     agentpod = load_json(args.agentpod_json)
-    policy, grant = resolve_activation_policy_and_grant(args, agentpod, policy_fabric)
+    policy, grant = resolve_activation_policy_and_grant(args, agentpod, policy_fabric, agent_registry)
     storage_receipts = activation.load_storage_receipts(files=args.storage_receipt_file, directories=args.storage_receipt_dir)
     storage_receipt_refs = list(args.storage_receipt_ref or [])
     if not storage_receipt_refs and storage_receipts:
@@ -255,6 +324,10 @@ def cmd_steer_stub_response(args: argparse.Namespace) -> int:
     steering_stub = __import__("agent_machine.steering_stub", fromlist=["_unused"])
     request = steering_stub.load_steer_request(str(args.request_json))
     result = steering_stub.build_stub_steer_result(request, status=args.status)
+    if args.pretty:
+        print(json.dumps(result, indent=2, sort_keys=True))
+    else:
+        print(json.dumps(result, sort_keys=True, separators=(",", ":")))
     print(json.dumps(result, indent=2 if args.pretty else None, sort_keys=True))
     return 0
 
@@ -283,6 +356,24 @@ def cmd_steer_resolve_artifacts(args: argparse.Namespace) -> int:
     return 0
 
 
+def add_registry_resolver_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--grant-file", action="append", type=Path, default=[])
+    parser.add_argument("--grant-dir", action="append", type=Path, default=[])
+    parser.add_argument("--requested-agent-identity-ref")
+    parser.add_argument("--session-ref")
+    parser.add_argument("--agent-machine-id")
+    parser.add_argument("--workroom-ref")
+    parser.add_argument("--topic-ref")
+    parser.add_argument("--grant-id")
+    parser.add_argument("--expected-grant-status", choices=["missing", "active", "expired", "revoked", "denied", "unknown"])
+    parser.add_argument("--no-missing-stub", action="store_true")
+    parser.add_argument("--provider-id")
+    parser.add_argument("--model-ref")
+    parser.add_argument("--tool-ref", action="append", default=[])
+    parser.add_argument("--storage-scope-ref")
+    parser.add_argument("--evidence-scope-ref")
+    parser.add_argument("--requested-expires-at")
+    parser.add_argument("--issued-at", default="1970-01-01T00:00:00Z")
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Agent Machine Python CLI")
     subcommands = parser.add_subparsers(dest="command", required=True)
@@ -333,6 +424,13 @@ def build_parser() -> argparse.ArgumentParser:
     policy_resolve.add_argument("--decided-at", default="1970-01-01T00:00:00Z")
     policy_resolve.add_argument("--pretty", action="store_true")
     policy_resolve.set_defaults(func=cmd_policy_resolve)
+    registry = subcommands.add_parser("registry", help="Resolve Agent Registry grant artifacts")
+    registry_subcommands = registry.add_subparsers(dest="registry_command", required=True)
+    registry_resolve = registry_subcommands.add_parser("resolve", help="Resolve an AgentRegistryGrant from local files/stores")
+    registry_resolve.add_argument("agentpod_json", type=Path)
+    add_registry_resolver_args(registry_resolve)
+    registry_resolve.add_argument("--pretty", action="store_true")
+    registry_resolve.set_defaults(func=cmd_registry_resolve)
     activate = subcommands.add_parser("activate", help="Evaluate activation readiness")
     activate_subcommands = activate.add_subparsers(dest="activate_command", required=True)
     activate_evaluate = activate_subcommands.add_parser("evaluate", help="Evaluate AgentPod activation decision")
@@ -344,9 +442,7 @@ def build_parser() -> argparse.ArgumentParser:
     activate_evaluate.add_argument("--policy-dir", action="append", type=Path, default=[])
     activate_evaluate.add_argument("--policy-id")
     activate_evaluate.add_argument("--expected-status", choices=["missing", "allowed", "denied", "not-required", "unknown"])
-    activate_evaluate.add_argument("--no-missing-stub", action="store_true")
-    activate_evaluate.add_argument("--agent-machine-id")
-    activate_evaluate.add_argument("--provider-id")
+    add_registry_resolver_args(activate_evaluate)
     activate_evaluate.add_argument("--storage-receipt-ref", action="append", default=[])
     activate_evaluate.add_argument("--storage-receipt-file", action="append", type=Path, default=[])
     activate_evaluate.add_argument("--storage-receipt-dir", action="append", type=Path, default=[])
@@ -354,6 +450,9 @@ def build_parser() -> argparse.ArgumentParser:
     activate_evaluate.add_argument("--decision-id")
     activate_evaluate.add_argument("--pretty", action="store_true")
     activate_evaluate.set_defaults(func=cmd_activate_evaluate)
+
+    steer = subcommands.add_parser("steer", help="Inspect or serve local steering endpoint stubs")
+    steer_subcommands = steer.add_subparsers(dest="steer_command", required=True)
     steer = subcommands.add_parser("steer", help="Inspect or serve local steering endpoints")
     steer_subcommands = steer.add_subparsers(dest="steer_command", required=True)
     stub_response = steer_subcommands.add_parser("stub-response", help="Render a Noetica-compatible steering stub response")
