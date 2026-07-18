@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+patterns='agent-machine|llama.cpp|llama-server|vllm|sglang|ollama|mlx'
+
+echo "agent-machine doctor"
+echo "component: agent-machine"
+echo "trust_surface: TRUST_SURFACE.yaml"
+
+echo
+echo "commands:"
+for cmd in agent-machine; do
+  if command -v "$cmd" >/dev/null 2>&1; then
+    echo "  $cmd: $(command -v "$cmd")"
+  else
+    echo "  $cmd: missing"
+  fi
+done
+
+echo
+echo "processes:"
+pgrep -af "$patterns" || echo "  none"
+
+echo
+echo "listeners:"
+if command -v lsof >/dev/null 2>&1; then
+  lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null | grep -Ei "$patterns" || echo "  no Agent Machine/provider listeners"
+else
+  echo "  lsof unavailable"
+fi
+
+echo
+echo "state paths:"
+for p in "$HOME/.local/state/agent-machine" "$HOME/.config/agent-machine" "$HOME/.cache/agent-machine"; do
+  if [ -e "$p" ]; then
+    echo "  exists: $p"
+  else
+    echo "  missing: $p"
+  fi
+done
+
+echo
+echo "policy: production activation remains blocked until provider, policy, registry, and evidence gates are declared"

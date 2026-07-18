@@ -1,0 +1,95 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:steering-sourceset:gpt2-small.res-jb",
+  "kind": "SteeringSourceset",
+  "sourcesetId": "gpt2-small.res-jb",
+  "status": "registered-not-loadable",
+  "readinessSummary": "GPT-2 Small residual-stream SAE sourceset is registered by reference but is not loadable until artifact digests, storage receipts, policy admission, grants, and activation injection are implemented.",
+  "model": {
+    "family": "gpt2-small",
+    "source": {
+      "type": "huggingface",
+      "repo": "openai-community/gpt2",
+      "url": "https://huggingface.co/openai-community/gpt2",
+      "revision": "main"
+    },
+    "license": "mit",
+    "access": {
+      "posture": "public",
+      "gated": false,
+      "operatorActionRequired": "none-observed"
+    },
+    "expectedFormat": "safetensors-or-pytorch",
+    "digestRequired": true
+  },
+  "sae": {
+    "source": {
+      "type": "huggingface",
+      "repo": "jbloom/GPT2-Small-SAEs-Reformatted",
+      "url": "https://huggingface.co/jbloom/GPT2-Small-SAEs-Reformatted",
+      "revision": "main"
+    },
+    "library": "SAELens",
+    "release": "gpt2-small-res-jb",
+    "saeId": "blocks.6.hook_resid_pre",
+    "artifactPath": "SAELens release=gpt2-small-res-jb sae_id=blocks.6.hook_resid_pre",
+    "hook": {
+      "neuronpediaLayer": "6-res-jb",
+      "modelLayer": 6,
+      "site": "residual-stream"
+    },
+    "featureIndexStatus": "known-demo-index",
+    "demoFeatureIndex": 10200,
+    "access": {
+      "posture": "public",
+      "gated": false,
+      "operatorActionRequired": "none-observed"
+    }
+  },
+  "endpointCompatibility": {
+    "endpoint": "/steer",
+    "requestShape": [
+      "prompt",
+      "model_id",
+      "steering.feature_id",
+      "steering.layer",
+      "steering.strength",
+      "steering.preset"
+    ],
+    "responseShape": [
+      "status",
+      "baseline",
+      "steered",
+      "diff_summary",
+      "feature_id",
+      "layer",
+      "strength"
+    ]
+  },
+  "activation": {
+    "controlledActivationIssue": "https://github.com/SourceOS-Linux/agent-machine/issues/34",
+    "loadableToday": false,
+    "downloadsPerformed": false,
+    "activationImplemented": false,
+    "missing": [
+      "artifact digest lock",
+      "storage receipt",
+      "policy admission",
+      "agent-registry grant",
+      "controlled activation injection",
+      "local smoke record"
+    ]
+  },
+  "policy": {
+    "allowSecretInConfig": false,
+    "requiresGrant": true,
+    "requiresPolicyAdmission": true,
+    "requiresStorageReceipt": true,
+    "requiresEvidence": true
+  },
+  "notes": [
+    "This record does not download model weights or SAE artifacts.",
+    "This record does not claim the sourceset is loadable today.",
+    "This record exists so Issue #34 has a typed input target for controlled activation work."
+  ]
+}
