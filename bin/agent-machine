@@ -69,6 +69,7 @@ Usage:
   agent-machine render quadlet <agentpod.json> [--compare <file>]
   agent-machine render k8s <agentpod.json> [--compare <file>]
   agent-machine policy resolve <agentpod.json> --policy-dir <dir> --deployment-receipt-id <id> [--expected-status allowed]
+  agent-machine activate evaluate <agentpod.json> [policy.json] <grant.json> --deployment-receipt-id <id> [--policy-dir <dir>] [--storage-receipt-dir <dir>] [--pretty]
   agent-machine registry resolve <agentpod.json> --grant-dir <dir> --requested-agent-identity-ref <ref> --session-ref <ref> [--expected-status active]
   agent-machine activate evaluate <agentpod.json> [policy.json] [grant.json] --deployment-receipt-id <id> [--policy-dir <dir>] [--grant-dir <dir>] [--storage-receipt-dir <dir>] [--pretty]
   agent-machine activate evaluate <agentpod.json> [policy.json] <grant.json> --deployment-receipt-id <id> [--policy-dir <dir>] [--storage-receipt-dir <dir>] [--pretty]
