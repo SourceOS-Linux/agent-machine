@@ -1,0 +1,42 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:capability-declaration:fs-introspect-list",
+  "kind": "CapabilityDeclaration",
+  "server": "fs.introspect",
+  "tool": "list",
+  "effect": "read",
+  "dangerClass": "LOW",
+  "schemaRefs": {
+    "input": "schemas/mcp/fs.introspect.list.input.json",
+    "output": "schemas/mcp/fs.introspect.list.output.json"
+  },
+  "constraints": {
+    "ttlSecondsMax": 900,
+    "ratePerMinuteMax": 6,
+    "bytesMax": 50000000,
+    "pathAllowRefs": [
+      "artifact-root",
+      "operator-approved-readonly"
+    ],
+    "domainAllowRefs": [],
+    "requiresQuorum": false
+  },
+  "dataClasses": [
+    "INTERNAL",
+    "CHAIN_OF_CUSTODY"
+  ],
+  "policy": {
+    "policyHookRef": "policy.mcp.fs_introspect.list",
+    "defaultDecision": "deny"
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "secretValuesIncluded": false,
+    "privateMemoryIncluded": false
+  },
+  "issuedAt": "2026-05-12T20:30:00Z",
+  "labels": {
+    "server": "fs.introspect",
+    "tool": "list"
+  }
+}

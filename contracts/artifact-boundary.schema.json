@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:artifact-boundary:v0.1.0",
+  "title": "ArtifactBoundary",
+  "description": "Secret-free export boundary contract for default-deny artifact packaging, path bucket classification, symlink safety, manifesting, and audit ledger emission.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["specVersion", "id", "kind", "exportPolicy", "pathBuckets", "symlinkPolicy", "enumerationPolicy", "manifestPolicy", "auditLedger", "receiptSafety", "issuedAt"],
+  "properties": {
+    "specVersion": {"type": "string", "const": "0.1.0"},
+    "id": {"type": "string", "pattern": "^urn:srcos:agent-machine:artifact-boundary:[a-z0-9][a-z0-9-]*$"},
+    "kind": {"type": "string", "const": "ArtifactBoundary"},
+    "exportPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["defaultDecision", "exceptionsRequireJustification", "copyToArtifactRequired"],
+      "properties": {
+        "defaultDecision": {"type": "string", "const": "deny"},
+        "exceptionsRequireJustification": {"type": "boolean", "const": true},
+        "copyToArtifactRequired": {"type": "boolean", "const": true}
+      }
+    },
+    "pathBuckets": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/pathBucket"}},
+    "symlinkPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resolveRealPaths", "denyEscapes", "overrideAllowed"],
+      "properties": {
+        "resolveRealPaths": {"type": "boolean", "const": true},
+        "denyEscapes": {"type": "boolean", "const": true},
+        "overrideAllowed": {"type": "boolean"}
+      }
+    },
+    "enumerationPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["depthCapRequired", "defaultMaxDepth", "recursiveExportDenied"],
+      "properties": {
+        "depthCapRequired": {"type": "boolean", "const": true},
+        "defaultMaxDepth": {"type": "integer", "minimum": 0},
+        "recursiveExportDenied": {"type": "boolean", "const": true}
+      }
+    },
+    "manifestPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifestRequired", "includeAllowedPaths", "includeBlockedPaths", "includePolicyDigest"],
+      "properties": {
+        "manifestRequired": {"type": "boolean", "const": true},
+        "includeAllowedPaths": {"type": "boolean", "const": true},
+        "includeBlockedPaths": {"type": "boolean", "const": true},
+        "includePolicyDigest": {"type": "boolean", "const": true}
+      }
+    },
+    "auditLedger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ledgerRequired", "hashAlgorithm", "recordCommand"],
+      "properties": {
+        "ledgerRequired": {"type": "boolean", "const": true},
+        "hashAlgorithm": {"type": "string", "const": "sha256"},
+        "recordCommand": {"type": "boolean", "const": true}
+      }
+    },
+    "receiptSafety": {"$ref": "#/$defs/receiptSafety"},
+    "issuedAt": {"type": "string"},
+    "labels": {"type": "object", "additionalProperties": {"type": "string"}}
+  },
+  "$defs": {
+    "pathBucket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "defaultExportable", "pathPrefixes"],
+      "properties": {
+        "name": {"type": "string", "enum": ["artifact", "runtime-home", "platform-scaffolding", "kernel-pseudo-fs", "operator-allowlist"]},
+        "defaultExportable": {"type": "boolean"},
+        "pathPrefixes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "receiptSafety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["includeRawContent", "secretValuesIncluded", "privateMemoryIncluded"],
+      "properties": {
+        "includeRawContent": {"type": "boolean", "const": false},
+        "secretValuesIncluded": {"type": "boolean", "const": false},
+        "privateMemoryIncluded": {"type": "boolean", "const": false}
+      }
+    }
+  }
+}

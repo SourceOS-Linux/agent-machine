@@ -1,0 +1,177 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:workspace-operation-contract:local-governed-execution",
+  "kind": "WorkspaceOperationContract",
+  "workspaceOperation": {
+    "operationId": "urn:srcos:workspace-operation:local-execution-0001",
+    "operationType": "agent_machine.execution.start",
+    "commandRef": "urn:srcos:workspace-operation-command:local-execution-start"
+  },
+  "operationTask": {
+    "taskId": "urn:srcos:operation-task:local-execution-0001",
+    "state": "running"
+  },
+  "supportedOperationTypes": [
+    "agent_machine.profile.create",
+    "agent_machine.execution.start",
+    "agent_machine.execution.cancel",
+    "agent_machine.tool_grant.apply",
+    "agent_machine.tool_grant.revoke",
+    "agent_machine.container.run",
+    "agent_machine.model_provider.bind",
+    "agent_machine.diagnostics.export_redacted"
+  ],
+  "profiles": {
+    "supported": [
+      "personal",
+      "corporate_firewall",
+      "multi_corporate_firewall",
+      "local_model_provider",
+      "hosted_model_provider",
+      "airgapped_local_only",
+      "user_owned_model"
+    ],
+    "inspectableSeparation": {
+      "personalVsCorporateFirewall": true,
+      "corporateVsMultiCorporateFirewall": true,
+      "enterpriseFirewallVsUserOwnedModel": true
+    }
+  },
+  "artifacts": {
+    "requiredArtifacts": [
+      "AgentMachineProfile",
+      "LocalAgentExecution",
+      "ToolGrantRecord",
+      "ContainerExecutionRecord",
+      "ModelProviderBinding",
+      "AgentMachineDiagnosticBundle"
+    ],
+    "agentMachineProfile": {
+      "kind": "AgentMachineProfile",
+      "profileType": "corporate_firewall"
+    },
+    "localAgentExecution": {
+      "kind": "LocalAgentExecution",
+      "delegationRef": "urn:srcos:delegation:workspace-operator-local-execution",
+      "budget": {
+        "modelCalls": 200,
+        "tokens": 160000,
+        "connectorCalls": 120,
+        "cpuGpuComputeSeconds": 3600,
+        "localDiskBytes": 21474836480,
+        "sandboxMemoryBytes": 8589934592,
+        "wallClockSeconds": 5400,
+        "agentConcurrency": 2
+      }
+    },
+    "toolGrantRecord": {
+      "kind": "ToolGrantRecord",
+      "applyCommandRef": "urn:srcos:workspace-operation-command:tool-grant-apply",
+      "revokeCommandRef": "urn:srcos:workspace-operation-command:tool-grant-revoke"
+    },
+    "containerExecutionRecord": {
+      "kind": "ContainerExecutionRecord",
+      "operationType": "agent_machine.container.run"
+    },
+    "modelProviderBinding": {
+      "kind": "ModelProviderBinding",
+      "operationType": "agent_machine.model_provider.bind",
+      "profileType": "hosted_model_provider",
+      "policyGateRef": "urn:srcos:policy-gate:model-provider-bind"
+    },
+    "agentMachineDiagnosticBundle": {
+      "kind": "AgentMachineDiagnosticBundle",
+      "operationType": "agent_machine.diagnostics.export_redacted",
+      "credentialsIncluded": false,
+      "tokensIncluded": false,
+      "localSecretsIncluded": false,
+      "sensitivePromptsIncluded": false
+    }
+  },
+  "controls": {
+    "delegatedAuthorityRequired": true,
+    "policyGates": {
+      "toolGrant": true,
+      "modelProviderUse": true,
+      "networkProfile": true,
+      "containerExecution": true,
+      "artifactAccess": true
+    },
+    "budget": {
+      "modelCalls": 200,
+      "tokens": 160000,
+      "connectorCalls": 120,
+      "cpuGpuComputeSeconds": 3600,
+      "localDiskBytes": 21474836480,
+      "sandboxMemoryBytes": 8589934592,
+      "wallClockSeconds": 5400,
+      "agentConcurrency": 2
+    },
+    "operationEvents": [
+      {
+        "eventType": "start",
+        "at": "2026-05-07T00:00:00Z",
+        "details": "Execution accepted with delegated authority."
+      },
+      {
+        "eventType": "progress",
+        "at": "2026-05-07T00:02:00Z",
+        "details": "Runtime initialization complete."
+      },
+      {
+        "eventType": "failure",
+        "at": "2026-05-07T00:03:00Z",
+        "details": "Network profile gate denied egress update."
+      },
+      {
+        "eventType": "retry",
+        "at": "2026-05-07T00:03:30Z",
+        "details": "Retrying after profile rollback."
+      },
+      {
+        "eventType": "cancel",
+        "at": "2026-05-07T00:04:30Z",
+        "details": "Manual cancel command captured for audit."
+      },
+      {
+        "eventType": "complete",
+        "at": "2026-05-07T00:05:00Z",
+        "details": "Operation completed under contract-only durable state."
+      }
+    ],
+    "durableWorkspaceState": {
+      "mode": "operation-contract-only",
+      "externalWrites": false
+    },
+    "ambientAuthority": false
+  },
+  "audit": {
+    "auditableCommands": [
+      {
+        "operationType": "agent_machine.execution.start",
+        "commandRef": "urn:srcos:workspace-operation-command:local-execution-start",
+        "auditable": true
+      },
+      {
+        "operationType": "agent_machine.tool_grant.apply",
+        "commandRef": "urn:srcos:workspace-operation-command:tool-grant-apply",
+        "auditable": true
+      },
+      {
+        "operationType": "agent_machine.tool_grant.revoke",
+        "commandRef": "urn:srcos:workspace-operation-command:tool-grant-revoke",
+        "auditable": true
+      },
+      {
+        "operationType": "agent_machine.model_provider.bind",
+        "commandRef": "urn:srcos:workspace-operation-command:model-provider-bind",
+        "auditable": true
+      },
+      {
+        "operationType": "agent_machine.execution.cancel",
+        "commandRef": "urn:srcos:workspace-operation-command:local-execution-cancel",
+        "auditable": true
+      }
+    ]
+  }
+}
