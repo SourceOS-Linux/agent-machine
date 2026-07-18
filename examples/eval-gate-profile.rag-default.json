@@ -1,0 +1,41 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:eval-gate-profile:rag-default",
+  "kind": "EvalGateProfile",
+  "loopBudget": {
+    "maxIterations": 4,
+    "onExhaustion": "deny-finalize"
+  },
+  "metrics": [
+    {
+      "name": "faithfulness",
+      "minimum": 0.85,
+      "source": "eval.rag/ragas"
+    },
+    {
+      "name": "context_precision",
+      "minimum": 0.8,
+      "source": "eval.rag/ragas"
+    },
+    {
+      "name": "answer_relevancy",
+      "minimum": 0.8,
+      "source": "eval.rag/ragas"
+    }
+  ],
+  "decision": {
+    "defaultDecision": "deny",
+    "publishRequiresAllMetrics": true,
+    "humanReviewOnFailure": true
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "secretValuesIncluded": false,
+    "privateMemoryIncluded": false
+  },
+  "issuedAt": "2026-05-12T20:30:00Z",
+  "labels": {
+    "gate": "rag",
+    "status": "draft"
+  }
+}
