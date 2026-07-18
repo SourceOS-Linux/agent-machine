@@ -1,0 +1,45 @@
+{
+  "_comment": "Agent Machine capability radius examples — R0 (observe-only), R2 (local-execution), R4 (mesh-connected).",
+  "examples": [
+    {
+      "radius": "R0",
+      "label": "observe-only",
+      "description": "Probe-only pod: reads hardware/runtime facts, emits health receipts. No writes, no network beyond probe endpoints.",
+      "effectiveConstraints": {
+        "allowedFilesystemPaths": ["/proc", "/sys", "/etc/os-release"],
+        "allowedFilesystemOperations": ["read"],
+        "allowedSubprocesses": [],
+        "allowedNetworkEndpoints": [],
+        "mutationPermitted": false
+      }
+    },
+    {
+      "radius": "R2",
+      "label": "local-execution",
+      "description": "Local coding agent: reads/writes within declared workspace, may spawn subprocesses. No network.",
+      "effectiveConstraints": {
+        "allowedFilesystemPaths": ["/home/user/.sourceos/workspace/coding-agent-001"],
+        "allowedFilesystemOperations": ["read", "write", "execute"],
+        "allowedSubprocesses": ["python3", "cargo", "node"],
+        "allowedNetworkEndpoints": [],
+        "mutationPermitted": true
+      }
+    },
+    {
+      "radius": "R4",
+      "label": "mesh-connected",
+      "description": "Reasoning pod with local steering + mesh routing. Restricted to declared local and mesh endpoints.",
+      "effectiveConstraints": {
+        "allowedFilesystemPaths": ["/home/user/.sourceos/workspace/reasoning-agent-001"],
+        "allowedFilesystemOperations": ["read", "write"],
+        "allowedSubprocesses": [],
+        "allowedNetworkEndpoints": [
+          "127.0.0.1:8080",
+          "mesh.socioprophet.ai:443",
+          "127.0.0.1:11435"
+        ],
+        "mutationPermitted": true
+      }
+    }
+  ]
+}
