@@ -134,5 +134,6 @@ Current blockers:
 - TopoLVM runtime integration beyond skeleton manifests;
 - provider discovery and controlled provider activation implementation;
 - M2 Asahi host measurement/provider readiness data;
+- signed release evidence bundle;
 - rollback, teardown, and wipe workflows.
 - rollback, teardown, and wipe workflows.
