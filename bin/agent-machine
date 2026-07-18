@@ -44,6 +44,16 @@ delegate_python_cli() {
   return 127
 }
 
+delegate_registry_resolver() {
+  ROOT="$(repo_root_guess || true)"
+  if [ -n "${ROOT:-}" ] && [ -d "$ROOT/src/agent_machine" ]; then
+    PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}" python3 -m agent_machine.agent_registry "$@"
+    return $?
+  fi
+  printf '%s\n' "agent-machine: Agent Registry resolver unavailable; repository package sources not found." >&2
+  return 127
+}
+
 print_help() {
   cat <<'EOF'
 agent-machine: SourceOS Agent Machine local node substrate CLI
@@ -60,6 +70,10 @@ Usage:
   agent-machine render k8s <agentpod.json> [--compare <file>]
   agent-machine policy resolve <agentpod.json> --policy-dir <dir> --deployment-receipt-id <id> [--expected-status allowed]
   agent-machine activate evaluate <agentpod.json> [policy.json] <grant.json> --deployment-receipt-id <id> [--policy-dir <dir>] [--storage-receipt-dir <dir>] [--pretty]
+  agent-machine registry resolve <agentpod.json> --grant-dir <dir> --requested-agent-identity-ref <ref> --session-ref <ref> [--expected-status active]
+  agent-machine activate evaluate <agentpod.json> [policy.json] <grant.json> --deployment-receipt-id <id> [--policy-dir <dir>] [--storage-receipt-dir <dir>] [--pretty]
+  agent-machine steer stub-response <request.json> [--status not_configured|noop] [--pretty]
+  agent-machine steer serve-stub [--host 127.0.0.1] [--port 8080] [--status not_configured|noop]
 
 This is the bootstrap CLI. It is intentionally conservative: it discovers host/runtime hints and never emits secrets, raw prompts, raw KV-cache contents, or credentials.
 EOF
@@ -280,9 +294,23 @@ case "$COMMAND" in
     shift || true
     delegate_python_cli policy "$@"
     ;;
+  registry)
+    shift || true
+    if [ "${1:-}" = "resolve" ]; then
+      shift || true
+      delegate_registry_resolver "$@"
+    else
+      printf '%s\n' "agent-machine: unsupported registry subcommand: ${1:-<missing>}" >&2
+      exit 2
+    fi
+    ;;
   activate)
     shift || true
     delegate_python_cli activate "$@"
+    ;;
+  steer)
+    shift || true
+    delegate_python_cli steer "$@"
     ;;
   *)
     print_help
