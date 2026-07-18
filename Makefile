@@ -106,6 +106,7 @@ validate-cli:
 	$(PYCLI) steer preflight --sourceset gpt2-small.res-jb --pretty >/tmp/agent-machine-pycli-steer-preflight.json
 	$(BOOTSTRAP_CLI) steer preflight --sourceset gpt2-small.res-jb --pretty >/tmp/agent-machine-bootstrap-steer-preflight.json
 	$(PYCLI) steer resolve-artifacts --sourceset gpt2-small.res-jb --local-dir /tmp/agent-machine-steering-artifacts --receipt-out /tmp/agent-machine-steering-artifact-receipt.json --dry-run --pretty >/tmp/agent-machine-pycli-artifact-receipt.json
+	$(PYTHON) scripts/verify-steering-receipt.py examples/steering-artifact-receipts/gpt2-small-res-jb.missing.steering-artifact-receipt.json --expect-status not_configured --pretty >/tmp/agent-machine-steering-load-preflight.json
 	$(PYTHON) scripts/verify-steering-receipt.py examples/steering-artifact-receipts/gpt2-small-res-jb.missing.steering-artifact-receipt.json --expect-status not_configured --pretty >/tmp/agent-machine-steering-verify-preflight.json
 	$(PYTHON) scripts/load-steering-receipt.py examples/steering-artifact-receipts/synthetic.available.steering-artifact-receipt.json --attempt-load --pretty >/tmp/agent-machine-steering-synthetic-load.json
 	$(PYTHON) scripts/run-mock-steering.py /tmp/agent-machine-steer-request.json --pretty >/tmp/agent-machine-mock-steering.json
