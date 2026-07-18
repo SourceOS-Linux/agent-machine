@@ -71,6 +71,7 @@ Usage:
   agent-machine policy resolve <agentpod.json> --policy-dir <dir> --deployment-receipt-id <id> [--expected-status allowed]
   agent-machine activate evaluate <agentpod.json> [policy.json] <grant.json> --deployment-receipt-id <id> [--policy-dir <dir>] [--storage-receipt-dir <dir>] [--pretty]
   agent-machine registry resolve <agentpod.json> --grant-dir <dir> --requested-agent-identity-ref <ref> --session-ref <ref> [--expected-status active]
+  agent-machine activate evaluate <agentpod.json> [policy.json] [grant.json] --deployment-receipt-id <id> [--policy-dir <dir>] [--grant-dir <dir>] [--storage-receipt-dir <dir>] [--pretty]
   agent-machine activate evaluate <agentpod.json> [policy.json] <grant.json> --deployment-receipt-id <id> [--policy-dir <dir>] [--storage-receipt-dir <dir>] [--pretty]
   agent-machine steer stub-response <request.json> [--status not_configured|noop] [--pretty]
   agent-machine steer serve-stub [--host 127.0.0.1] [--port 8080] [--status not_configured|noop]
@@ -296,6 +297,7 @@ case "$COMMAND" in
     ;;
   registry)
     shift || true
+    delegate_python_cli registry "$@"
     if [ "${1:-}" = "resolve" ]; then
       shift || true
       delegate_registry_resolver "$@"
