@@ -67,12 +67,12 @@ and documented in:
 ```text
 docs/steering-artifact-receipts.md
 ```
-
 ## Remaining blockers before #34 can close
 
 - optional ML dependencies installed from `requirements-steering.txt`
 - verified GPT-2 Small model artifacts
 - verified SAE artifacts for SAELens release `gpt2-small-res-jb`, SAE id `blocks.6.hook_resid_pre`
+- digest locks for model and SAE artifacts
 - artifact receipt with exact repo, file path, resolved revision, and SHA-256 digest for each model/SAE file
 - storage receipt for the resolved artifact locations
 - policy admission and agent-registry grant records
