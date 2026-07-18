@@ -8,6 +8,7 @@ the SourceOS root of trust.
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -223,4 +224,5 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except (AssertionError, RuntimeError) as exc:
         print(str(exc), file=__import__("sys").stderr)
+        print(str(exc), file=sys.stderr)
         raise SystemExit(1) from exc

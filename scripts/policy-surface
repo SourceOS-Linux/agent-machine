@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "agent-machine policy surface"
+echo "filesystem: render_and_probe_only_until_activation_gates_land"
+echo "network: no_runtime_provider_listener_or_egress_until_declared"
+echo "execution: dry_run_render_and_evaluate_only_by_default"
+echo "approval: policy_admission_required_for_provider_activation_side_effects_teardown_and_wipe"
+echo "workspace_scope: declared_agentpod_workspace_or_none"
+
+echo
+echo "blocking rule: update TRUST_SURFACE.yaml before provider activation, model serving, service installation, credential use, cache reuse, side effects, teardown, or wipe behavior lands"

@@ -28,6 +28,10 @@
     },
     "sha256Digest": {
       "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "pattern": "^sha256:[a-f0-9]{64}$"
     },
     "freshness": {
@@ -38,6 +42,23 @@
         "maxAgeSeconds": { "type": "integer", "minimum": 0 },
         "observedAgeSeconds": { "type": "integer", "minimum": 0 },
         "fresh": { "type": "boolean" }
+      "required": [
+        "maxAgeSeconds",
+        "observedAgeSeconds",
+        "fresh"
+      ],
+      "properties": {
+        "maxAgeSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observedAgeSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fresh": {
+          "type": "boolean"
+        }
       }
     },
     "signature": {
@@ -49,6 +70,31 @@
         "observed": { "type": "boolean" },
         "signatureRef": { "type": ["string", "null"] },
         "signerRef": { "type": ["string", "null"] }
+      "required": [
+        "required",
+        "observed",
+        "signatureRef",
+        "signerRef"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "observed": {
+          "type": "boolean"
+        },
+        "signatureRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "signerRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
     "externalTrustSignal": {
@@ -73,22 +119,63 @@
         "verifiedAt": { "type": "string" },
         "freshness": { "$ref": "#/$defs/freshness" },
         "signature": { "$ref": "#/$defs/signature" },
+        "providerRef": {
+          "type": "string"
+        },
+        "signalType": {
+          "$ref": "#/$defs/signalType"
+        },
+        "signalRef": {
+          "type": "string"
+        },
+        "signalDigest": {
+          "$ref": "#/$defs/sha256Digest"
+        },
+        "verifiedAt": {
+          "type": "string"
+        },
+        "freshness": {
+          "$ref": "#/$defs/freshness"
+        },
+        "signature": {
+          "$ref": "#/$defs/signature"
+        },
         "authority": {
           "type": "string",
           "const": "non-authoritative-verifier-input"
         },
         "failureReason": { "type": ["string", "null"] },
         "notes": { "type": "array", "items": { "type": "string" } }
+        "failureReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     }
   },
   "properties": {
     "specVersion": { "type": "string", "const": "0.1.0" },
+    "specVersion": {
+      "type": "string",
+      "const": "0.1.0"
+    },
     "id": {
       "type": "string",
       "pattern": "^urn:srcos:agent-machine:external-trust-signal-provider:[a-z0-9][a-z0-9-]*$"
     },
     "kind": { "type": "string", "const": "ExternalTrustSignalProvider" },
+    "kind": {
+      "type": "string",
+      "const": "ExternalTrustSignalProvider"
+    },
     "request": {
       "type": "object",
       "additionalProperties": false,
@@ -108,6 +195,12 @@
       "properties": {
         "requestId": { "type": "string" },
         "providerRef": { "type": "string" },
+        "requestId": {
+          "type": "string"
+        },
+        "providerRef": {
+          "type": "string"
+        },
         "agentPodId": {
           "type": "string",
           "pattern": "^urn:srcos:agent-machine:agent-pod:[a-z0-9][a-z0-9-]*$"
@@ -125,6 +218,45 @@
         "verificationFreshnessSeconds": { "type": "integer", "minimum": 0 },
         "requestedExpiresAt": { "type": ["string", "null"] },
         "signatureRequired": { "type": "boolean" }
+        "requestedAgentIdentityRef": {
+          "type": "string"
+        },
+        "sessionRef": {
+          "type": "string"
+        },
+        "workroomRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "topicRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "requestedSignalTypes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/signalType"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "verificationFreshnessSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "requestedExpiresAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "signatureRequired": {
+          "type": "boolean"
+        }
       }
     },
     "response": {
@@ -147,6 +279,22 @@
         },
         "usableForGrantResolution": { "type": "boolean" },
         "providerRef": { "type": "string" },
+          "enum": [
+            "available",
+            "unavailable",
+            "stale",
+            "malformed",
+            "unsigned",
+            "denied",
+            "error"
+          ]
+        },
+        "usableForGrantResolution": {
+          "type": "boolean"
+        },
+        "providerRef": {
+          "type": "string"
+        },
         "authority": {
           "type": "string",
           "const": "non-authoritative-verifier-input"
@@ -158,6 +306,27 @@
           "items": { "$ref": "#/$defs/externalTrustSignal" }
         },
         "failureReason": { "type": ["string", "null"] }
+        "verifiedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "freshness": {
+          "$ref": "#/$defs/freshness"
+        },
+        "signals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/externalTrustSignal"
+          }
+        },
+        "failureReason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
     "receiptSafety": {
@@ -188,5 +357,52 @@
     },
     "observedAt": { "type": "string" },
     "labels": { "type": "object", "additionalProperties": { "type": "string" } }
+        "includeRawContent": {
+          "type": "boolean",
+          "const": false
+        },
+        "rawPromptContentIncluded": {
+          "type": "boolean",
+          "const": false
+        },
+        "rawKvCacheContentIncluded": {
+          "type": "boolean",
+          "const": false
+        },
+        "secretValuesIncluded": {
+          "type": "boolean",
+          "const": false
+        },
+        "privateMemoryIncluded": {
+          "type": "boolean",
+          "const": false
+        },
+        "apiKeysIncluded": {
+          "type": "boolean",
+          "const": false
+        },
+        "walletPrivateKeysIncluded": {
+          "type": "boolean",
+          "const": false
+        },
+        "rawCredentialsIncluded": {
+          "type": "boolean",
+          "const": false
+        },
+        "rawUserDataIncluded": {
+          "type": "boolean",
+          "const": false
+        }
+      }
+    },
+    "observedAt": {
+      "type": "string"
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
   }
 }
