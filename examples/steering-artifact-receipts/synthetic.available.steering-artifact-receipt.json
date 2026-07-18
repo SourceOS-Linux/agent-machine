@@ -1,0 +1,63 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:steering-artifact-receipt:synthetic.available",
+  "kind": "SteeringArtifactReceipt",
+  "sourcesetId": "synthetic.available",
+  "status": "complete",
+  "generatedAt": "1970-01-01T00:00:00Z",
+  "activationIssue": "active-steering-work",
+  "artifactRecords": [
+    {
+      "role": "model-weight",
+      "source": {
+        "type": "local",
+        "repo": "synthetic/model",
+        "filePath": "synthetic-model.txt",
+        "resolvedRevision": "synthetic-fixture",
+        "url": "local://examples/fixtures/steering-loader/synthetic-model.txt"
+      },
+      "storage": {
+        "localPath": "examples/fixtures/steering-loader/synthetic-model.txt",
+        "sizeBytes": 25,
+        "storageReceiptRef": null
+      },
+      "digest": {
+        "algorithm": "sha256",
+        "sha256": "e127f6c93d77b6e8d5ce59f9e98996484486bdbbe6d85cc2fccb1115e8c79bb0",
+        "verified": true
+      }
+    },
+    {
+      "role": "sae-artifact",
+      "source": {
+        "type": "local",
+        "repo": "synthetic/sae",
+        "filePath": "synthetic-sae.txt",
+        "resolvedRevision": "synthetic-fixture",
+        "url": "local://examples/fixtures/steering-loader/synthetic-sae.txt"
+      },
+      "storage": {
+        "localPath": "examples/fixtures/steering-loader/synthetic-sae.txt",
+        "sizeBytes": 23,
+        "storageReceiptRef": null
+      },
+      "digest": {
+        "algorithm": "sha256",
+        "sha256": "a758389c63a7db69e811c4f26a4834e02a1630b2b29c08bdca5db49627d91415",
+        "verified": true
+      }
+    }
+  ],
+  "missing": [],
+  "storageReceiptRefs": [],
+  "policyRefs": [],
+  "agentRegistryGrantRefs": [],
+  "receiptSafety": {
+    "includeRawArtifacts": false,
+    "includeAuthMaterial": false
+  },
+  "notes": [
+    "Synthetic fixture for CI-only loader validation.",
+    "This fixture proves digest re-verification and load-path gating without model weights."
+  ]
+}

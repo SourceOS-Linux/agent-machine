@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+patterns='agent-machine|llama.cpp|llama-server|vllm|sglang|ollama|mlx'
+failed=0
+
+if pgrep -af "$patterns" >/dev/null 2>&1; then
+  echo "FAIL: Agent Machine or provider process still present"
+  pgrep -af "$patterns" || true
+  failed=1
+else
+  echo "OK: no Agent Machine/provider process"
+fi
+
+if command -v lsof >/dev/null 2>&1 && lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null | grep -Ei "$patterns" >/dev/null; then
+  echo "FAIL: Agent Machine/provider listener still present"
+  failed=1
+else
+  echo "OK: no Agent Machine/provider listener"
+fi
+
+for p in "$HOME/.local/state/agent-machine" "$HOME/.config/agent-machine" "$HOME/.cache/agent-machine"; do
+  if [ -e "$p" ]; then
+    echo "FAIL: residue exists: $p"
+    failed=1
+  else
+    echo "OK: missing: $p"
+  fi
+done
+
+exit "$failed"
