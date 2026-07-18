@@ -1,3 +1,4 @@
+.PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-superconscious-runtime-plan validate-package validate-cli validate-formula doctor probe
 .PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula doctor probe
 .PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-release-bundle validate-package validate-cli validate-formula doctor probe
 .PHONY: validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-policy-fabric validate-agent-registry validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula doctor probe
@@ -26,6 +27,7 @@ DECIDED_AT := 2026-05-04T12:51:00Z
 PYCLI := PYTHONPATH=src $(PYTHON) -m agent_machine.cli
 PYMOD := PYTHONPATH=src $(PYTHON) -m
 
+validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-superconscious-runtime-plan validate-package validate-cli validate-formula
 validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula
 validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-activation validate-supply-chain validate-release-bundle validate-package validate-cli validate-formula
 validate: validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-policy-fabric validate-agent-registry validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula
@@ -98,6 +100,9 @@ validate-release-bundle:
 
 validate-sourceos-projections:
 	$(PYTHON) scripts/validate-sourceos-projection-fixtures.py
+
+validate-superconscious-runtime-plan:
+	$(PYTHON) scripts/validate-superconscious-runtime-plan.py
 validate-package:
 	$(PYTHON) scripts/validate-package.py
 
