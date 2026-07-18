@@ -1,0 +1,95 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:steering-sourceset:gemma-2-2b.pt-res",
+  "kind": "SteeringSourceset",
+  "sourcesetId": "gemma-2-2b.pt-res",
+  "status": "registered-blocked-terms",
+  "readinessSummary": "Gemma 2 2B residual-stream Gemma Scope sourceset is registered by reference but remains blocked until operator access/terms, artifact digests, storage receipts, policy admission, grants, and activation injection are verified.",
+  "model": {
+    "family": "gemma-2-2b-pt",
+    "source": {
+      "type": "huggingface",
+      "repo": "google/gemma-2-2b",
+      "url": "https://huggingface.co/google/gemma-2-2b",
+      "revision": "main"
+    },
+    "license": "gemma",
+    "access": {
+      "posture": "terms-required",
+      "gated": true,
+      "operatorActionRequired": "verify Hugging Face account access and accept applicable Google/Gemma terms before runtime use"
+    },
+    "expectedFormat": "safetensors",
+    "digestRequired": true
+  },
+  "sae": {
+    "source": {
+      "type": "huggingface",
+      "repo": "google/gemma-scope-2b-pt-res",
+      "url": "https://huggingface.co/google/gemma-scope-2b-pt-res",
+      "revision": "main"
+    },
+    "library": "SAELens",
+    "release": "gemma-scope-2b-pt-res-canonical",
+    "saeId": "layer_20/width_16k/average_l0_71",
+    "artifactPath": "layer_20/width_16k/average_l0_71",
+    "hook": {
+      "neuronpediaLayer": "20-gemmascope-res-16k",
+      "modelLayer": 20,
+      "site": "residual-stream"
+    },
+    "featureIndexStatus": "not-selected",
+    "access": {
+      "posture": "public",
+      "gated": false,
+      "operatorActionRequired": "verify exact SAE artifact digest before runtime use"
+    }
+  },
+  "endpointCompatibility": {
+    "endpoint": "/steer",
+    "requestShape": [
+      "prompt",
+      "model_id",
+      "steering.feature_id",
+      "steering.layer",
+      "steering.strength",
+      "steering.preset"
+    ],
+    "responseShape": [
+      "status",
+      "baseline",
+      "steered",
+      "diff_summary",
+      "feature_id",
+      "layer",
+      "strength"
+    ]
+  },
+  "activation": {
+    "controlledActivationIssue": "https://github.com/SourceOS-Linux/agent-machine/issues/34",
+    "loadableToday": false,
+    "downloadsPerformed": false,
+    "activationImplemented": false,
+    "missing": [
+      "operator terms/access verification",
+      "artifact digest lock",
+      "storage receipt",
+      "policy admission",
+      "agent-registry grant",
+      "controlled activation injection",
+      "local smoke record"
+    ]
+  },
+  "policy": {
+    "allowSecretInConfig": false,
+    "requiresGrant": true,
+    "requiresPolicyAdmission": true,
+    "requiresStorageReceipt": true,
+    "requiresEvidence": true
+  },
+  "notes": [
+    "This is the first Gemma sourceset registration candidate.",
+    "This record does not claim Gemma runtime access is admitted.",
+    "This record does not download model weights or SAE artifacts."
+  ]
+}
