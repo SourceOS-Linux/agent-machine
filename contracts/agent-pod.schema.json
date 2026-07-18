@@ -92,7 +92,7 @@
         },
         "imageOrCommand": {
           "type": "string",
-          "description": "Container image, systemd unit command, executable, or Kubernetes workload reference. Do not include secrets."
+          "description": "Container image, systemd unit command, executable, or Kubernetes workload reference. Do not include secrets. Release-candidate container images must be digest-pinned."
         },
         "entrypoint": { "type": "string" },
         "args": {
@@ -108,7 +108,25 @@
           "enum": ["never", "on-failure", "always", "policy-managed"]
         },
         "serviceAccountName": { "type": "string" },
-        "namespace": { "type": "string" }
+        "namespace": { "type": "string" },
+        "imageDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "description": "Resolved image digest for release-candidate/production validation."
+        },
+        "imageReferencePolicy": {
+          "type": "string",
+          "enum": ["tag-allowed-bootstrap", "digest-required", "digest-pinned"],
+          "description": "Bootstrap examples may allow tags; release-candidate and production artifacts must be digest-pinned."
+        },
+        "sbomRef": {
+          "type": "string",
+          "description": "Non-secret SBOM/provenance reference for the runtime image or artifact."
+        },
+        "provenanceRef": {
+          "type": "string",
+          "description": "Non-secret provenance reference for the runtime image or artifact."
+        }
       }
     },
     "resources": {

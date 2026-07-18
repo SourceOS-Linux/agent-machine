@@ -9,7 +9,31 @@
     "requestedAgentIdentityRef": "urn:srcos:agent:local-inference-provider",
     "sessionRef": "urn:srcos:session:local-bootstrap",
     "workroomRef": "urn:srcos:workroom:local-default",
-    "topicRef": "urn:srcos:topic:agent-machine"
+    "topicRef": "urn:srcos:topic:agent-machine",
+    "requestedScope": {
+      "providerIds": [
+        "urn:srcos:agent-machine:inference-provider:asahi-llama-cpp"
+      ],
+      "modelRefs": [
+        "urn:srcos:model:local-gguf-default"
+      ],
+      "toolRefs": [
+        "urn:srcos:tool:inference-http"
+      ],
+      "cacheScopeRefs": [
+        "urn:srcos:policy-domain:local-workstation-default"
+      ],
+      "memoryScopeRefs": [
+        "urn:srcos:memory:local-default"
+      ],
+      "storageScopeRefs": [
+        "urn:srcos:agent-machine:storage-receipt:local-lvm-warm-cache"
+      ],
+      "evidenceScopeRefs": [
+        "urn:srcos:evidence:local-default"
+      ]
+    },
+    "requestedExpiresAt": "2026-05-04T13:49:00Z"
   },
   "grant": {
     "status": "missing",
@@ -18,7 +42,10 @@
     "grantDigest": null,
     "reason": "Agent Registry grant has not been resolved; activation must fail closed.",
     "expiresAt": null,
-    "revocationRef": null
+    "revocationStatus": "unavailable",
+    "revocationRef": null,
+    "revocationHookRef": null,
+    "externalTrustSignals": []
   },
   "scope": {
     "allowed": {
@@ -31,13 +58,27 @@
       "evidenceScopeRefs": []
     },
     "denied": {
-      "providerIds": ["urn:srcos:agent-machine:inference-provider:asahi-llama-cpp"],
-      "modelRefs": ["urn:srcos:model:local-gguf-default"],
-      "toolRefs": ["urn:srcos:tool:inference-http"],
-      "cacheScopeRefs": ["urn:srcos:policy-domain:local-workstation-default"],
-      "memoryScopeRefs": ["urn:srcos:memory:local-default"],
-      "storageScopeRefs": ["urn:srcos:agent-machine:storage-receipt:local-lvm-warm-cache"],
-      "evidenceScopeRefs": ["urn:srcos:evidence:local-default"]
+      "providerIds": [
+        "urn:srcos:agent-machine:inference-provider:asahi-llama-cpp"
+      ],
+      "modelRefs": [
+        "urn:srcos:model:local-gguf-default"
+      ],
+      "toolRefs": [
+        "urn:srcos:tool:inference-http"
+      ],
+      "cacheScopeRefs": [
+        "urn:srcos:policy-domain:local-workstation-default"
+      ],
+      "memoryScopeRefs": [
+        "urn:srcos:memory:local-default"
+      ],
+      "storageScopeRefs": [
+        "urn:srcos:agent-machine:storage-receipt:local-lvm-warm-cache"
+      ],
+      "evidenceScopeRefs": [
+        "urn:srcos:evidence:local-default"
+      ]
     }
   },
   "receiptSafety": {

@@ -1,0 +1,78 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:external-trust-signal-provider:local-pch-style-stale",
+  "kind": "ExternalTrustSignalProvider",
+  "request": {
+    "requestId": "urn:srcos:agent-machine:external-trust-request:local-pch-style-stale",
+    "providerRef": "urn:srcos:external-trust-provider:pch-style-local-mirror",
+    "agentPodId": "urn:srcos:agent-machine:agent-pod:local-podman-llama-cpp",
+    "requestedAgentIdentityRef": "urn:srcos:agent:local-inference-provider",
+    "sessionRef": "urn:srcos:session:local-bootstrap",
+    "workroomRef": "urn:srcos:workroom:local-default",
+    "topicRef": "urn:srcos:topic:agent-machine",
+    "requestedSignalTypes": [
+      "agent-identity",
+      "cert-tier",
+      "reputation-score",
+      "registry-lookup"
+    ],
+    "verificationFreshnessSeconds": 300,
+    "requestedExpiresAt": "2026-05-04T13:50:00Z",
+    "signatureRequired": true
+  },
+  "response": {
+    "status": "stale",
+    "usableForGrantResolution": false,
+    "providerRef": "urn:srcos:external-trust-provider:pch-style-local-mirror",
+    "authority": "non-authoritative-verifier-input",
+    "verifiedAt": "2026-05-04T11:40:00Z",
+    "freshness": {
+      "maxAgeSeconds": 300,
+      "observedAgeSeconds": 4210,
+      "fresh": false
+    },
+    "signals": [
+      {
+        "providerRef": "urn:srcos:external-trust-provider:pch-style-local-mirror",
+        "signalType": "agent-identity",
+        "signalRef": "urn:srcos:external-trust-signal:local-agent-identity",
+        "signalDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "verifiedAt": "2026-05-04T11:40:00Z",
+        "freshness": {
+          "maxAgeSeconds": 300,
+          "observedAgeSeconds": 4210,
+          "fresh": false
+        },
+        "signature": {
+          "required": true,
+          "observed": true,
+          "signatureRef": "urn:srcos:signature:local-agent-identity",
+          "signerRef": "urn:srcos:signer:local-trust-mirror"
+        },
+        "authority": "non-authoritative-verifier-input",
+        "failureReason": "stale",
+        "notes": [
+          "Stale external signal is not usable for grant resolution."
+        ]
+      }
+    ],
+    "failureReason": "External trust signal cache is stale; local grant resolver must ignore it or fail closed."
+  },
+  "receiptSafety": {
+    "includeRawContent": false,
+    "rawPromptContentIncluded": false,
+    "rawKvCacheContentIncluded": false,
+    "secretValuesIncluded": false,
+    "privateMemoryIncluded": false,
+    "apiKeysIncluded": false,
+    "walletPrivateKeysIncluded": false,
+    "rawCredentialsIncluded": false,
+    "rawUserDataIncluded": false
+  },
+  "observedAt": "2026-05-04T12:50:10Z",
+  "labels": {
+    "sourceos.external-trust.prototype": "true",
+    "sourceos.external-trust.usable": "false",
+    "sourceos.external-trust.failure": "stale"
+  }
+}
