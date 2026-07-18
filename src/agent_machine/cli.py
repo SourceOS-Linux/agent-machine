@@ -236,6 +236,8 @@ def cmd_policy_resolve(args: argparse.Namespace) -> int:
 
 
 def resolve_activation_policy_and_grant(args: argparse.Namespace, agentpod: dict[str, Any], policy_fabric: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+    policy_json = args.policy_json
+    grant_json = args.grant_json
     """Resolve activation policy/grant from explicit files or local policy store."""
     policy_json = args.policy_json
     grant_json = args.grant_json
@@ -254,10 +256,11 @@ def resolve_activation_policy_and_grant(args: argparse.Namespace, agentpod: dict
             "grant JSON is required. Use either `<agentpod> <policy.json> <grant.json>` "
             "or `<agentpod> <grant.json> --policy-dir <dir>`"
         )
-
     if policy_json is not None:
         return load_json(policy_json), load_json(grant_json)
 
+    if policy_json is not None:
+        return load_json(policy_json), load_json(grant_json)
     policies = policy_fabric.load_policy_admissions(
         files=args.policy_file,
         directories=args.policy_dir,
