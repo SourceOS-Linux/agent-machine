@@ -1,3 +1,8 @@
+"""Receipt-backed local artifact verification for steering runtime.
+
+This module verifies a SteeringArtifactReceipt before any runtime may use the
+referenced files. It is deliberately fail-closed: absent files or digest mismatch
+produce a not_configured result rather than a runtime claim.
 """Receipt-backed local artifact verification and loading gate.
 
 This module verifies a SteeringArtifactReceipt immediately before any runtime use
@@ -83,8 +88,6 @@ class SteeringLoader:
             }
 
         return load_runtime_artifacts(receipt, model_files, sae_files, Path(receipt_path), verified)
-
-
 def verify_receipt_files(receipt_path: Path) -> dict[str, Any]:
     """Verify receipt local paths and SHA-256 digests without loading artifacts."""
     receipt_path = Path(receipt_path)
@@ -208,8 +211,6 @@ def common_parent(paths: list[Path]) -> Path | None:
                 return None
             common = common.parent
     return common
-
-
 def sha256_file(path: Path) -> str:
     hasher = hashlib.sha256()
     with path.open("rb") as handle:
