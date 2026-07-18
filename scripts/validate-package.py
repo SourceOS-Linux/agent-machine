@@ -61,6 +61,8 @@ def main() -> int:
         raise AssertionError("supply_chain.is_sha256_digest rejected valid digest")
     if agent_machine.release_bundle.DEFAULT_REPOSITORY != "SourceOS-Linux/agent-machine":
         raise AssertionError("unexpected release_bundle default repository")
+    if agent_machine.external_trust.AUTHORITY != "non-authoritative-verifier-input":
+        raise AssertionError("unexpected external trust authority")
     if agent_machine.policy_fabric.DEFAULT_DECIDED_AT != "1970-01-01T00:00:00Z":
         raise AssertionError("unexpected policy_fabric default decided_at")
     if agent_machine.agent_registry.DEFAULT_ISSUED_AT != "1970-01-01T00:00:00Z":

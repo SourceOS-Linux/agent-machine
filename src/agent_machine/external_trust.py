@@ -223,5 +223,6 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except (AssertionError, RuntimeError) as exc:
+        print(str(exc), file=__import__("sys").stderr)
         print(str(exc), file=sys.stderr)
         raise SystemExit(1) from exc
