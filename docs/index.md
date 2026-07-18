@@ -32,6 +32,7 @@ Agent Machine is a bootstrap runtime-control substrate for SourceOS agent worklo
 | [AgentRegistryGrant resolution](architecture/agent-registry-grant-resolution.md) | Local Agent Registry grant resolver and fail-closed missing-grant behavior. |
 | [Image digest pinning and provenance](architecture/image-digest-pinning-and-provenance.md) | Supply-chain strict-mode gate for digest-pinned release-candidate artifacts. |
 | [Release evidence bundle](architecture/release-evidence-bundle.md) | Deterministic validation/source/inventory/render/supply-chain/readiness bundle. |
+| [Signed release bundle envelope](architecture/signed-release-bundle-envelope.md) | Signing envelope contract for release evidence bundles. |
 | [Signed release bundle envelope](architecture/signed-release-bundle-envelope.md) | Signing/verification envelope around a release evidence bundle. |
 | [Runtime package layout](architecture/runtime-package-layout.md) | Migration from loose scripts to `src/agent_machine/` package modules. |
 | [Homebrew Python dependencies](architecture/homebrew-python-dependencies.md) | Current dependency strategy for render/evaluation commands. |
@@ -133,4 +134,5 @@ Current blockers:
 - TopoLVM runtime integration beyond skeleton manifests;
 - provider discovery and controlled provider activation implementation;
 - M2 Asahi host measurement/provider readiness data;
+- rollback, teardown, and wipe workflows.
 - rollback, teardown, and wipe workflows.
