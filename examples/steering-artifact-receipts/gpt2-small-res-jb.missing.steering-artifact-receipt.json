@@ -1,0 +1,63 @@
+{
+  "specVersion": "0.1.0",
+  "id": "urn:srcos:agent-machine:steering-artifact-receipt:gpt2-small.res-jb.missing-fixture",
+  "kind": "SteeringArtifactReceipt",
+  "sourcesetId": "gpt2-small.res-jb",
+  "status": "complete",
+  "generatedAt": "1970-01-01T00:00:00Z",
+  "activationIssue": "active-steering-work",
+  "artifactRecords": [
+    {
+      "role": "model-config",
+      "source": {
+        "type": "huggingface",
+        "repo": "openai-community/gpt2",
+        "filePath": "config.json",
+        "resolvedRevision": "0000000000000000000000000000000000000000",
+        "url": "https://huggingface.co/openai-community/gpt2/blob/0000000000000000000000000000000000000000/config.json"
+      },
+      "storage": {
+        "localPath": "/tmp/agent-machine-nonexistent/gpt2/config.json",
+        "sizeBytes": 0,
+        "storageReceiptRef": null
+      },
+      "digest": {
+        "algorithm": "sha256",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "verified": true
+      }
+    },
+    {
+      "role": "sae-artifact",
+      "source": {
+        "type": "huggingface",
+        "repo": "jbloom/GPT2-Small-SAEs-Reformatted",
+        "filePath": "blocks.6.hook_resid_pre/sae_weights.safetensors",
+        "resolvedRevision": "0000000000000000000000000000000000000000",
+        "url": "https://huggingface.co/jbloom/GPT2-Small-SAEs-Reformatted/blob/0000000000000000000000000000000000000000/blocks.6.hook_resid_pre/sae_weights.safetensors"
+      },
+      "storage": {
+        "localPath": "/tmp/agent-machine-nonexistent/gpt2-sae/sae_weights.safetensors",
+        "sizeBytes": 0,
+        "storageReceiptRef": null
+      },
+      "digest": {
+        "algorithm": "sha256",
+        "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "verified": true
+      }
+    }
+  ],
+  "missing": [],
+  "storageReceiptRefs": [],
+  "policyRefs": [],
+  "agentRegistryGrantRefs": [],
+  "receiptSafety": {
+    "includeRawArtifacts": false,
+    "includeAuthMaterial": false
+  },
+  "notes": [
+    "Fixture for fail-closed loader validation only.",
+    "Paths intentionally do not exist. The loader preflight must report not_configured rather than using artifacts."
+  ]
+}
