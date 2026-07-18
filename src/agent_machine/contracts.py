@@ -53,12 +53,16 @@ def schema_by_kind(root: Path | None = None) -> dict[str, Path]:
         "AgentRegistryGrant": base / "agent-registry-grant.schema.json",
         "CacheTier": base / "cache-tier.schema.json",
         "DeploymentReceipt": base / "deployment-receipt.schema.json",
+        "ExternalTrustSignalProvider": base / "external-trust-signal-provider.schema.json",
         "InferenceProvider": base / "inference-provider.schema.json",
         "PolicyAdmission": base / "policy-admission.schema.json",
         "ReleaseEvidenceBundle": base / "release-evidence-bundle.schema.json",
         "RuntimeInstallReceipt": base / "runtime-install-receipt.schema.json",
         "SignedReleaseBundleEnvelope": base / "signed-release-bundle-envelope.schema.json",
+        "SteeringArtifactReceipt": base / "steering-artifact-receipt.schema.json",
+        "SteeringSourceset": base / "steering-sourceset.schema.json",
         "StorageReceipt": base / "storage-receipt.schema.json",
+        "WorkspaceOperationContract": base / "workspace-operation-contract.schema.json",
     }
 
 

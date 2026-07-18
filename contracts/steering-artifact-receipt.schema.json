@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:steering-artifact-receipt:v0.1.0",
+  "title": "SteeringArtifactReceipt",
+  "description": "Receipt for resolved local steering model and SAE artifacts. Each artifact record requires source repo, exact file path, resolved revision, and SHA-256 digest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["specVersion", "id", "kind", "sourcesetId", "status", "generatedAt", "artifactRecords", "receiptSafety"],
+  "properties": {
+    "specVersion": { "type": "string", "const": "0.1.0" },
+    "id": { "type": "string", "pattern": "^urn:srcos:agent-machine:steering-artifact-receipt:[a-z0-9][a-z0-9.-]*$" },
+    "kind": { "type": "string", "const": "SteeringArtifactReceipt" },
+    "sourcesetId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$" },
+    "status": { "type": "string", "enum": ["pending", "complete", "failed"] },
+    "generatedAt": { "type": "string" },
+    "activationIssue": { "type": "string" },
+    "artifactRecords": { "type": "array", "items": { "$ref": "#/$defs/artifactRecord" }, "uniqueItems": true },
+    "missing": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "storageReceiptRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "policyRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "agentRegistryGrantRefs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "receiptSafety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["includeRawArtifacts", "includeAuthMaterial"],
+      "properties": {
+        "includeRawArtifacts": { "type": "boolean", "const": false },
+        "includeAuthMaterial": { "type": "boolean", "const": false }
+      }
+    },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  },
+  "$defs": {
+    "artifactRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "source", "storage", "digest"],
+      "properties": {
+        "role": { "type": "string", "enum": ["model-config", "model-weight", "tokenizer", "sae-artifact", "sae-config", "other"] },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "repo", "filePath", "resolvedRevision"],
+          "properties": {
+            "type": { "type": "string", "enum": ["huggingface", "local", "other"] },
+            "repo": { "type": "string" },
+            "filePath": { "type": "string", "minLength": 1 },
+            "resolvedRevision": { "type": "string", "minLength": 1 },
+            "url": { "type": "string" }
+          }
+        },
+        "storage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["localPath", "sizeBytes"],
+          "properties": {
+            "localPath": { "type": "string", "minLength": 1 },
+            "sizeBytes": { "type": "integer", "minimum": 0 },
+            "storageReceiptRef": { "type": ["string", "null"] }
+          }
+        },
+        "digest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["algorithm", "sha256", "verified"],
+          "properties": {
+            "algorithm": { "type": "string", "const": "sha256" },
+            "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "verified": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}
