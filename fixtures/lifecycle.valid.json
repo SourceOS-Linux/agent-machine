@@ -1,0 +1,17 @@
+{
+  "machine_id": "agent-machine.fixture",
+  "service_id": "svc.substrate.agent-machine",
+  "lifecycle_state": "ready",
+  "runtime_boundary": {
+    "local_only": true,
+    "network_policy": "restricted",
+    "mount_scope": "workspace"
+  },
+  "agentos_handoff": {
+    "enabled": true,
+    "target_service_id": "svc.managed.agentos"
+  },
+  "receipt_refs": [
+    "receipt://fixture/agent-machine"
+  ]
+}

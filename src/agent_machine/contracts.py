@@ -53,11 +53,16 @@ def schema_by_kind(root: Path | None = None) -> dict[str, Path]:
         "AgentRegistryGrant": base / "agent-registry-grant.schema.json",
         "CacheTier": base / "cache-tier.schema.json",
         "DeploymentReceipt": base / "deployment-receipt.schema.json",
+        "ExternalTrustSignalProvider": base / "external-trust-signal-provider.schema.json",
         "InferenceProvider": base / "inference-provider.schema.json",
         "PolicyAdmission": base / "policy-admission.schema.json",
         "ReleaseEvidenceBundle": base / "release-evidence-bundle.schema.json",
+        "RuntimeInstallReceipt": base / "runtime-install-receipt.schema.json",
         "SignedReleaseBundleEnvelope": base / "signed-release-bundle-envelope.schema.json",
+        "SteeringArtifactReceipt": base / "steering-artifact-receipt.schema.json",
+        "SteeringSourceset": base / "steering-sourceset.schema.json",
         "StorageReceipt": base / "storage-receipt.schema.json",
+        "WorkspaceOperationContract": base / "workspace-operation-contract.schema.json",
     }
 
 
@@ -93,9 +98,9 @@ def validate_by_kind(instance_path: Path, root: Path | None = None) -> Path:
     instance = load_json(instance_path)
     if not isinstance(instance, dict):
         raise AssertionError(f"{instance_path}: example root must be a JSON object")
-    kind = instance.get("kind")
+    kind = instance.get("kind") or instance.get("type")
     if not isinstance(kind, str):
-        raise AssertionError(f"{instance_path}: missing string `kind` field")
+        raise AssertionError(f"{instance_path}: missing string `kind` or `type` field")
     mapping = schema_by_kind(root)
     schema_path = mapping.get(kind)
     if schema_path is None:

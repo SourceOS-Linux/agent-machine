@@ -1,0 +1,43 @@
+{
+  "id": "urn:srcos:receipt:runtime-install:agent-runtime-rolled-back-0001",
+  "type": "RuntimeInstallReceipt",
+  "specVersion": "0.1.0",
+  "sessionRef": "urn:srcos:session:runtime-install-demo-0005",
+  "capabilityLedgerRef": "urn:srcos:capability-ledger:runtime-install-demo-0005",
+  "agentMachineReceiptRef": "urn:srcos:agent-machine-receipt:runtime-probe-0005",
+  "runtimeRef": "urn:srcos:runtime:sourceos-agent-runtime@0.1.0",
+  "runtimeName": "sourceos-agent-runtime",
+  "runtimeVersion": "0.1.0",
+  "targetRef": "urn:srcos:target:developer-workstation-0001",
+  "platform": "linux-x64",
+  "installState": "rolled_back",
+  "manifest": {
+    "manifestRef": "urn:srcos:artifact:runtime-manifest-sourceos-agent-runtime-0.1.0",
+    "manifestDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "bundleFormatVersion": "1",
+    "resolvedAt": "2026-05-06T08:00:00Z"
+  },
+  "artifacts": [
+    {
+      "artifactRef": "urn:srcos:artifact:sourceos-agent-runtime-linux-x64-0.1.0.tar.xz",
+      "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "sizeBytes": 1048576,
+      "verificationState": "verified"
+    }
+  ],
+  "rollbackRef": "urn:srcos:receipt:runtime-install:agent-runtime-installed-0000",
+  "failureReason": "post_install_health_check_failed_rollback_executed",
+  "logMode": "compact_receipt_ref",
+  "causalRefs": [
+    "urn:srcos:event:runtime-install-requested-0005",
+    "urn:srcos:event:runtime-health-check-failed-0005"
+  ],
+  "policyDecisionRef": "urn:srcos:decision:runtime-install-policy-0005",
+  "evidenceRefs": [
+    "urn:srcos:evidence:runtime-install-rollback-executed-0001",
+    "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  ],
+  "startedAt": "2026-05-06T08:00:00Z",
+  "finishedAt": "2026-05-06T08:10:00Z",
+  "capturedAt": "2026-05-06T08:10:05Z"
+}
