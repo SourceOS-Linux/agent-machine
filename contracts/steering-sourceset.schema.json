@@ -127,6 +127,27 @@
         }
       }
     },
+    "consent": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Whether a user must agree BEFORE these artifacts are fetched. Distinct from the policy block below, which gates activation: policy answers 'may this run', consent answers 'may this arrive'. Adjudicating only the former means the bytes, the bandwidth and the disk are already spent by the time anyone is asked.",
+      "required": ["requiresUserConsent"],
+      "properties": {
+        "requiresUserConsent": {
+          "type": "boolean",
+          "description": "When true, resolution refuses to contact any remote without a granted, unexpired, unrevoked ArtifactConsentRecord whose scope authorises a download."
+        },
+        "purpose": {
+          "type": "string",
+          "description": "What the artifacts are for, in terms the subject was actually shown."
+        },
+        "estimatedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Expected on-disk footprint, so the subject is asked about a quantity rather than an abstraction."
+        }
+      }
+    },
     "policy": {
       "type": "object",
       "additionalProperties": false,

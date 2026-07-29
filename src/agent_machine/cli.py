@@ -412,7 +412,7 @@ def cmd_steer_serve(args: argparse.Namespace) -> int:
 
 def cmd_steer_resolve_artifacts(args: argparse.Namespace) -> int:
     steering_artifacts = __import__("agent_machine.steering_artifacts", fromlist=["_unused"])
-    result = steering_artifacts.resolve_steering_artifacts(args.sourceset, args.local_dir, args.receipt_out, allow_network=args.allow_network, dry_run=args.dry_run, revision=args.revision)
+    result = steering_artifacts.resolve_steering_artifacts(args.sourceset, args.local_dir, args.receipt_out, allow_network=args.allow_network, dry_run=args.dry_run, revision=args.revision, consent_record=args.consent_record)
     print(json.dumps(result, indent=2 if args.pretty else None, sort_keys=True))
     return 0
 
@@ -567,6 +567,10 @@ def build_parser() -> argparse.ArgumentParser:
     resolve_artifacts.add_argument("--receipt-out", type=Path, required=True)
     resolve_artifacts.add_argument("--revision", default="main")
     resolve_artifacts.add_argument("--allow-network", action="store_true")
+    # --allow-network says the machine has connectivity. --consent-record says a person
+    # agreed to these bytes landing on this disk. They are not the same claim, and a
+    # sourceset with consent.requiresUserConsent refuses to fetch on the first alone.
+    resolve_artifacts.add_argument("--consent-record", type=Path, default=None)
     resolve_artifacts.add_argument("--dry-run", action="store_true")
     resolve_artifacts.add_argument("--pretty", action="store_true")
     resolve_artifacts.set_defaults(func=cmd_steer_resolve_artifacts)

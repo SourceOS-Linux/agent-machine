@@ -1,0 +1,27 @@
+{
+  "specVersion": "0.1.0",
+  "kind": "ArtifactConsentRecord",
+  "sourcesetId": "gpt2-small.res-jb",
+  "decidedAt": "2026-07-29T10:00:00Z",
+  "expiresAt": null,
+  "revokedAt": "2026-07-29T12:00:00Z",
+  "subject": {
+    "principalRef": "urn:srcos:principal:local-operator",
+    "attestation": "interactive-operator"
+  },
+  "disclosure": {
+    "declaredBytes": 600000000,
+    "purpose": "Local SAE steering research on GPT-2 Small.",
+    "artifactRepos": [
+      "openai-community/gpt2",
+      "jbloom/GPT2-Small-SAEs-Reformatted"
+    ],
+    "retention": "until-revoked"
+  },
+  "id": "urn:srcos:agent-machine:artifact-consent-record:gpt2-revoked",
+  "scope": "download-and-activation",
+  "decision": "granted",
+  "notes": [
+    "Revocation is recorded on the decision rather than by deleting it, so withdrawal leaves a trace."
+  ]
+}

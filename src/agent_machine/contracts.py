@@ -47,6 +47,7 @@ def schema_by_kind(root: Path | None = None) -> dict[str, Path]:
     return {
         "A2AStateMachine": base / "a2a-state-machine.schema.json",
         "ActivationDecision": base / "activation-decision.schema.json",
+        "ArtifactConsentRecord": base / "artifact-consent-record.schema.json",
         "AgentMachine": base / "agent-machine.schema.json",
         "AgentPlaneRuntimeEvidence": base / "agentplane-runtime-evidence.schema.json",
         "AgentPod": base / "agent-pod.schema.json",

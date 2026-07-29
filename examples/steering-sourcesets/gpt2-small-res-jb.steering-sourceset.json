@@ -90,6 +90,12 @@
   "notes": [
     "This record does not download model weights or SAE artifacts.",
     "This record does not claim the sourceset is loadable today.",
-    "This record exists so Issue #34 has a typed input target for controlled activation work."
-  ]
+    "This record exists so Issue #34 has a typed input target for controlled activation work.",
+    "Artifacts are not fetched without a granted ArtifactConsentRecord: consent is adjudicated before the download, not before activation."
+  ],
+  "consent": {
+    "requiresUserConsent": true,
+    "purpose": "Local SAE steering research on GPT-2 Small; model weights and SAE artifacts are stored on this machine.",
+    "estimatedBytes": 600000000
+  }
 }

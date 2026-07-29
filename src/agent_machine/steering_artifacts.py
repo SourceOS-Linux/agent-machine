@@ -44,6 +44,7 @@ def resolve_steering_artifacts(
     allow_network: bool = False,
     dry_run: bool = False,
     revision: str = "main",
+    consent_record: Path | str | None = None,
 ) -> dict[str, Any]:
     """Resolve registered steering artifacts and emit a receipt.
 
@@ -66,13 +67,22 @@ def resolve_steering_artifacts(
     else:
         if not allow_network:
             raise SteeringRuntimeError("real artifact resolution requires --allow-network")
+        # --allow-network is an OPERATOR affordance: it says this box has connectivity.
+        # It has never said a person agreed to these bytes landing on their disk, and
+        # treating it as though it did is what makes staging silently unconsented.
+        consent = load_json(Path(consent_record)) if consent_record else None
+        assert_consent_permits_download(
+            consent,
+            sourceset,
+            repos=[require_repo(sourceset, "model"), require_repo(sourceset, "sae")],
+        )
         # Fail closed BEFORE the first network call: a sourceset that requires
         # digest pinning but carries no pins can never be verified, so it must
         # not be fetched at all. Adjudicating this after the bytes have landed
         # is the ordering error this resolver exists to avoid.
         for section in ("model", "sae"):
             pinned_digests(sourceset, section)
-        receipt = resolve_gpt2_small_res_jb(sourceset, local_dir, revision=revision)
+        receipt = resolve_gpt2_small_res_jb(sourceset, local_dir, revision=revision, consent=consent)
 
     receipt_out.parent.mkdir(parents=True, exist_ok=True)
     receipt_out.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -80,7 +90,7 @@ def resolve_steering_artifacts(
     return receipt
 
 
-def resolve_gpt2_small_res_jb(sourceset: dict[str, Any], local_dir: Path, *, revision: str) -> dict[str, Any]:
+def resolve_gpt2_small_res_jb(sourceset: dict[str, Any], local_dir: Path, *, revision: str, consent: dict[str, Any] | None = None) -> dict[str, Any]:
     try:
         from huggingface_hub import HfApi, hf_hub_download
     except ImportError as exc:
@@ -154,6 +164,10 @@ def resolve_gpt2_small_res_jb(sourceset: dict[str, Any], local_dir: Path, *, rev
         "storageReceiptRefs": [],
         "policyRefs": [],
         "agentRegistryGrantRefs": [],
+        "consent": assert_consent_permits_download(
+            consent, sourceset, repos=[model_repo, sae_repo]
+        ),
+        "outstandingPolicyRequirements": outstanding_policy_requirements(sourceset),
         "receiptSafety": {
             "includeRawArtifacts": False,
             "includeAuthMaterial": False,
@@ -162,6 +176,7 @@ def resolve_gpt2_small_res_jb(sourceset: dict[str, Any], local_dir: Path, *, rev
             "This receipt records resolved artifact metadata only.",
             "It does not load the model, load the SAE, run inference, or perform activation injection.",
             "A separate storage receipt, policy admission, and grant record are still required before applied steering can be accepted.",
+            "consent.checkedBefore records WHEN the decision was adjudicated relative to the fetch; 'download' means no bytes were requested until it passed.",
         ],
     }
 
@@ -178,6 +193,13 @@ def build_pending_receipt(sourceset_id: str, sourceset: dict[str, Any] | None = 
                     f"{section}.expectedDigests absent (digestRequired {requirement}): "
                     f"{section} artifacts could only be recorded trust-on-first-use"
                 )
+        if consent_required(sourceset):
+            unpinned.append(
+                "consent.requiresUserConsent is true: a granted ArtifactConsentRecord must be "
+                "supplied via --consent-record before any remote is contacted"
+            )
+        for requirement in outstanding_policy_requirements(sourceset):
+            unpinned.append(f"{requirement} still required before activation (not discharged by resolution)")
     return {
         "specVersion": "0.1.0",
         "id": f"urn:srcos:agent-machine:steering-artifact-receipt:{sourceset_id}.{receipt_stamp(generated_at)}.dryrun",
@@ -207,6 +229,112 @@ def build_pending_receipt(sourceset_id: str, sourceset: dict[str, Any] | None = 
             "Run with --allow-network on an operator machine to produce a complete receipt.",
         ],
     }
+
+
+def consent_required(sourceset: dict[str, Any]) -> bool:
+    block = sourceset.get("consent")
+    return bool(isinstance(block, dict) and block.get("requiresUserConsent"))
+
+
+def assert_consent_permits_download(
+    consent: dict[str, Any] | None,
+    sourceset: dict[str, Any],
+    *,
+    repos: list[str],
+    now: str | None = None,
+) -> dict[str, Any]:
+    """Adjudicate consent BEFORE the first byte is fetched.
+
+    Every check here is deliberately positioned ahead of the download rather than
+    ahead of activation. A grant adjudicated after the bytes land governs whether
+    the artifacts may be USED; it cannot govern whether they may ARRIVE, and by the
+    time it is consulted the disk, the bandwidth and the exposure have already been
+    spent. That ordering — fetch first, adjudicate later — is the pattern this
+    function exists to invert.
+    """
+    sourceset_id = str(sourceset.get("sourcesetId", ""))
+    if not consent_required(sourceset):
+        return {"required": False, "checkedBefore": "download", "consentRef": None}
+
+    if consent is None:
+        raise SteeringRuntimeError(
+            f"{sourceset_id}: consent.requiresUserConsent is true but no ArtifactConsentRecord "
+            "was supplied; refusing to fetch"
+        )
+
+    if str(consent.get("kind")) != "ArtifactConsentRecord":
+        raise SteeringRuntimeError("consent record is not an ArtifactConsentRecord")
+
+    if str(consent.get("sourcesetId", "")) != sourceset_id:
+        raise SteeringRuntimeError(
+            f"consent record covers {consent.get('sourcesetId')!r}, not {sourceset_id!r}; "
+            "consent does not generalise across sourcesets"
+        )
+
+    if str(consent.get("decision")) != "granted":
+        raise SteeringRuntimeError(
+            f"{sourceset_id}: consent was {consent.get('decision')!r}; refusing to fetch"
+        )
+
+    # Agreeing that something may run if present is not agreeing that it may be put there.
+    if str(consent.get("scope")) not in {"download", "download-and-activation"}:
+        raise SteeringRuntimeError(
+            f"{sourceset_id}: consent scope is {consent.get('scope')!r}, which does not "
+            "authorise a download; refusing to fetch"
+        )
+
+    if consent.get("revokedAt"):
+        raise SteeringRuntimeError(
+            f"{sourceset_id}: consent was revoked at {consent['revokedAt']}; refusing to fetch"
+        )
+
+    stamp = now or utc_now()
+    expires = consent.get("expiresAt")
+    if expires and str(expires) <= stamp:
+        raise SteeringRuntimeError(
+            f"{sourceset_id}: consent expired at {expires}; refusing to fetch"
+        )
+
+    # Consent to an undisclosed remote is not consent to that remote.
+    disclosed = set(consent.get("disclosure", {}).get("artifactRepos", []))
+    undisclosed = [r for r in repos if r not in disclosed]
+    if undisclosed:
+        raise SteeringRuntimeError(
+            f"{sourceset_id}: would fetch from undisclosed repo(s) {', '.join(sorted(undisclosed))}; "
+            f"consent disclosed only {', '.join(sorted(disclosed)) or '(none)'}; refusing to fetch"
+        )
+
+    return {
+        "required": True,
+        "checkedBefore": "download",
+        "consentRef": str(consent.get("id", "")),
+        "scope": str(consent.get("scope")),
+        "decidedAt": str(consent.get("decidedAt", "")),
+        "subjectRef": str(consent.get("subject", {}).get("principalRef", "")),
+        "attestation": str(consent.get("subject", {}).get("attestation", "")),
+        "declaredBytes": consent.get("disclosure", {}).get("declaredBytes"),
+    }
+
+
+def outstanding_policy_requirements(sourceset: dict[str, Any]) -> list[str]:
+    """Policy requirements the sourceset declares that resolution does not satisfy.
+
+    The sourceset has always declared requiresGrant, requiresPolicyAdmission,
+    requiresStorageReceipt and requiresEvidence, and resolve_steering_artifacts read
+    none of them. They gate activation rather than fetching, so resolution cannot
+    discharge them — but it can stop pretending they are not there, and name them in
+    the receipt so a reader sees what still has to happen before use.
+    """
+    policy = sourceset.get("policy", {})
+    if not isinstance(policy, dict):
+        return []
+    labels = {
+        "requiresGrant": "agent-registry grant",
+        "requiresPolicyAdmission": "policy admission",
+        "requiresStorageReceipt": "storage receipt",
+        "requiresEvidence": "evidence record",
+    }
+    return [label for key, label in labels.items() if policy.get(key)]
 
 
 def pinned_digests(sourceset: dict[str, Any], section: str) -> dict[str, str]:

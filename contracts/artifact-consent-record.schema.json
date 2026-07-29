@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:artifact-consent-record:v0.1.0",
+  "title": "ArtifactConsentRecord",
+  "description": "Evidence that a user agreed to specific artifacts landing on their disk, recorded BEFORE those bytes are fetched. This exists because the ordering is the guarantee: a grant adjudicated after download governs whether the artifacts may be USED, not whether they may ARRIVE, and the two are not the same promise. A machine that pre-stages regardless of opt-in and adjudicates afterwards has already spent the disk, the bandwidth and the exposure it was asking permission for.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["specVersion", "id", "kind", "sourcesetId", "scope", "decision", "decidedAt", "subject", "disclosure"],
+  "properties": {
+    "specVersion": { "type": "string", "const": "0.1.0" },
+    "id": {
+      "type": "string",
+      "pattern": "^urn:srcos:agent-machine:artifact-consent-record:[a-z0-9][a-z0-9.-]*$"
+    },
+    "kind": { "type": "string", "const": "ArtifactConsentRecord" },
+    "sourcesetId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]*$",
+      "description": "The sourceset this decision covers. Consent is per-sourceset; it does not generalise to others."
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["download", "activation", "download-and-activation"],
+      "description": "What was agreed to. 'activation' alone does NOT authorise a fetch: agreeing that something may run if present is not agreeing that it may be placed there. A resolver must refuse to download under an activation-only record."
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["granted", "declined"],
+      "description": "A declined record is retained deliberately. Absence of consent and refusal of consent are different states, and silently re-prompting past a refusal is how an opt-out becomes advisory."
+    },
+    "decidedAt": { "type": "string", "format": "date-time" },
+    "expiresAt": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "After this instant the record no longer authorises a fetch. Null means it does not lapse on its own."
+    },
+    "revokedAt": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Revocation is recorded on the decision itself rather than by deleting it, so that a withdrawal leaves a trace instead of resembling a decision never made."
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["principalRef", "attestation"],
+      "description": "WHO agreed. An operator flag such as --allow-network says a machine has connectivity; it does not say a person consented, and the two must not be conflated.",
+      "properties": {
+        "principalRef": { "type": "string", "minLength": 1 },
+        "attestation": {
+          "type": "string",
+          "enum": ["interactive-operator", "delegated-policy", "automated-fleet"],
+          "description": "How the agreement was obtained. Recorded because a fleet default and a person clicking accept are different evidence and should not be indistinguishable after the fact."
+        }
+      }
+    },
+    "disclosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["declaredBytes", "purpose", "artifactRepos"],
+      "description": "What the subject was actually told. Consent to an undisclosed quantity is not consent to any quantity, so the resolver checks what was disclosed against what it is about to fetch.",
+      "properties": {
+        "declaredBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Upper bound of on-disk footprint disclosed at the time of asking."
+        },
+        "purpose": { "type": "string", "minLength": 1 },
+        "artifactRepos": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Every remote the fetch will contact. A repo absent here was not disclosed and must not be fetched under this record."
+        },
+        "retention": {
+          "type": "string",
+          "enum": ["until-revoked", "session", "single-use"],
+          "description": "How long the artifacts may remain after the fetch."
+        }
+      }
+    },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  }
+}
