@@ -1,4 +1,4 @@
-.PHONY: validate-no-merge-duplication validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-policy-fabric validate-agent-registry validate-superconscious-runtime-plan validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula validate-runtime-install-receipts doctor probe validate-artifact-digest-honesty
+.PHONY: validate-no-merge-duplication validate validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-policy-fabric validate-agent-registry validate-superconscious-runtime-plan validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula validate-runtime-install-receipts doctor probe validate-artifact-digest-honesty validate-consent-before-staging
 
 PYTHON ?= python3
 RUBY ?= ruby
@@ -22,7 +22,7 @@ DECIDED_AT := 2026-05-04T12:51:00Z
 PYCLI := PYTHONPATH=src $(PYTHON) -m agent_machine.cli
 PYMOD := PYTHONPATH=src $(PYTHON) -m
 
-validate: validate-no-merge-duplication validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-policy-fabric validate-agent-registry validate-superconscious-runtime-plan validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula validate-runtime-install-receipts validate-artifact-digest-honesty
+validate: validate-no-merge-duplication validate-json validate-yaml validate-quadlet validate-render validate-evidence validate-governance validate-policy-fabric validate-agent-registry validate-superconscious-runtime-plan validate-activation validate-supply-chain validate-release-bundle validate-sourceos-projections validate-package validate-cli validate-formula validate-runtime-install-receipts validate-artifact-digest-honesty validate-consent-before-staging
 
 validate-no-merge-duplication:
 	$(PYTHON) scripts/validate-no-merge-duplication.py
@@ -30,6 +30,9 @@ validate-no-merge-duplication:
 
 validate-artifact-digest-honesty:
 	$(PYTHON) scripts/validate-artifact-digest-honesty.py
+
+validate-consent-before-staging:
+	$(PYTHON) scripts/validate-consent-before-staging.py
 
 validate-json:
 	$(PYTHON) scripts/validate-json.py

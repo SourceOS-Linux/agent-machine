@@ -28,6 +28,71 @@
         "includeAuthMaterial": { "type": "boolean", "const": false }
       }
     },
+    "consent": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The consent decision as adjudicated, and CRUCIALLY when. checkedBefore='download' asserts no byte was requested until the decision passed; a receipt that cannot make that claim should not imply it.",
+      "required": [
+        "required",
+        "checkedBefore"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean",
+          "description": "Whether the sourceset demanded consent at all."
+        },
+        "checkedBefore": {
+          "type": "string",
+          "enum": [
+            "download",
+            "activation"
+          ],
+          "description": "The point in the sequence at which consent was adjudicated. 'activation' means bytes had already landed."
+        },
+        "consentRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "download",
+            "activation",
+            "download-and-activation"
+          ]
+        },
+        "decidedAt": {
+          "type": "string"
+        },
+        "subjectRef": {
+          "type": "string"
+        },
+        "attestation": {
+          "type": "string",
+          "enum": [
+            "interactive-operator",
+            "delegated-policy",
+            "automated-fleet"
+          ]
+        },
+        "declaredBytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "outstandingPolicyRequirements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Requirements the sourceset declares that resolution does NOT discharge. They gate activation, not fetching, so resolution cannot satisfy them \u2014 but naming them keeps a declared-and-unread policy block from reading as a satisfied one."
+    },
     "notes": { "type": "array", "items": { "type": "string" } }
   },
   "$defs": {
