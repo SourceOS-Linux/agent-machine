@@ -47,10 +47,34 @@ def validate_example_by_kind_or_type(example_path: Path, root: Path) -> Path:
     return schema_path
 
 
+def is_documentation_bundle(instance: object) -> bool:
+    """A narrative bundle of illustrative fragments, not a single typed artifact.
+
+    Shape: no top-level `kind`/`type`, plus an `examples` array. The fragments it
+    carries are untyped, so there is no schema to check them against without
+    guessing. Recognised here so it can be REPORTED as unvalidated rather than
+    silently walked past — an unchecked file that nothing mentions is how a
+    contract quietly stops being enforced.
+    """
+    return (
+        isinstance(instance, dict)
+        and not isinstance(instance.get("kind") or instance.get("type"), str)
+        and isinstance(instance.get("examples"), list)
+    )
+
+
 def validate_examples(root: Path) -> None:
+    unvalidated: list[Path] = []
     for example_path in iter_json_files(examples_dir(root)):
+        if is_documentation_bundle(load_json(example_path)):
+            unvalidated.append(example_path)
+            print(f"DOC BUNDLE (not schema-validated) {example_path.relative_to(root)}")
+            continue
         schema_path = validate_example_by_kind_or_type(example_path, root)
         print(f"VALID example {example_path.relative_to(root)} -> {schema_path.relative_to(root)}")
+    if unvalidated:
+        print(f"\nNOTE: {len(unvalidated)} documentation bundle(s) carry untyped fragments and were not")
+        print("      schema-checked. Give a fragment a `kind` and a contract to bring it under validation.")
 
 
 def main() -> int:

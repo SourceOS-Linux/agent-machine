@@ -1,8 +1,3 @@
-"""Receipt-backed local artifact verification for steering runtime.
-
-This module verifies a SteeringArtifactReceipt before any runtime may use the
-referenced files. It is deliberately fail-closed: absent files or digest mismatch
-produce a not_configured result rather than a runtime claim.
 """Receipt-backed local artifact verification and loading gate.
 
 This module verifies a SteeringArtifactReceipt immediately before any runtime use

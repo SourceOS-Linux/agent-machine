@@ -235,119 +235,6 @@ def cmd_policy_resolve(args: argparse.Namespace) -> int:
     return 0
 
 
-def resolve_activation_policy_and_grant(args: argparse.Namespace, agentpod: dict[str, Any], policy_fabric: Any) -> tuple[dict[str, Any], dict[str, Any]]:
-    policy_json = args.policy_json
-    grant_json = args.grant_json
-    """Resolve activation policy/grant from explicit files or local policy store."""
-    policy_json = args.policy_json
-    grant_json = args.grant_json
-
-    # Backward-compatible shorthand:
-    # agent-machine activate evaluate <agentpod.json> <grant.json> --policy-dir examples ...
-    # argparse first assigns the single optional positional to policy_json, so we
-    # reinterpret it as grant_json when a policy store/resolver option is present.
-    resolver_requested = bool(args.policy_file or args.policy_dir or args.policy_id or args.expected_status)
-    if grant_json is None and policy_json is not None and resolver_requested:
-        grant_json = policy_json
-        policy_json = None
-
-    if grant_json is None:
-        raise AssertionError(
-            "grant JSON is required. Use either `<agentpod> <policy.json> <grant.json>` "
-            "or `<agentpod> <grant.json> --policy-dir <dir>`"
-        )
-    if policy_json is not None:
-        return load_json(policy_json), load_json(grant_json)
-
-    if policy_json is not None:
-        return load_json(policy_json), load_json(grant_json)
-    policies = policy_fabric.load_policy_admissions(
-        files=args.policy_file,
-        directories=args.policy_dir,
-        root=REPO_ROOT,
-    )
-    policy = policy_fabric.resolve_policy_admission(
-        policies=policies,
-        agentpod_id=str(agentpod.get("id")),
-        request_type="activation",
-        deployment_receipt_id=args.deployment_receipt_id,
-        agent_machine_id=args.agent_machine_id,
-        provider_id=args.provider_id,
-        policy_id=args.policy_id,
-        expected_status=args.expected_status,
-        allow_missing_stub=not args.no_missing_stub,
-        decided_at=args.decided_at,
-        root=REPO_ROOT,
-    )
-    return policy, load_json(grant_json)
-
-
-def cmd_activate_evaluate(args: argparse.Namespace) -> int:
-    activation = import_renderer(lambda: __import__("agent_machine.activation", fromlist=["_unused"]))
-    policy_fabric = import_renderer(lambda: __import__("agent_machine.policy_fabric", fromlist=["_unused"]))
-    agentpod = load_json(args.agentpod_json)
-    policy, grant = resolve_activation_policy_and_grant(args, agentpod, policy_fabric)
-    storage_receipts = activation.load_storage_receipts(
-        files=args.storage_receipt_file,
-        directories=args.storage_receipt_dir,
-    )
-    storage_receipt_refs = list(args.storage_receipt_ref or [])
-    if not storage_receipt_refs and storage_receipts:
-        storage_receipt_refs = [str(receipt.get("id")) for receipt in storage_receipts]
-    decision = activation.evaluate_activation(
-        agentpod=agentpod,
-        policy=policy,
-        grant=grant,
-        deployment_receipt_id=args.deployment_receipt_id,
-        storage_receipt_refs=storage_receipt_refs,
-        storage_receipts=storage_receipts if storage_receipts else None,
-        decided_at=args.decided_at,
-        decision_id=args.decision_id,
-        root=REPO_ROOT,
-    )
-    activation.validate_activation_decision_payload(decision, REPO_ROOT)
-    if args.pretty:
-        print(json.dumps(decision, indent=2, sort_keys=True))
-    else:
-        print(json.dumps(decision, sort_keys=True, separators=(",", ":")))
-    policy = policy_fabric.resolve_policy_admission(policies=policies, agentpod_id=str(agentpod.get("id")), request_type=args.request_type, deployment_receipt_id=args.deployment_receipt_id, agent_machine_id=args.agent_machine_id, provider_id=args.provider_id, policy_id=args.policy_id, expected_status=args.expected_status, allow_missing_stub=not args.no_missing_stub, decided_at=args.decided_at, root=REPO_ROOT)
-    print(json.dumps(policy, indent=2 if args.pretty else None, sort_keys=True))
-    return 0
-
-
-def cmd_registry_resolve(args: argparse.Namespace) -> int:
-    agent_registry = import_renderer(lambda: __import__("agent_machine.agent_registry", fromlist=["_unused"]))
-    agentpod = load_json(args.agentpod_json)
-    grants = agent_registry.load_agent_registry_grants(files=args.grant_file, directories=args.grant_dir, root=REPO_ROOT)
-    grant = agent_registry.resolve_agent_registry_grant(
-        grants=grants,
-        agentpod_id=str(agentpod.get("id")),
-        requested_agent_identity_ref=args.requested_agent_identity_ref,
-        session_ref=args.session_ref,
-        agent_machine_id=args.agent_machine_id,
-        workroom_ref=args.workroom_ref,
-        topic_ref=args.topic_ref,
-        grant_id=args.grant_id,
-        expected_status=args.expected_status,
-        allow_missing_stub=not args.no_missing_stub,
-        issued_at=args.issued_at,
-        requested_expires_at=args.requested_expires_at,
-        requested_scope=agent_registry.requested_scope_from_inputs(
-            provider_id=args.provider_id,
-            model_ref=args.model_ref,
-            tool_refs=args.tool_ref,
-            storage_scope_ref=args.storage_scope_ref,
-            evidence_scope_ref=args.evidence_scope_ref,
-        ),
-        root=REPO_ROOT,
-    )
-    if args.pretty:
-        print(json.dumps(grant, indent=2, sort_keys=True))
-    else:
-        print(json.dumps(grant, sort_keys=True, separators=(",", ":")))
-    return 0
-
-
 def resolve_activation_policy(args: argparse.Namespace, agentpod: dict[str, Any], policy_fabric: Any) -> dict[str, Any]:
     if args.policy_json is not None:
         return load_json(args.policy_json)
@@ -370,20 +257,6 @@ def resolve_activation_policy(args: argparse.Namespace, agentpod: dict[str, Any]
 def resolve_activation_grant(args: argparse.Namespace, agentpod: dict[str, Any], agent_registry: Any) -> dict[str, Any]:
     if args.grant_json is not None:
         return load_json(args.grant_json)
-def resolve_activation_policy_and_grant(args: argparse.Namespace, agentpod: dict[str, Any], policy_fabric: Any) -> tuple[dict[str, Any], dict[str, Any]]:
-    policy_json = args.policy_json
-    grant_json = args.grant_json
-    resolver_requested = bool(args.policy_file or args.policy_dir or args.policy_id or args.expected_status)
-    if grant_json is None and policy_json is not None and resolver_requested:
-        grant_json = policy_json
-        policy_json = None
-    if grant_json is None:
-        raise AssertionError("grant JSON is required. Use either `<agentpod> <policy.json> <grant.json>` or `<agentpod> <grant.json> --policy-dir <dir>`")
-    if policy_json is not None:
-        return load_json(policy_json), load_json(grant_json)
-    policies = policy_fabric.load_policy_admissions(files=args.policy_file, directories=args.policy_dir, root=REPO_ROOT)
-    policy = policy_fabric.resolve_policy_admission(policies=policies, agentpod_id=str(agentpod.get("id")), request_type="activation", deployment_receipt_id=args.deployment_receipt_id, agent_machine_id=args.agent_machine_id, provider_id=args.provider_id, policy_id=args.policy_id, expected_status=args.expected_status, allow_missing_stub=not args.no_missing_stub, decided_at=args.decided_at, root=REPO_ROOT)
-    return policy, load_json(grant_json)
 def agentpod_workload_default(agentpod: dict[str, Any], key: str) -> str | None:
     value = agentpod.get("workload", {}).get(key)
     return value if isinstance(value, str) and value else None
@@ -403,35 +276,25 @@ def resolve_registry_grant_from_args(args: argparse.Namespace, agentpod: dict[st
         storage_scope_ref=args.storage_scope_ref,
         evidence_scope_ref=args.evidence_scope_ref,
     )
+    grant_expected_status = getattr(args, "grant_expected_status", None) or getattr(args, "expected_grant_status", None)
+    allow_missing_grant_stub = not (getattr(args, "no_missing_grant_stub", False) or getattr(args, "no_missing_stub", False))
     grants = agent_registry.load_agent_registry_grants(files=args.grant_file, directories=args.grant_dir, root=REPO_ROOT)
     return agent_registry.resolve_agent_registry_grant(
         grants=grants,
         agentpod_id=str(agentpod.get("id")),
-        requested_agent_identity_ref=args.requested_agent_identity_ref,
-        session_ref=args.session_ref,
-        agent_machine_id=args.agent_machine_id,
-        workroom_ref=args.workroom_ref,
-        topic_ref=args.topic_ref,
-        grant_id=args.grant_id,
-        expected_status=args.grant_expected_status,
-        allow_missing_stub=not args.no_missing_grant_stub,
-        issued_at=args.issued_at,
-        requested_expires_at=args.requested_expires_at,
-        requested_scope=agent_registry.requested_scope_from_inputs(
-            provider_id=args.provider_id,
-            model_ref=args.model_ref,
-            tool_refs=args.tool_ref,
-            storage_scope_ref=args.storage_scope_ref,
-            evidence_scope_ref=args.evidence_scope_ref,
-        ),
         requested_agent_identity_ref=requested_agent_identity_ref,
         session_ref=session_ref,
         agent_machine_id=args.agent_machine_id,
         workroom_ref=args.workroom_ref or agentpod_workload_default(agentpod, "workroomRef"),
         topic_ref=args.topic_ref or agentpod_workload_default(agentpod, "topicRef"),
         grant_id=args.grant_id,
-        expected_status=args.expected_grant_status,
-        allow_missing_stub=not args.no_missing_stub,
+        # The two callers spell these differently: `registry resolve` takes them from
+        # add_registry_resolver_args (--expected-grant-status / --no-missing-stub),
+        # while `activate evaluate` declares its own grant-scoped pair
+        # (--grant-expected-status / --no-missing-grant-stub). Accept either, so
+        # neither caller hits an AttributeError on the other's namespace.
+        expected_status=grant_expected_status,
+        allow_missing_stub=allow_missing_grant_stub,
         issued_at=args.issued_at,
         requested_scope=requested_scope,
         requested_expires_at=args.requested_expires_at,
@@ -467,34 +330,16 @@ def cmd_registry_resolve(args: argparse.Namespace) -> int:
 def resolve_activation_policy_and_grant(args: argparse.Namespace, agentpod: dict[str, Any], policy_fabric: Any, agent_registry: Any) -> tuple[dict[str, Any], dict[str, Any]]:
     policy_json = args.policy_json
     grant_json = args.grant_json
-    resolver_requested = bool(args.policy_file or args.policy_dir or args.policy_id or args.expected_status)
-    if grant_json is None and policy_json is not None and resolver_requested:
-        grant_json = policy_json
-        policy_json = None
-    if grant_json is None:
-        raise AssertionError(
-            "grant JSON is required. Use either `<agentpod> <policy.json> <grant.json>` "
-            "or `<agentpod> <grant.json> --policy-dir <dir>`"
-        )
-    if policy_json is not None:
-        return load_json(policy_json), load_json(grant_json)
-    policies = policy_fabric.load_policy_admissions(files=args.policy_file, directories=args.policy_dir, root=REPO_ROOT)
-    policy = policy_fabric.resolve_policy_admission(
-        policies=policies,
-        agentpod_id=str(agentpod.get("id")),
-        request_type="activation",
-        deployment_receipt_id=args.deployment_receipt_id,
-        agent_machine_id=args.agent_machine_id,
-        provider_id=args.provider_id,
-        policy_id=args.policy_id,
-        expected_status=args.expected_status,
-        allow_missing_stub=not args.no_missing_stub,
-        decided_at=args.decided_at,
-        root=REPO_ROOT,
-    )
-    return policy, load_json(grant_json)
     policy_resolver_requested = bool(args.policy_file or args.policy_dir or args.policy_id or args.expected_status)
-    grant_resolver_requested = bool(args.grant_file or args.grant_dir or args.grant_id or args.expected_grant_status)
+    # See resolve_registry_grant_from_args: the two callers spell the grant status
+    # flag differently, so accept either rather than depending on one namespace.
+    grant_resolver_requested = bool(
+        args.grant_file
+        or args.grant_dir
+        or args.grant_id
+        or getattr(args, "grant_expected_status", None)
+        or getattr(args, "expected_grant_status", None)
+    )
     if grant_json is None and policy_json is not None and policy_resolver_requested and not grant_resolver_requested:
         grant_json = policy_json
         policy_json = None
@@ -526,9 +371,7 @@ def cmd_activate_evaluate(args: argparse.Namespace) -> int:
         files=args.storage_receipt_file,
         directories=args.storage_receipt_dir,
     )
-    policy, grant = resolve_activation_policy_and_grant(args, agentpod, policy_fabric)
     policy, grant = resolve_activation_policy_and_grant(args, agentpod, policy_fabric, agent_registry)
-    storage_receipts = activation.load_storage_receipts(files=args.storage_receipt_file, directories=args.storage_receipt_dir)
     storage_receipt_refs = list(args.storage_receipt_ref or [])
     if not storage_receipt_refs and storage_receipts:
         storage_receipt_refs = [str(receipt.get("id")) for receipt in storage_receipts]
@@ -538,11 +381,6 @@ def cmd_activate_evaluate(args: argparse.Namespace) -> int:
     return 0
 
 
-def add_registry_resolver_args(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--grant-file", action="append", type=Path, default=[])
-    parser.add_argument("--grant-dir", action="append", type=Path, default=[])
-    parser.add_argument("--requested-agent-identity-ref", required=True)
-    parser.add_argument("--session-ref", required=True)
 def cmd_steer_stub_response(args: argparse.Namespace) -> int:
     steering_stub = __import__("agent_machine.steering_stub", fromlist=["_unused"])
     request = steering_stub.load_steer_request(str(args.request_json))
@@ -598,7 +436,8 @@ def add_registry_resolver_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--evidence-scope-ref")
     parser.add_argument("--requested-expires-at")
     parser.add_argument("--issued-at", default="1970-01-01T00:00:00Z")
-    parser.add_argument("--pretty", action="store_true")
+    # --pretty is output formatting, not a registry-resolver input; each subcommand
+    # declares its own. Adding it here collided with registry_resolve's.
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Agent Machine Python CLI")
     subcommands = parser.add_subparsers(dest="command", required=True)
@@ -688,9 +527,9 @@ def build_parser() -> argparse.ArgumentParser:
     activate_evaluate.add_argument("--evidence-scope-ref")
     activate_evaluate.add_argument("--requested-expires-at")
     activate_evaluate.add_argument("--issued-at", default="1970-01-01T00:00:00Z")
-    activate_evaluate.add_argument("--agent-machine-id")
-    activate_evaluate.add_argument("--provider-id")
-    add_registry_resolver_args(activate_evaluate)
+    # activate_evaluate declares its full registry-grant surface above, including
+    # grant-scoped names and local-bootstrap defaults. add_registry_resolver_args
+    # would re-add the same option strings, which argparse rejects outright.
     activate_evaluate.add_argument("--storage-receipt-ref", action="append", default=[])
     activate_evaluate.add_argument("--storage-receipt-file", action="append", type=Path, default=[])
     activate_evaluate.add_argument("--storage-receipt-dir", action="append", type=Path, default=[])
@@ -699,8 +538,6 @@ def build_parser() -> argparse.ArgumentParser:
     activate_evaluate.add_argument("--pretty", action="store_true")
     activate_evaluate.set_defaults(func=cmd_activate_evaluate)
 
-    steer = subcommands.add_parser("steer", help="Inspect or serve local steering endpoints")
-    steer_subcommands = steer.add_subparsers(dest="steer_command", required=True)
     steer = subcommands.add_parser("steer", help="Inspect or serve local steering endpoints")
     steer_subcommands = steer.add_subparsers(dest="steer_command", required=True)
     stub_response = steer_subcommands.add_parser("stub-response", help="Render a Noetica-compatible steering stub response")
