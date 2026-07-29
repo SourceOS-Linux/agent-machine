@@ -59,10 +59,19 @@ def resolve_steering_artifacts(
     receipt_out = Path(receipt_out)
 
     if dry_run:
-        receipt = build_pending_receipt(sourceset_id)
+        # A dry run fetches nothing, so an unsatisfiable pin requirement is
+        # reported rather than raised — this is the cheap way to discover a
+        # sourceset cannot be verified before anyone tries to fetch it.
+        receipt = build_pending_receipt(sourceset_id, sourceset)
     else:
         if not allow_network:
             raise SteeringRuntimeError("real artifact resolution requires --allow-network")
+        # Fail closed BEFORE the first network call: a sourceset that requires
+        # digest pinning but carries no pins can never be verified, so it must
+        # not be fetched at all. Adjudicating this after the bytes have landed
+        # is the ordering error this resolver exists to avoid.
+        for section in ("model", "sae"):
+            pinned_digests(sourceset, section)
         receipt = resolve_gpt2_small_res_jb(sourceset, local_dir, revision=revision)
 
     receipt_out.parent.mkdir(parents=True, exist_ok=True)
@@ -83,6 +92,9 @@ def resolve_gpt2_small_res_jb(sourceset: dict[str, Any], local_dir: Path, *, rev
     generated_at = utc_now()
     artifact_records: list[dict[str, Any]] = []
 
+    model_pins = pinned_digests(sourceset, "model")
+    sae_pins = pinned_digests(sourceset, "sae")
+
     model_repo = require_repo(sourceset, "model")
     model_revision = resolved_revision(api, model_repo, revision)
     model_root = local_dir / sourceset["sourcesetId"] / safe_repo_name(model_repo)
@@ -102,6 +114,7 @@ def resolve_gpt2_small_res_jb(sourceset: dict[str, Any], local_dir: Path, *, rev
                 file_path=filename,
                 resolved_revision_value=model_revision,
                 local_path=path,
+                expected_sha256=model_pins.get(filename),
             )
         )
 
@@ -124,6 +137,7 @@ def resolve_gpt2_small_res_jb(sourceset: dict[str, Any], local_dir: Path, *, rev
                 file_path=filename,
                 resolved_revision_value=sae_revision,
                 local_path=path,
+                expected_sha256=sae_pins.get(filename),
             )
         )
 
@@ -152,8 +166,18 @@ def resolve_gpt2_small_res_jb(sourceset: dict[str, Any], local_dir: Path, *, rev
     }
 
 
-def build_pending_receipt(sourceset_id: str) -> dict[str, Any]:
+def build_pending_receipt(sourceset_id: str, sourceset: dict[str, Any] | None = None) -> dict[str, Any]:
     generated_at = utc_now()
+    unpinned: list[str] = []
+    if sourceset is not None:
+        for section in ("model", "sae"):
+            block = sourceset.get(section, {})
+            if isinstance(block, dict) and not block.get("expectedDigests", {}).get("files"):
+                requirement = "required" if block.get("digestRequired") else "not required"
+                unpinned.append(
+                    f"{section}.expectedDigests absent (digestRequired {requirement}): "
+                    f"{section} artifacts could only be recorded trust-on-first-use"
+                )
     return {
         "specVersion": "0.1.0",
         "id": f"urn:srcos:agent-machine:steering-artifact-receipt:{sourceset_id}.{receipt_stamp(generated_at)}.dryrun",
@@ -169,7 +193,8 @@ def build_pending_receipt(sourceset_id: str) -> dict[str, Any]:
             "artifact revisions not resolved",
             "artifact sha256 digests not computed",
             "storage receipts not emitted",
-        ],
+        ]
+        + unpinned,
         "storageReceiptRefs": [],
         "policyRefs": [],
         "agentRegistryGrantRefs": [],
@@ -184,6 +209,27 @@ def build_pending_receipt(sourceset_id: str) -> dict[str, Any]:
     }
 
 
+def pinned_digests(sourceset: dict[str, Any], section: str) -> dict[str, str]:
+    """Return the pinned filePath -> sha256 map for a sourceset section.
+
+    Enforces the precondition the schema can declare but not check: when a
+    section sets `digestRequired`, an `expectedDigests` block must exist.
+    Without pins there is nothing to compare downloaded bytes against, so
+    resolution fails closed rather than recording an unearned `verified: true`.
+    """
+    block = sourceset.get(section, {})
+    if not isinstance(block, dict):
+        raise SteeringRuntimeError(f"sourceset section {section} is not an object")
+    pins = block.get("expectedDigests", {}).get("files", {})
+    if block.get("digestRequired") and not pins:
+        raise SteeringRuntimeError(
+            f"{section}.digestRequired is true but {section}.expectedDigests is absent: "
+            "downloaded artifacts could not be verified against a pinned expectation, "
+            "refusing to resolve"
+        )
+    return pins
+
+
 def artifact_record(
     *,
     role: str,
@@ -191,7 +237,31 @@ def artifact_record(
     file_path: str,
     resolved_revision_value: str,
     local_path: Path,
+    expected_sha256: str | None = None,
 ) -> dict[str, Any]:
+    observed = sha256_file(local_path)
+    if expected_sha256 is None:
+        # Nothing was pinned for this file. The digest records what arrived;
+        # it is not evidence that what arrived was correct.
+        digest: dict[str, Any] = {
+            "algorithm": "sha256",
+            "sha256": observed,
+            "verified": False,
+            "verificationMethod": "trust-on-first-use",
+        }
+    elif observed != expected_sha256:
+        raise SteeringRuntimeError(
+            f"digest mismatch for {repo}/{file_path} at {resolved_revision_value}: "
+            f"expected {expected_sha256}, observed {observed}"
+        )
+    else:
+        digest = {
+            "algorithm": "sha256",
+            "sha256": observed,
+            "expectedSha256": expected_sha256,
+            "verified": True,
+            "verificationMethod": "pinned-digest",
+        }
     return {
         "role": role,
         "source": {
@@ -206,11 +276,7 @@ def artifact_record(
             "sizeBytes": local_path.stat().st_size,
             "storageReceiptRef": None,
         },
-        "digest": {
-            "algorithm": "sha256",
-            "sha256": sha256_file(local_path),
-            "verified": True,
-        },
+        "digest": digest,
     }
 
 

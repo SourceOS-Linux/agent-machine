@@ -57,7 +57,8 @@
         "license": { "type": "string" },
         "access": { "$ref": "#/$defs/accessRef" },
         "expectedFormat": { "type": "string" },
-        "digestRequired": { "type": "boolean" }
+        "digestRequired": { "type": "boolean" },
+        "expectedDigests": { "$ref": "#/$defs/expectedDigests" }
       }
     },
     "sae": {
@@ -88,7 +89,9 @@
           "type": "integer",
           "minimum": 0
         },
-        "access": { "$ref": "#/$defs/accessRef" }
+        "access": { "$ref": "#/$defs/accessRef" },
+        "digestRequired": { "type": "boolean" },
+        "expectedDigests": { "$ref": "#/$defs/expectedDigests" }
       }
     },
     "endpointCompatibility": {
@@ -142,6 +145,21 @@
     }
   },
   "$defs": {
+    "expectedDigests": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Digests a resolver MUST compare downloaded bytes against before recording them as verified. A file path present here is pinned; a file path absent is not pinned and may only be recorded as trust-on-first-use. This block is what makes digestRequired satisfiable — without it, digestRequired:true can never be honoured and resolution must fail closed.",
+      "required": ["algorithm", "files"],
+      "properties": {
+        "algorithm": { "type": "string", "const": "sha256" },
+        "files": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "Map of repo-relative file path to expected lowercase-hex sha256.",
+          "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        }
+      }
+    },
     "sourceRef": {
       "type": "object",
       "additionalProperties": false,

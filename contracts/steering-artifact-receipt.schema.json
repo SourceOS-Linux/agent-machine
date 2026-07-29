@@ -62,12 +62,38 @@
         "digest": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["algorithm", "sha256", "verified"],
+          "description": "Records the integrity check that was actually performed, not the one that was intended. verified:true is admissible only when the observed digest was compared equal to a digest pinned in the sourceset BEFORE download, and the value compared against is carried in expectedSha256.",
+          "required": ["algorithm", "sha256", "verified", "verificationMethod"],
           "properties": {
             "algorithm": { "type": "string", "const": "sha256" },
             "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
-            "verified": { "type": "boolean" }
-          }
+            "expectedSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "verified": { "type": "boolean" },
+            "verificationMethod": {
+              "type": "string",
+              "enum": ["pinned-digest", "trust-on-first-use", "unverified"],
+              "description": "pinned-digest: observed digest compared equal to a pre-download pinned expectation. trust-on-first-use: digest computed from the bytes that just arrived, with nothing to compare against — a record of WHAT arrived, not evidence that what arrived was CORRECT. unverified: no digest computed."
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "required": ["verified"],
+                "properties": { "verified": { "const": true } }
+              },
+              "then": {
+                "required": ["expectedSha256"],
+                "properties": { "verificationMethod": { "const": "pinned-digest" } }
+              }
+            },
+            {
+              "if": {
+                "required": ["verificationMethod"],
+                "properties": { "verificationMethod": { "const": "pinned-digest" } }
+              },
+              "then": { "required": ["expectedSha256"] }
+            }
+          ]
         }
       }
     }
