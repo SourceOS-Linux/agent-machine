@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:srcos:agent-machine:schema:attestation-decision:v0.1.0",
+  "title": "AttestationDecision",
+  "description": "Host attestation decision for whether an Agent Machine host may be activated. activation_permitted is true only if ALL blocking checks pass; a single blocking failure denies activation. Advisory checks (TELEMETRY_BOUNDARY/SEAM-013, DISPLAY_UUID_STABILITY/SEAM-008) warn only and never block. Field names are snake_case per Tranche Work Order T2-1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["specVersion","kind","attestation_id","host_id","attested_at","attested_by","activation_permitted","overall_status","check_results"],
+  "properties": {
+    "specVersion": { "type": "string", "const": "0.1.0" },
+    "kind": { "type": "string", "const": "AttestationDecision" },
+    "attestation_id": { "type": "string", "pattern": "^urn:srcos:agent-machine:attestation-decision:[a-z0-9][a-z0-9-]*$" },
+    "host_id": { "type": "string", "minLength": 1 },
+    "attested_at": { "type": "string", "format": "date-time" },
+    "attested_by": { "type": "string", "minLength": 1 },
+    "activation_permitted": { "type": "boolean" },
+    "overall_status": { "type": "string", "enum": ["pass","fail","partial"] },
+    "check_results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["check_id","check_name","status","expected","actual","blocking"],
+        "properties": {
+          "check_id": { "type": "string", "minLength": 1 },
+          "check_name": { "type": "string" },
+          "status": { "type": "string", "enum": ["pass","fail","warn","skip"] },
+          "expected": { "type": "string" },
+          "actual": { "type": "string" },
+          "blocking": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}
