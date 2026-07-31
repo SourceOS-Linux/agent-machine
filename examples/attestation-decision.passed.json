@@ -1,0 +1,92 @@
+{
+  "specVersion": "0.1.0",
+  "kind": "AttestationDecision",
+  "attestation_id": "urn:srcos:agent-machine:attestation-decision:passed",
+  "host_id": "host-alpha-001",
+  "attested_at": "2026-07-31T04:00:00Z",
+  "attested_by": "urn:srcos:agent-machine:attest",
+  "activation_permitted": true,
+  "overall_status": "pass",
+  "check_results": [
+    {
+      "check_id": "SIP_STATUS",
+      "check_name": "System Integrity Protection",
+      "status": "pass",
+      "expected": "csr-active-config=0x00 (enabled)",
+      "actual": "0x00 (enabled)",
+      "blocking": true
+    },
+    {
+      "check_id": "NVRAM_INTEGRITY",
+      "check_name": "NVRAM plist permissions",
+      "status": "pass",
+      "expected": "0644 root-owned",
+      "actual": "0644 root-owned",
+      "blocking": true
+    },
+    {
+      "check_id": "MDM_PROFILE_AUDIT",
+      "check_name": "MDM configuration profile audit",
+      "status": "pass",
+      "expected": "no unrecognized profiles",
+      "actual": "no unrecognized profiles",
+      "blocking": true
+    },
+    {
+      "check_id": "SEP_PARTICIPATION",
+      "check_name": "Secure Enclave participation",
+      "status": "pass",
+      "expected": "SEP participates in keybag",
+      "actual": "SEP participates in keybag",
+      "blocking": true
+    },
+    {
+      "check_id": "SECURITY_DB_SCHEMA",
+      "check_name": "iCloud Keychain schema",
+      "status": "pass",
+      "expected": "v25+ with ZSEQUENCENUMBER in ZPEER",
+      "actual": "v25+ with ZSEQUENCENUMBER in ZPEER",
+      "blocking": true
+    },
+    {
+      "check_id": "DNS_INTEGRITY",
+      "check_name": "DNS resolution integrity",
+      "status": "pass",
+      "expected": "platform endpoints resolve normally",
+      "actual": "platform endpoints resolve normally",
+      "blocking": true
+    },
+    {
+      "check_id": "TLS_CIPHER_AUDIT",
+      "check_name": "TLS cipher suite audit",
+      "status": "pass",
+      "expected": "TLS1.2+; no RC4/MD5/SHA1",
+      "actual": "TLS1.2+; no RC4/MD5/SHA1",
+      "blocking": true
+    },
+    {
+      "check_id": "EFI_SIGNATURE",
+      "check_name": "EFI firmware signature",
+      "status": "pass",
+      "expected": "signed vendor firmware",
+      "actual": "signed vendor firmware",
+      "blocking": true
+    },
+    {
+      "check_id": "TELEMETRY_BOUNDARY",
+      "check_name": "Claude Desktop telemetry boundary (SEAM-013)",
+      "status": "pass",
+      "expected": "sensitive output not routed through 100%-sampled surface",
+      "actual": "sensitive output not routed through sampled surface",
+      "blocking": false
+    },
+    {
+      "check_id": "DISPLAY_UUID_STABILITY",
+      "check_name": "Display UUID stability (SEAM-008)",
+      "status": "pass",
+      "expected": "stable displayUUID",
+      "actual": "stable displayUUID",
+      "blocking": false
+    }
+  ]
+}
