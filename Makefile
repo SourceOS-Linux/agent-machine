@@ -40,6 +40,9 @@ validate-consent-before-staging:
 validate-inference-gateway:
 	$(PYTHON) scripts/validate-inference-gateway.py
 
+validate-inference-backends:
+	$(PYTHON) scripts/validate-inference-backends.py
+
 validate-inference-receipt:
 	$(PYTHON) scripts/validate-inference-receipt.py
 
