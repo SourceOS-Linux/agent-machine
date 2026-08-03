@@ -37,6 +37,9 @@ validate-artifact-digest-honesty:
 validate-consent-before-staging:
 	$(PYTHON) scripts/validate-consent-before-staging.py
 
+validate-inference-gateway:
+	$(PYTHON) scripts/validate-inference-gateway.py
+
 validate-inference-receipt:
 	$(PYTHON) scripts/validate-inference-receipt.py
 
