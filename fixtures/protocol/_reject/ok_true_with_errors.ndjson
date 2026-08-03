@@ -1,0 +1,2 @@
+# expect: ok=true must carry an empty errors array
+{"id":"r2","ok":true,"result":{"sha256":"0000000000000000000000000000000000000000000000000000000000000000"},"errors":[{"code":"E_INTERNAL","message":"should not be here"}],"warnings":[]}

@@ -1,0 +1,2 @@
+{"id":"hello-9","op":"hello","protocol_version":"1.0","runner":{"name":"contract-runner","version":"0.1.0","ci_mode":true},"required_capabilities":["task_run"],"params":{"strict":true}}
+{"id":"hello-9","ok":false,"result":null,"errors":[{"code":"E_PROTOCOL_INCOMPATIBLE","message":"Adapter does not support runner protocol_version 1.0","details":{"runner_requested":"1.0","adapter_supported":["0.9"]}}],"warnings":[]}

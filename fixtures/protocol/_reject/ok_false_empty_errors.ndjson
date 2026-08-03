@@ -1,0 +1,2 @@
+# expect: ok=false must carry a non-empty errors array
+{"id":"r1","ok":false,"result":null,"errors":[],"warnings":[]}

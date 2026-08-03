@@ -1,0 +1,2 @@
+# expect: op not in the allowed operation set
+{"id":"r5","op":"delete_everything","params":{}}
