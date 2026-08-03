@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.sourceos.dev/agent-machine/adapter-ipc.schema.json",
+  "title": "AdapterIpcMessage",
+  "description": "M2 Adapter IPC v0.1 — JSON-over-stdio (NDJSON) messages between the contract-runner and a backend adapter subprocess. Each stdin/stdout line is exactly one of these objects. Provenance: 'M2 Adapter IPC Spec v0.1' + 'M2 Protocol Versioning & Compatibility Spec v0.1' (SourceOS Spec intake 2026-07-31). stderr carries human logs only and is not modelled here.",
+  "type": "object",
+  "properties": {},
+  "oneOf": [
+    { "$ref": "#/$defs/requestEnvelope" },
+    { "$ref": "#/$defs/responseEnvelope" }
+  ],
+  "$defs": {
+    "correlationId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "uuid-or-monotonic correlation id; a response MUST echo the request id."
+    },
+    "protocolVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$",
+      "description": "MAJOR.MINOR semantic protocol version."
+    },
+    "op": {
+      "type": "string",
+      "enum": [
+        "hello",
+        "info",
+        "lock_validate",
+        "lock_hash",
+        "env_realize",
+        "task_run",
+        "deps_inventory",
+        "lock_update",
+        "env_shell"
+      ]
+    },
+    "role": {
+      "type": "string",
+      "enum": ["dev", "build", "ci", "release", "audit"]
+    },
+    "errorCode": {
+      "type": "string",
+      "description": "Canonical error-code registry (Protocol Versioning Spec v0.1 §4.2). Unknown codes MUST be rejected.",
+      "enum": [
+        "E_PROTOCOL_INCOMPATIBLE",
+        "E_HELLO_REQUIRED",
+        "E_CAPABILITY_MISSING",
+        "E_LOCK_MISSING",
+        "E_LOCK_INVALID",
+        "E_LOCK_HASH_FAILED",
+        "E_LOCK_UPDATE_DENIED",
+        "E_ENV_REALIZE_FAILED",
+        "E_ENV_FLOATING_DISALLOWED",
+        "E_ENV_NOT_FOUND",
+        "E_TASK_UNKNOWN",
+        "E_TASK_FAILED",
+        "E_TASK_TIMEOUT",
+        "E_CMD_FAILED",
+        "E_PATH_ESCAPE",
+        "E_WRITE_DENIED",
+        "E_DEPS_INVENTORY_FAILED",
+        "E_LICENSE_EVIDENCE_MISSING",
+        "E_UNSUPPORTED",
+        "E_INTERNAL"
+      ]
+    },
+    "errorObject": {
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "$ref": "#/$defs/errorCode" },
+        "message": { "type": "string", "minLength": 1 },
+        "details": { "type": "object" }
+      },
+      "additionalProperties": true
+    },
+    "laneConfig": {
+      "type": "object",
+      "required": ["lane_id", "platform", "arch", "backend", "lock_ref", "containerized"],
+      "properties": {
+        "lane_id": { "type": "string", "minLength": 1 },
+        "platform": { "type": "string", "enum": ["macos", "linux"] },
+        "arch": { "type": "string", "enum": ["arm64", "amd64"] },
+        "backend": { "type": "string", "enum": ["pixi", "nix", "devbox", "mise", "bazel"] },
+        "lock_ref": { "type": "string", "minLength": 1 },
+        "containerized": { "type": "boolean" },
+        "container": {
+          "type": "object",
+          "required": ["image", "runtime"],
+          "properties": {
+            "image": {
+              "type": "string",
+              "pattern": "^.+@sha256:[0-9a-f]{64}$",
+              "description": "Container image pinned by digest (name@sha256:<hex64>)."
+            },
+            "runtime": { "type": "string", "enum": ["podman", "docker"] },
+            "mount_repo_to": { "type": "string" },
+            "workdir": { "type": "string" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": { "properties": { "containerized": { "const": true } } },
+          "then": { "required": ["container"] }
+        }
+      ]
+    },
+    "requestEnvelope": {
+      "type": "object",
+      "required": ["id", "op"],
+      "properties": {
+        "id": { "$ref": "#/$defs/correlationId" },
+        "op": { "$ref": "#/$defs/op" },
+        "lane": { "$ref": "#/$defs/laneConfig" },
+        "role": { "$ref": "#/$defs/role" },
+        "task": { "type": "string" },
+        "ci_mode": { "type": "boolean" },
+        "protocol_version": { "$ref": "#/$defs/protocolVersion" },
+        "runner": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string" },
+            "ci_mode": { "type": "boolean" }
+          },
+          "additionalProperties": true
+        },
+        "required_capabilities": { "type": "array", "items": { "type": "string" } },
+        "optional_capabilities": { "type": "array", "items": { "type": "string" } },
+        "params": { "type": "object" }
+      },
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": { "properties": { "op": { "const": "hello" } }, "required": ["op"] },
+          "then": { "required": ["protocol_version"] }
+        }
+      ]
+    },
+    "responseEnvelope": {
+      "type": "object",
+      "required": ["id", "ok", "errors"],
+      "properties": {
+        "id": { "$ref": "#/$defs/correlationId" },
+        "ok": { "type": "boolean" },
+        "result": { "type": ["object", "null"] },
+        "errors": { "type": "array", "items": { "$ref": "#/$defs/errorObject" } },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": { "properties": { "ok": { "const": false } }, "required": ["ok"] },
+          "then": { "properties": { "errors": { "minItems": 1 } } }
+        },
+        {
+          "if": { "properties": { "ok": { "const": true } }, "required": ["ok"] },
+          "then": { "properties": { "errors": { "maxItems": 0 } } }
+        }
+      ]
+    }
+  }
+}

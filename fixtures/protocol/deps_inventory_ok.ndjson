@@ -1,0 +1,2 @@
+{"id":"5","op":"deps_inventory","role":"ci","ci_mode":true,"lane":{"lane_id":"linux-amd64-container","platform":"linux","arch":"amd64","backend":"pixi","lock_ref":"workstation.lock/pixi.linux-amd64.lock","containerized":false},"params":{}}
+{"id":"5","ok":true,"result":{"deps_path":".workstation/state/deps/20251220T2210Z/deps.json"},"errors":[],"warnings":[]}

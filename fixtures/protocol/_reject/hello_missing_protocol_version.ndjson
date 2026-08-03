@@ -1,0 +1,2 @@
+# expect: hello request must declare protocol_version
+{"id":"r7","op":"hello","runner":{"name":"contract-runner","version":"0.1.0"}}

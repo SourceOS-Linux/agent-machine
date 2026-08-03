@@ -1,0 +1,2 @@
+# expect: containerized lane must pin container image by sha256 digest
+{"id":"r8","op":"lock_hash","lane":{"lane_id":"linux-amd64-container","platform":"linux","arch":"amd64","backend":"pixi","lock_ref":"workstation.lock/pixi.linux-amd64.lock","containerized":true,"container":{"image":"debian:latest","runtime":"podman"}},"params":{}}

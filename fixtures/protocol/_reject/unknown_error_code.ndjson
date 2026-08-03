@@ -1,0 +1,2 @@
+# expect: error code not in the canonical registry
+{"id":"r3","ok":false,"result":null,"errors":[{"code":"E_MADE_UP","message":"not a registered code"}],"warnings":[]}

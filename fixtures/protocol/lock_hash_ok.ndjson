@@ -1,0 +1,2 @@
+{"id":"2","op":"lock_hash","lane":{"lane_id":"linux-amd64-container","platform":"linux","arch":"amd64","backend":"pixi","lock_ref":"workstation.lock/pixi.linux-amd64.lock","containerized":true,"container":{"image":"debian@sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef","runtime":"podman","mount_repo_to":"/repo","workdir":"/repo"}},"role":"ci","ci_mode":true,"params":{}}
+{"id":"2","ok":true,"result":{"sha256":"0000000000000000000000000000000000000000000000000000000000000000"},"errors":[],"warnings":[]}

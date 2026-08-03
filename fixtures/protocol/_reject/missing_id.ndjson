@@ -1,0 +1,2 @@
+# expect: every message must carry a string id for correlation
+{"ok":true,"result":{},"errors":[],"warnings":[]}

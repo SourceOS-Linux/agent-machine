@@ -1,0 +1,2 @@
+{"id":"4","op":"task_run","task":"build","role":"ci","ci_mode":true,"lane":{"lane_id":"linux-amd64-container","platform":"linux","arch":"amd64","backend":"pixi","lock_ref":"workstation.lock/pixi.linux-amd64.lock","containerized":true,"container":{"image":"debian@sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef","runtime":"podman"}},"params":{"timeout_seconds":1800}}
+{"id":"4","ok":false,"result":null,"errors":[{"code":"E_TASK_FAILED","message":"build task exited non-zero","details":{"exit_code":2}}],"warnings":[]}

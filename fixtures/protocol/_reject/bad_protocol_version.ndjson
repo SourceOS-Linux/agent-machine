@@ -1,0 +1,2 @@
+# expect: hello protocol_version must match MAJOR.MINOR
+{"id":"r6","op":"hello","protocol_version":"one-point-oh","runner":{"name":"contract-runner","version":"0.1.0"}}
